@@ -1,0 +1,27 @@
+# The main entry point of your workflow.
+# After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
+
+configfile: "config/config.yaml"
+include: "rules/common.smk"
+include: "rules/Download.smk"
+include: "rules/GenomeAnnotations.smk"
+localrules: DownloadFastaAndGtf
+wildcard_constraints: GenomeName = "|".join(STAR_genomes.index)
+
+# Instead of using samples.tsv file, a quick/dirty way to apply rules over grob of existing files is this:
+# IDS, = glob_wildcards("Path/To/{MyFileNames}.bed.gz")
+
+rule all:
+    input:
+        # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
+        # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.fa.fai", GenomeName = STAR_genomes.index),
+        expand("GenomeFiles/{GenomeName}/SpliceSites.seq.bed.gz", GenomeName = STAR_genomes.index),
+        expand("GenomeFiles/{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
+        # expand("GenomeFiles/{GenomeName}/Reference.gtf", GenomeName = STAR_genomes.index),
+        expand(config['GenomesPrefix'] + "{GenomeName}/Reference.igv.genome.json", GenomeName = STAR_genomes.index),
+        expand("GenomeFiles/{GenomeName}/Reannotated.{TranslationApproach}.gtf.gz", GenomeName = STAR_genomes.index, TranslationApproach = ["A", "B", "C", "D", "E"]),
+        # The first rule should define the default target files
+        # Subsequent target rules can be specified below. They should start with all_*.
+
+
+include: "rules/other.smk"

@@ -1,0 +1,3 @@
+[submodule "code/scripts/leafcutter2"]
+	path = code/scripts/leafcutter2
+	url = https://github.com/daiuc/leafcutter2.git

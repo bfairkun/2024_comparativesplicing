@@ -1,0 +1,589 @@
+---
+title: "2024-06-24_CheckAnnotationsOfOtherSpecies"
+output: html_document
+date: '2024-06-24'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+To have some better sense of how to proceed with poorly annotated genomes, for the purposes of identifying unproductive juncs, first I want to explore a bit the annotations of these other species (human, mouse, rat, macaque, chicken, lamprey, opossum)
+
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(knitr)
+library(ggseqlogo)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+
+```
+
+
+```{r}
+
+bed12 <- Sys.glob("../code/GenomeFiles/*[0-9]/Reference.bed.gz") %>%
+  setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reference.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id","transcript_id","gene_biotype","gene_name","transcript_biotype","transcript_support_level","tag","transcript_name" )) %>%
+  bind_rows(.id="Genome")
+```
+
+Let's check Number of annotated protein coding genes in each genome
+
+```{r}
+bed12 %>%
+  filter(gene_biotype=="protein_coding") %>%
+  distinct(gene_id, .keep_all=T) %>%
+  count(Genome) %>%
+  ggplot(aes(x=Genome, y=n)) +
+  geom_col() +
+  Rotate_x_labels +
+  labs(y='Number', title='Number of protein_coding genes annotated')
+```
+
+...So similar numbers (roughly 20,000), between human and opossum. that is believable.  Only ~15,000 for chicken...  And even less in lamprey. Not sure if that is real biology or annotation quality, both seem plausible explanations. Let's check the number/fraction of other types of genes.
+
+Fraction of gene_biotypes
+
+```{r}
+
+bed12 %>%
+  add_count(gene_biotype) %>%
+  filter(n>4000) %>%
+  distinct(gene_id, .keep_all=T) %>%
+  count(gene_biotype, Genome) %>%
+  ggplot(aes(x=Genome, y=n, fill=gene_biotype)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y='fraction', title='fraction of gene_biotypes',
+       caption='gene_biotypes < 4000 intsances filtered out')
+
+```
+
+Some mammals don't have as many lincRNAs annotated... I think this is more likely just a refelection of annotation quality than biology. Let's now check transcript annotations..
+
+
+```{r}
+bed12 %>%
+  # count(transcript_biotype) %>%
+  # filter(n>4000)
+  add_count(transcript_biotype) %>%
+  filter(n>4000) %>%
+  count(transcript_biotype, Genome) %>%
+  ggplot(aes(x=Genome, y=n, fill=transcript_biotype)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y='fraction', title='fraction of transcript_biotypes',
+       caption='transcript_biotypes < 4000 intsances filtered out')
+```
+
+Ok so only human and mouse have lots of the unproductive 'processed_transcript' and 'nonsense_mediated_decay' transcripts annotated. Defintely just refelction of annotation quality. Our unproductive splicing script might be really useful for these other species.
+
+Let's also check number of transcripts per protein coding gene...
+
+```{r}
+bed12 %>%
+  filter(gene_biotype == "protein_coding") %>%
+  mutate(IsProteinCodingTranscript = transcript_biotype=="protein_coding") %>%
+  group_by(Genome, gene_id) %>%
+  mutate(numIsoforms = n()) %>%
+  mutate(numProteinCodingIsoforms = sum(IsProteinCodingTranscript)) %>%
+  ungroup() %>%
+  distinct(Genome, gene_id, .keep_all=T) %>%
+  dplyr::select(Genome, gene_id, numIsoforms, numProteinCodingIsoforms) %>%
+  mutate(FractionCodingIsoforms = numProteinCodingIsoforms/numIsoforms) %>%
+  group_by(Genome, numIsoforms) %>%
+  summarise(
+    n = n(),
+    FractionCodingIsoforms.mean = mean(FractionCodingIsoforms)
+  ) %>%
+  ungroup() %>%
+  mutate(NumProductiveIsoforms = FractionCodingIsoforms.mean*n) %>%
+  mutate(numIsoforms.simplified = case_when(
+    numIsoforms < 20 ~ as.numeric(numIsoforms),
+    TRUE ~ as.numeric(20))) %>%
+  group_by(Genome, numIsoforms.simplified) %>%
+  summarise(
+    n.simplified = sum(n),
+    NumProductiveIsoforms.simplified = sum(NumProductiveIsoforms)) %>%
+  ungroup() %>%
+  mutate(NumUnproductive = n.simplified - NumProductiveIsoforms.simplified) %>%
+  dplyr::select(Genome, numIsoforms.simplified, n.simplified, NumProductive = NumProductiveIsoforms.simplified, NumUnproductive) %>%
+  pivot_longer(names_to = "transcript_type", values_to = "n", cols=c("NumProductive", "NumUnproductive")) %>%
+  ggplot(aes(x=factor(numIsoforms.simplified), y=n, fill=transcript_type)) +
+  geom_col(position='stack') +
+  scale_x_discrete(labels = c(1:19, ">20")) +
+  facet_wrap(~Genome, scales="free_y") +
+  scale_fill_manual(values=c("red", "gray"), labels=c("NumProductive"="Productive", "NumUnproductive"="Unproductive")) +
+  Rotate_x_labels +
+  labs(fill="transcript type", y="Num genes", x="Number transcripts per gene",
+       caption="only protein coding genes considered\ntranscripts with 'protein_coding' are 'Productive'")
+  
+
+```
+So only human and mouse have 'unproductive' transcripts annotated. And many species only have one isoform annotated for most genes in any case. I suppose one reasonable approach is to just use all ORFs in 'protein_coding' transcripts as productive.
+
+Let's check the additoinal tags (unfortanely, bedparse only considers the first tag instance, so there are undoubtedly some mistakes here, but I think that is still ok...). I'm most interested in the tags related to 'mRNA_end', and 'mRNA_start' which indicate poor quality transciript boundary definitions.
+```{r}
+bed12 %>%
+  filter(transcript_biotype == "protein_coding") %>%
+  count(tag, Genome) %>%
+  ggplot(aes(x=Genome, y=n, fill=tag)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y='fraction', title='fraction of transcript tags')
+```
+
+Ok, but from IGV, looking at say chicken or lamprey, the CDS annotations are clearly not accurate (often starting at the first base of the transcript)... So I will definitely need to try to manually identify the ORF for Yang's script to reasonably work. So based on a little intuition, I think the approach for getting Yang's script to work with all of these species, will be to manually reannotated ORFs (based on longest ORF), and not requiring an ATG start (since I think often the true start is cut off from the transcript).
+
+Next let's look at intron sizes and motifs...
+
+note that I see there is a bug about the lamprey splice sites file (actually all of them, because gtftools by default only processes chromosomes named 1-22,X,Y)... will fix later.
+
+```{r}
+Introns <-  Sys.glob("../code/GenomeFiles/*[0-9]/SpliceSites.seq.bed.gz") %>%
+  setNames(str_replace(., "../code/GenomeFiles/(.+?)/SpliceSites.seq.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "DonorSeq","AcceptorSeq" )) %>%
+  bind_rows(.id="Genome")
+
+Introns <- Introns %>%
+  separate(name, into=c("transcript", "intron"), sep="_")
+
+Introns %>%
+  mutate(len = stop - start) %>%
+  ggplot(aes(x=len, color=Genome)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10') +
+  coord_cartesian(xlim=c(100, 1E5)) +
+  labs(y='ecdf', x='IntLength (bp)')
+
+```
+Ok, chicken and lamprey have slightly shorter introns than the mammals... Still much longer than yeast/plant introns which are usually than 50-200 bp.
+
+Let's check number of introns per protein coding gene transcript.
+
+```{r}
+ 
+bed12 %>%
+  filter(gene_biotype=="protein_coding") %>%
+  distinct(gene_id, .keep_all=T) %>%
+  dplyr::select(Genome, transcript_id) %>%
+  inner_join(Introns, by=c("Genome", "transcript_id"="transcript")) %>%
+  count(transcript_id, Genome) %>%
+  ggplot(aes(x=n, color=Genome)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0, 20)) +
+  labs(y='ecdf', x='Num introns', title='num introns per gene')
+```
+All these species have median ~8 introns per gene.
+
+Let's look at splice site motifs:
+
+```{r}
+SpliceSites <- Introns %>%
+  # head(1000) %>%
+  dplyr::rename(Donor.Seq=DonorSeq, Acceptor.Seq=AcceptorSeq) %>%
+  mutate(Donor.Pos = case_when(
+    strand == "+" ~ paste(chrom, start),
+    strand == "-" ~ paste(chrom, stop)
+  )) %>%
+  mutate(Acceptor.Pos = case_when(
+    strand == "+" ~ paste(chrom, stop),
+    strand == "-" ~ paste(chrom, start)  
+  )) %>%
+  dplyr::select(Genome, transcript, intron, Donor.Pos, Acceptor.Pos, Donor.Seq, Acceptor.Seq) %>%
+  pivot_longer(cols=c("Donor.Seq", "Acceptor.Seq", "Donor.Pos", "Acceptor.Pos"),names_to=c("AcceptorOrDonor", ".value"), names_pattern="(^.+?)\\.(.+$)")
+
+SpliceSites %>%
+  # filter for introns in protein coding genes
+  inner_join(
+    bed12 %>%
+      filter(gene_biotype=="protein_coding") %>%
+      distinct(transcript_id, .keep_all=T) %>%
+      dplyr::select(Genome, transcript=transcript_id)
+  ) %>%
+  distinct(Genome, Pos, AcceptorOrDonor, .keep_all=T) %>%
+  count(AcceptorOrDonor, Genome) %>%
+  ggplot(aes(x=Genome, y=n, fill=AcceptorOrDonor)) +
+  geom_col(position='dodge') +
+  Rotate_x_labels +
+  labs(y='Number of unique splice sites annotated', caption='only protein cooding genes')
+```
+I think this roughly matches the number of protein coding genes annotated, and is somewhat reasonable... Perhaps both some biology and difference in annotation effects here. Now let's look at splice site motifs
+
+```{r}
+PullSeq <- function(df){
+  df %>%
+    pull(Seq) %>%
+    return()
+}
+
+set.seed(0)
+SpliceSites %>%
+  # filter for introns in protein coding genes
+  inner_join(
+    bed12 %>%
+      filter(gene_biotype=="protein_coding") %>%
+      distinct(transcript_id, .keep_all=T) %>%
+      dplyr::select(Genome, transcript=transcript_id)
+  ) %>%
+  distinct(Genome, Pos, AcceptorOrDonor, .keep_all=T) %>%
+  group_by(Genome, AcceptorOrDonor) %>%
+  sample_n(5000) %>%
+  mutate(Motif = paste(Genome, AcceptorOrDonor)) %>%
+  split(as.factor(.$Motif)) %>%
+  lapply(PullSeq) %>%
+  ggseqlogo()
+
+
+
+```
+
+
+I think ggseqlogo is thinking these are amino acid sequences because there are lots of sequences with 'N's.
+
+Let's count how many of them have N's, and then consider filtering them out...
+
+```{r}
+SpliceSites %>%
+  # filter for introns in protein coding genes
+  inner_join(
+    bed12 %>%
+      filter(gene_biotype=="protein_coding") %>%
+      distinct(transcript_id, .keep_all=T) %>%
+      dplyr::select(Genome, transcript=transcript_id)
+  ) %>%
+  distinct(Genome, Pos, AcceptorOrDonor, .keep_all=T) %>%
+  mutate(ContainsN = str_detect(Seq, 'N')) %>%
+  count(AcceptorOrDonor, Genome, ContainsN) %>%
+  ggplot(aes(x=Genome, y=n, fill=ContainsN)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  coord_cartesian(ylim=c(0, 0.01)) +
+  facet_wrap(~AcceptorOrDonor) +
+  labs(y='fraction splice sites containing "N"', caption='only protein cooding genes')
+```
+So, something like 0-0.05% of splice sites contain "N" in the sequence. pretty negligble. Surprisingly, lamprey doesn't have many of these. Let's just filter them out and remake the plot, so that ggseqlogo colors the letters better.
+
+```{r}
+set.seed(0)
+SpliceSites %>%
+  # filter for introns in protein coding genes
+  inner_join(
+    bed12 %>%
+      filter(gene_biotype=="protein_coding") %>%
+      distinct(transcript_id, .keep_all=T) %>%
+      dplyr::select(Genome, transcript=transcript_id)
+  ) %>%
+  distinct(Genome, Pos, AcceptorOrDonor, .keep_all=T) %>%
+  filter(!str_detect(Seq, "N")) %>%
+  group_by(Genome, AcceptorOrDonor) %>%
+  sample_n(5000) %>%
+  mutate(Motif = paste(Genome, AcceptorOrDonor)) %>%
+  split(as.factor(.$Motif)) %>%
+  lapply(PullSeq) %>%
+  ggseqlogo()
+
+```
+
+Maybe lamprey has a weaker necessity for polypyrimidine tract, but other than that, all these seqlogos look more or less same to me.
+
+Now let's better understand why, when browsing IGV, some of these transcripts have coding segments that start at the annotated transcript start. Obviously I think this is just poor annotation, but I want to know exactly how prevalent it is, and if these transcripts are tagged or have other definiing features I should know about. Note that in these bed12, the coding region is marked by the thick regions in the bed file.
+
+First let's look at the coding span (thickStop - thickStart)
+
+```{r}
+bed12 %>%
+  filter(transcript_biotype=="protein_coding") %>%
+  mutate(codingSpanLen = thickStop - thickStart) %>%
+  # mutate(codingStart)
+  ggplot(aes(x=codingSpanLen, color=Genome)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0, 10000)) +
+  labs(y='ecdf', x='CodingSpanLen (bp)')
+
+UTR.Lens.P <- bed12 %>%
+  filter(transcript_biotype=="protein_coding") %>%
+  mutate(ThreePrimeUTR = case_when(
+    strand == "+" ~ stop - thickStop,
+    strand == "-" ~ thickStart - start
+  )) %>%
+  mutate(FivePrimeUTR = case_when(
+    strand == "+" ~ thickStart - start,
+    strand == "-" ~stop - thickStop  
+  )) %>%
+  dplyr::select(Genome, ThreePrimeUTR, FivePrimeUTR, transcript_id) %>%
+  pivot_longer(names_to = "UTRType", values_to="Length", cols = c("ThreePrimeUTR", "FivePrimeUTR")) %>%
+  ggplot(aes(x=Length, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~UTRType) +
+  coord_cartesian(xlim=c(0, 5000)) +
+  labs(y='ecdf', x='UTR length (bp)', caption="length includes introns")
+
+UTR.Lens.P
+
+UTR.Lens.P +
+  scale_x_continuous(trans='log1p')
+
+
+```
+
+Ok so human and mouse have the best annotated UTRs, while lamprey is clearly the worst... Especially the 5' UTRs... I think often the start codon will be missing from the transcript. I think the best thing to do will actually just be to use start and stop codons when the UTRs are present, and other wise look for the longest ORF within the transcript, not requiring a STOP to be present if the 3'UTR is len==0, and not requiring a START to be present if the 5'UTR len==0. That way, we can identify the correct frame, whilst not cutting the ORF short of the transcript boundaries.
+
+Let's look at the tags in the gtf, to get a sense of if these might be tagged in some special way...
+
+```{r}
+bed12 %>%
+  count(Genome, tag)
+```
+
+Well the only tag I see in Lamprey is "Ensembl_canonical", so these are largely not tagged with any special identifier.
+
+
+...I have reannotated the gtf to comply with Yang's script (meaning start_codon and stop_codon features must be present, and also used the longest ORF when no CDS for a transcript is found or when only one UTR is present) and also to determine NMDFinderB classifications for each transcript. Let's explore these transcripts.
+
+```{r}
+bed12.reannotated <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.A.bed.gz") %>%
+  setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.A.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  bind_rows(.id="Genome")
+
+```
+
+
+First let's check how NMDFinder classification coressponds with transcript_type
+
+```{r}
+bed12.reannotated %>%
+  count(Genome, tag)
+
+bed12.reannotated %>%
+  filter(str_detect(Genome, "Human")) %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  add_count(transcript_type) %>%
+  mutate(transcript_type = str_glue("{transcript_type} (n={n})")) %>%
+  dplyr::select(-n) %>%
+  count(transcript_type, NMDFinderB) %>%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="annotated transcript_type", caption="'processed_transcript' contains no annotated ORF\nin which case NMD status based on longest ORF", title='human')
+
+bed12.reannotated %>%
+  filter(str_detect(Genome, "Mouse")) %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  add_count(transcript_type) %>%
+  filter(n>1000) %>%
+  mutate(transcript_type = str_glue("{transcript_type} (n={n})")) %>%
+  dplyr::select(-n) %>%
+  count(transcript_type, NMDFinderB) %>%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="annotated transcript_type", caption="'processed_transcript' contains no annotated ORF\nin which case NMD status based on longest ORF", title='mouse')
+
+bed12.reannotated %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  mutate(Genome = str_replace(Genome, "^(.+?)_ensembl.+$", "\\1")) %>%
+  add_count(Genome, transcript_type) %>%
+  filter(n>1000) %>%
+  mutate(transcript_type = str_glue("{transcript_type} (n={n})")) %>%
+  dplyr::select(-n) %>%
+  count(Genome, transcript_type, NMDFinderB) %>%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="annotated transcript_type") +
+  facet_grid(~Genome, scales="free_x", space='free', labeller = label_wrap_gen(10))
+```
+Ok one thing that surprises me is that the 'processed_transript' actually is not overwhelmingly 'Trigger NMD' the way that 'nonsense_mediated_decay' is... But from eQTL effect correlations, and from naRNA/steadyStateRNA, I think these transcripts (or rather, transcripts containing the splice junctions unique to these transcripts) are in fact generally unstable. Maybe this is actually an artifact of how I determined NMDFinder: when a transcript does not have an ORF, I identified the longest ORF without requiring an ATG or STOP codon, then use that "ORF" for the NMDFinderB decision tree. My reasoning for this was to reasonably identify the correct reading frame for transcripts in species in which the transcripts are poorly annotated such that the ATG (and 5'UTR) might be missing just because of incompleteness. I think this might often identify correct frame of the protein_coding ORF, even if the transcript doesn't actually contain an ATG to use that frame.
+
+From manual inspection, I think it might be the case that these 'incomplete' transcripts are often annotated from ATG to TAA, even if there is no UTR on either side... In any case, this should not affect how things are processed through Yang's script, since I am still correctly identifying the ORF in those species.
+
+Just to make sure of my understanding of the 'processed_transcript' transcript_type, let's make the same plots but just using the annotated CDS instead of manually searching for the ORFs...
+
+```{r}
+bed12.reannotated.usingOriginalAnnotations <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.B.bed.gz") %>%
+  setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.B.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  bind_rows(.id="Genome")
+
+bed12.reannotated.usingOriginalAnnotations %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  mutate(Genome = str_replace(Genome, "^(.+?)_ensembl.+$", "\\1")) %>%
+  add_count(Genome, transcript_type) %>%
+  filter(n>1000) %>%
+  mutate(transcript_type = str_glue("{transcript_type} (n={n})")) %>%
+  dplyr::select(-n) %>%
+  count(Genome, transcript_type, NMDFinderB) %>%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="annotated transcript_type") +
+  facet_grid(~Genome, scales="free_x", space='free', labeller = label_wrap_gen(10))
+```
+
+Ok so one thing this obviously confirms is that processed_transcript never contains an annotated CDS, yet I'm sure many of these (even by chance) would contain an ATG and by extension some kind of ORF, albeit probably a short one often. I wonder if there is a hard cutoff for what length ORF the annotators consider a valid CDS worth annotating. Let's check the length distribution of annotated CDSs.
+
+```{r}
+P <- bed12.reannotated.usingOriginalAnnotations %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  add_count(Genome, transcript_type) %>%
+  filter(n>1000) %>%
+  ggplot(aes(x=CDSLen, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~transcript_type) +
+  coord_cartesian(xlim=c(0, 1000)) +
+  labs(x="CDS length (bp)", y="ecdf")
+P
+
+# zoomed in more
+P +
+  coord_cartesian(xlim=c(0,150), ylim=c(0,.25))
+  
+```
+As far as I can tell, there's not an obvious hard cutoff. perhaps they also consider conservation or something, cause some legitmate functional ORFs might be short. But I do notice that there seems to be a sholder at about ~120bp (40 codons) for nonsense_mediated_decay transcripts. So maybe a reasonable thing to do is to attempt translating the processed_transcripts and see that there are ORFs, but they tend to be shorter than that, otherwise the annotators would more likely call them nonsense_mediated_decay
+
+So let's replot using that strategy (translate from first ATG, but require ORF to be > 30 codons), and then see how NMDFinderB classifies these 'processed_transcript's.
+
+```{r}
+bed12.reannotated.ApproachC <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.C.bed.gz") %>%
+  setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.C.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  bind_rows(.id="Genome")
+
+
+bed12.reannotated.ApproachC %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  mutate(Genome = str_replace(Genome, "^(.+?)_ensembl.+$", "\\1")) %>%
+  add_count(Genome, transcript_type) %>%
+  filter(n>1000) %>%
+  mutate(transcript_type = str_glue("{transcript_type} (n={n})")) %>%
+  dplyr::select(-n) %>%
+  count(Genome, transcript_type, NMDFinderB) %>%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="annotated transcript_type") +
+  facet_grid(~Genome, scales="free_x", space='free', labeller = label_wrap_gen(10))
+
+bed12.reannotated.ApproachC %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  add_count(Genome, transcript_type) %>%
+  filter(n>1000) %>%
+  ggplot(aes(x=CDSLen, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~transcript_type) +
+  coord_cartesian(xlim=c(0, 300)) +
+  labs(x="CDS length (bp)", y="ecdf")
+```
+
+Same plots but using approach of translating from first start_codon if no annotated CDS, with no minimum length requirement.
+
+```{r}
+bed12.reannotated.ApproachD <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.D.bed.gz") %>%
+  setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.D.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  bind_rows(.id="Genome")
+
+
+bed12.reannotated.ApproachD %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  mutate(Genome = str_replace(Genome, "^(.+?)_ensembl.+$", "\\1")) %>%
+  add_count(Genome, transcript_type) %>%
+  filter(n>1000) %>%
+  mutate(transcript_type = str_glue("{transcript_type} (n={n})")) %>%
+  dplyr::select(-n) %>%
+  count(Genome, transcript_type, NMDFinderB) %>%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="annotated transcript_type") +
+  facet_grid(~Genome, scales="free_x", space='free', labeller = label_wrap_gen(10))
+
+bed12.reannotated.ApproachD %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  add_count(Genome, transcript_type) %>%
+  filter(n>1000) %>%
+  ggplot(aes(x=CDSLen, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~transcript_type) +
+  coord_cartesian(xlim=c(0, 300)) +
+  labs(x="CDS length (bp)", y="ecdf")
+```
+
+Ok, right. so i think i get the point. processed_transcript just means short ORF.
+
+I also have another approach to identifying ORF, which is to ignore annotations completely, and just translate from first ATG with an ORF > 42... Let's check what that does...
+
+```{r}
+bed12.reannotated.ApproachE <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.E.bed.gz") %>%
+  setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.E.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  bind_rows(.id="Genome")
+
+
+bed12.reannotated.ApproachE %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  mutate(Genome = str_replace(Genome, "^(.+?)_ensembl.+$", "\\1")) %>%
+  add_count(Genome, transcript_type) %>%
+  filter(n>1000) %>%
+  mutate(transcript_type = str_glue("{transcript_type} (n={n})")) %>%
+  dplyr::select(-n) %>%
+  count(Genome, transcript_type, NMDFinderB) %>%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="annotated transcript_type") +
+  facet_grid(~Genome, scales="free_x", space='free', labeller = label_wrap_gen(10))
+
+bed12.reannotated.ApproachE %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  add_count(Genome, transcript_type) %>%
+  filter(n>1000) %>%
+  ggplot(aes(x=CDSLen, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~transcript_type) +
+  coord_cartesian(xlim=c(0, 300)) +
+  labs(x="CDS length (bp)", y="ecdf")
+```
+Ok, there's enough times that this approach doesn't find any CDS or finds the wrong CDS for annotated transcripts, that I think when there is any annotated start codon, I should use that.
+
+Anyway, let's move on to thinking about how to take these gtf files (now properly formatted with start_codon and stop_codon lines for Yang's script) and making sense of the alternative coding regions listed in Mazin, in terms of productive/unproductive splicing. 
+
+## Approach for going from alternative coding regions (Mazin appraoch for communicating AS events), to alternative splice junctions
+- could start with all protein_coding tagged transcripts that span the cassette exon, then create juncs with and without. (Won't handle mutually exclusive exons properly, but i think that is ok)
+- similar for alt donors, but start with protein_coding transcripts that contain one of the splice donors
+- same for alt acceptors
+
+- probably will want some additional filters for the 'weird' hard to interpret cases... Like when the Mazin cassette exon only partially overlaps an annotated exon. Or when there are consecutive Mazin AS exons.
+
+Here is a pseudocode approach to accomplishing this:
+
+0. bedtools intersect to remove Mazin AS segments only partially overlapping annotated exons.
+1. bedtools intersect protein coding transcripts with cassette exons, then read into python and with bedparse...
+2. get junctions uniquely made from including/excluding the exon. 
+
+

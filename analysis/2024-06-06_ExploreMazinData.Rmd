@@ -1,0 +1,882 @@
+---
+title: "2024-06-06_ExploreMazinData"
+output: html_document
+date: '2024-06-06'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+[Mazin et al](https://www.nature.com/articles/s41588-021-00851-w) analyzed RNA-seq from human, macaque, mouse, rat, opossum, and chicken and uploaded splicing data to their web server app ([https://apps.kaessmannlab.org/alternative-splicing/](https://apps.kaessmannlab.org/alternative-splicing/)) for easy download... I downloaded the data, and here I want to explore a bit, just to get a feel for the data. Eventually, Chao and maybe Dylan might be looking at this data for identification and characterization of conserved unproductive splice events. I have also downloaded some of the stuff packaged in the supplementary info zip file. Also, RPKM data is from a seperate web App from kaessman lab ([https://apps.kaessmannlab.org/evodevoapp/](https://apps.kaessmannlab.org/evodevoapp/))
+
+
+First, let's just read in the human data files, and look at a little bit of them to understand their structure... Then I'll do exploratory analyses with other species later.
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(knitr)
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+gtf <- read_tsv("../code/kaessman_AS_dat/FromWebApp/human/gtf.gz", comment="#", n_max=1000, col_names = c("seqname", "source", "feature", "start", "end", "score", "strand", "frame", "attribute"))
+gtf %>% head(20) %>% kable()
+
+
+devAS <- read_csv("../code/kaessman_AS_dat/FromWebApp/human/devAS.gz", n_max=1000) %>%
+  rename("segment.name"="...1")
+devAS %>% head(20) %>% kable()
+
+sajr <- read_tsv("../code/kaessman_AS_dat/FromWebApp/human/gtf.gz", comment="#", n_max=1000, col_names = c("seqname", "source", "feature", "start", "end", "score", "strand", "frame", "attribute"))
+sajr %>% head(20) %>% kable()
+
+PSI <- read_csv("../code/kaessman_AS_dat/FromWebApp/human/PSI.gz", n_max=1000) %>%
+  rename("segment.name"="...1")
+PSI %>% head(20) %>% kable() %>%
+  kableExtra::kable_styling("striped", full_width = F) %>% 
+  kableExtra::scroll_box(width = "500px", height = "200px")
+
+OrthologousSegmentList <- read_csv("../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_8.csv")
+OrthologousSegmentList %>% head(20) %>% kable()
+
+AllSegmentEffects <- read_csv("../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_9.csv") %>%
+  rename("segment.name"="...1")
+AllSegmentEffects %>% head(20) %>% kable() %>%
+  kableExtra::kable_styling("striped", full_width = F) %>% 
+  kableExtra::scroll_box(width = "500px", height = "200px")
+
+RPKM <- read_delim("../code/kaessman_AS_dat/FromWebApp/human/RPKM.gz", n_max=1000, delim=' ')
+RPKM %>% head(20) %>% kable() %>%
+  kableExtra::kable_styling("striped", full_width = F) %>% 
+  kableExtra::scroll_box(width = "500px", height = "200px")
+```
+
+The devAS list is a subset of the AllSegmentList, but what confuses me is that not all of the have 'd' (down), 'u' (up), 'ud' (up-down), or 'du' (down-up) in at least one column...
+
+Note the following genome versions they use:
+
+```{r}
+readxl::read_excel("../code/kaessman_AS_dat/Supplementary_Data/41588_2021_851_MOESM5_ESM.xlsx", sheet=3, skip=1) %>%
+  kable()
+```
+
+Hmm, so between PSI table, RPKM table, and OrthologousSegmentList we can caculate deltaPSI between species for a bunch of unproductive events, and then also ask about RPKM differences... That's eventually what Chao might be interested in. All we need now is a way to determine unproductive or productive from these segments.
+
+Let's see what the "AS.type" distribution is for these orthologous segments...
+
+```{r}
+AllSegmentEffects %>%
+  dplyr::select(segment.name, ens_id, as.type) %>%
+  inner_join(
+    OrthologousSegmentList %>%
+      dplyr::select(human) %>%
+      separate(human, into=c("segment.name", "chrom", "strand", "start", "stop"), sep=":")
+  ) %>%
+  count(as.type) %>%
+  ggplot(aes(x=as.type, y=n)) +
+  geom_col()
+```
+
+vast majority is cassette exons... those will be easy enough to determine unproductiveness...
+
+
+I note that the included gtf (made de novo from author's running string tie does not annotate coding segments, so can't just use that gtf as input for yang's script...
+
+Maybe we ought to download the corresponding ensembl gtf, to check out quality of annotations, and what is or isn't annotated to think about how we could most easily get unproductive/productive classifications in a similar way to what he has already done. As a quick proxy to see how many of these might be productive/unproductive switches, let's see how many of those cassette exons are symmetric
+
+```{r}
+AllSegmentEffects %>%
+  dplyr::select(segment.name, ens_id, as.type) %>%
+  inner_join(
+    OrthologousSegmentList %>%
+      dplyr::select(human) %>%
+      separate(human, into=c("segment.name", "chrom", "strand", "start", "stop"), sep=":", convert=T)
+  ) %>%
+  filter(as.type == "CE") %>%
+  mutate(len = stop - start) %>%
+  ggplot(aes(x=len)) +
+  geom_bar() +
+  coord_cartesian(xlim=c(0,300))
+
+AllSegmentEffects %>%
+  dplyr::select(segment.name, ens_id, as.type) %>%
+  inner_join(
+    OrthologousSegmentList %>%
+      dplyr::select(human) %>%
+      separate(human, into=c("segment.name", "chrom", "strand", "start", "stop"), sep=":", convert=T)
+  ) %>%
+  filter(as.type == "CE") %>%
+  mutate(len = stop - start) %>%
+  mutate(LenMod3 = len %% 3) %>%
+  ggplot(aes(x=LenMod3)) +
+  geom_bar()
+
+AllSegmentEffects %>%
+  dplyr::select(segment.name, ens_id, as.type) %>%
+  inner_join(
+    OrthologousSegmentList %>%
+      dplyr::select(human) %>%
+      separate(human, into=c("segment.name", "chrom", "strand", "start", "stop"), sep=":", convert=T)
+  ) %>%
+  filter(as.type == "CE") %>%
+  mutate(len = stop - start) %>%
+  mutate(LenMod3 = len %% 3) %>%
+  count(LenMod3) %>%
+  mutate(LenMod3 = factor(LenMod3)) %>%
+  ggplot(aes(x=1, y=n, fill=LenMod3)) +
+  geom_col(position='fill') +
+  labs(y="Fraction", x=NULL, fill="Length/3 remainder")
+```
+
+I can see the periodicity and enrichment but I think there is an off-by-one error to keep in mind, resulting in excess of Length%%3==2, rather than Length%%3==0...
+
+
+As a crude analysis, we could focus on these symmetric vs assyemtric cassette exons.
+
+Let's make a little more sense of the cassette exons and the potential off-by-one error by writing out these segments to a bed file to browse in IGV, in the context of annotated gene structure... 
+
+```{r}
+AllSegmentEffects %>%
+  dplyr::select(segment.name, ens_id, as.type) %>%
+  inner_join(
+    OrthologousSegmentList %>%
+      dplyr::select(human) %>%
+      separate(human, into=c("segment.name", "chrom", "strand", "start", "stop"), sep=":", convert=T)
+  ) %>%
+  mutate(score = ".", thickStart = start, thickStop=stop) %>%
+  # distinct(as.type)
+  mutate(color = recode(as.type, "CE"="#1b9e77", "RI"="#d95f02", "AA"="#7570b3", "AD"="#e7298a")) %>%
+  dplyr::select(chrom, start, stop, segment.name, score, strand, thickStart, thickStop, color) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../code/kaessman_AS_dat/human.hg19.orth_segs.bed", col_names = F)
+```
+
+I can see the off-by-one error. That will be easy to fix later. A lot of those cassette exons are indeed cassette exons in RefSeq.
+
+
+Let's better understand the devAS subset
+
+```{r}
+devAS %>%
+  dplyr::select(segment.name:pattern.testis) %>%
+  pivot_longer(names_to = "tissue" , values_to="pattern", pattern.brain:pattern.testis) %>%
+  mutate(Is.n = pattern=="n") %>%
+  group_by(segment.name) %>%
+  summarise(sum.n= sum(Is.n)) %>%
+  ungroup() %>%
+  ggplot(aes(x=sum.n)) +
+  stat_ecdf() +
+  labs(x="number tissues labelled as 'n' for pattern", y='ecdf, across devAS segments')
+
+
+AllSegmentEffects %>%
+  dplyr::select(segment.name:pattern.testis) %>%
+  pivot_longer(names_to = "tissue" , values_to="pattern", pattern.brain:pattern.testis) %>%
+  mutate(Is.n = pattern=="n") %>%
+  group_by(segment.name) %>%
+  summarise(sum.n= sum(Is.n)) %>%
+  ungroup() %>%
+  ggplot(aes(x=sum.n)) +
+  stat_ecdf() +
+  labs(x="number tissues labelled as 'n' for pattern", y='ecdf, across all segments')
+
+```
+Ok, so I'm still confused what 'devAS' really means... It is clearly not that there is a non-'n' in one of the tissue pattern columns since ~25% of devAS segments (similar to all segments) have 'n' for all 7 tissues...
+
+From the methods:
+
+> Splines were used to predict PSI for ages of the different samples, and
+dPSI was calculated as the difference between maximal and minimal predicted values (Supplementary Fig. 9a). Segments with adjusted P values < 0.05 and dPSI > 0.2 were considered to be devAS (Supplementary Fig. 9b). Next, PSI was interpolated into 1,000 evenly distributed age points and the difference between PSI at a given point and PSI at the previous point was calculated (PSI change). To define the direction of devAS change, four additional statistics were calculated (Supplementary Figs. 9c,d): (1) ‘up’—the sum of positive PSI changes;
+(2) ‘down’—the absolute value of the sum of negative PSI changes; (3) ‘up_ timing’—the sum of positive PSI changes multiplied by age, then divided by the
+up value; and (4) ‘down_timing’—the absolute value of the sum of negative PSI changes multiplied by age, then divided by the down value. All exons with a ratio of up/(up + down) < 0.3 are classified as having a down pattern and exons with a ratio > 0.7 as up. To classify the remaining exons (that is, those with a ratio from 0.3 to 0.7), we compared up_timing and down_timing; exons with up_timing < down_ timing were classified as up–down and those with up_timing > down_timing as down–up (Supplementary Fig. 9e).
+
+So perhaps these are cases where there is a significant change from the spline fitting, but it doesn't fit into any of their four classes. Let's double check that by looking at the adjusted P values, which as I understand it, should be <0.05 in at least one tissue for all devAS segments.
+
+```{r}
+devAS %>%
+  dplyr::select(segment.name:as.type, starts_with("bh.ad")) %>%
+  pivot_longer(names_to = "tissue" , values_to="adjust.P", starts_with("bh.ad")) %>%
+  mutate(Is.Sig = adjust.P<0.05) %>%
+  group_by(segment.name) %>%
+  summarise(sum.n= sum(Is.Sig)) %>%
+  ungroup() %>%
+  ggplot(aes(x=sum.n)) +
+  stat_ecdf() +
+  labs(x="number tissues with P.adj<0.05", y='ecdf, across devAS segments')
+
+
+AllSegmentEffects %>%
+  dplyr::select(segment.name:as.type, starts_with("bh.ad")) %>%
+  pivot_longer(names_to = "tissue" , values_to="adjust.P", starts_with("bh.ad")) %>%
+  mutate(Is.Sig = adjust.P<0.05) %>%
+  group_by(segment.name) %>%
+  summarise(sum.n= sum(Is.Sig)) %>%
+  ungroup() %>%
+  ggplot(aes(x=sum.n)) +
+  stat_ecdf() +
+  labs(x="number tissues with P.adj<0.05", y='ecdf, across all segments')
+```
+
+Hmmm. I'm still confused. Maybe I have to also incorporate the dPSI>0.2 threshold
+
+```{r}
+
+devAS %>%
+  pivot_longer(cols=-c(1:8), names_to = c(".value", "tissue"), values_to = c("value"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+  mutate(Is.Sig = bh.adj.pv<=0.05 & dpsi >= 0.2) %>%
+  group_by(segment.name) %>%
+  summarise(sum.n= sum(Is.Sig)) %>%
+  ungroup() %>%
+  ggplot(aes(x=sum.n)) +
+  stat_ecdf() +
+  labs(x="number tissues with P.adj<0.05 & dpsi>0.2", y='ecdf, across devAS segments')
+
+AllSegmentEffects %>% 
+  pivot_longer(cols=-c(1:8), names_to = c(".value", "tissue"), values_to = c("value"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+  mutate(Is.Sig = bh.adj.pv<=0.05 & dpsi >= 0.2) %>%
+  group_by(segment.name) %>%
+  summarise(sum.n= sum(Is.Sig)) %>%
+  ungroup() %>%
+  ggplot(aes(x=sum.n)) +
+  stat_ecdf() +
+  labs(x="number tissues with P.adj<0.05 & dpsi>0.2", y='ecdf, across all segments')
+```
+
+So I'm still confused what the devAS dataframe is... But at least I that the conditions (P.adj<0.05 & dpsi>0.2) correspond to non 'n' in the pattern column... See below...
+
+```{r}
+devAS %>%
+  pivot_longer(cols=-c(1:8), names_to = c(".value", "tissue"), values_to = c("value"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+  mutate(Is.Sig = bh.adj.pv<=0.05 & dpsi >= 0.2) %>%
+  count(pattern, Is.Sig)
+
+
+```
+...maybe I downloaded the wrong file, or the devAS file is actually the all segments file... let's check...
+
+```{r}
+devAS.full <- read_csv("../code/kaessman_AS_dat/FromWebApp/human/devAS.gz", n_max=Inf) %>%
+  rename("segment.name"="...1")
+
+AllSegmentEffects %>%
+  separate(seg.id, into=c("species", "species.identifier", "segment_num"), sep="\\.") %>%
+  count(species)
+
+dim(devAS.full)
+```
+
+Ohh ok now I see. The "devAS" table is just the "AllSegmentEffects" table but for each species. To isolate the "devAS" segments referred to in the text, you will have to do the filtering for (P.adjust < 0.5 & dpsi > 0.2), or equivalently, non 'n' in the pattern column, as I've done before...
+
+
+Now let's isolate all the orthologous segments that are devAS in all, or in at least one species first...
+
+```{r}
+OrthologusSegments.Effects <- AllSegmentEffects %>%
+  inner_join(
+    OrthologousSegmentList %>%
+      mutate(human.seg.id = human) %>%
+      pivot_longer(names_to='species', values_to='seg.chrom.strand.start.stop', cols=-human.seg.id) %>%
+      separate(seg.chrom.strand.start.stop, into=c("seg.id", "strand", "start", "stop"), sep=":", convert=T) %>%
+      dplyr::select(human.seg.id, seg.id)
+  )
+
+# Number orthologous segments that are tested for devAS
+OrthologusSegments.Effects %>%
+  filter(as.type == "CE") %>%
+  pull(human.seg.id) %>%
+  unique() %>% length()
+
+OrthologousEffects.WithAtLeastOneDevAS <- OrthologusSegments.Effects %>%
+  filter(as.type == "CE") %>%
+  pivot_longer(cols=-c(1:8, "human.seg.id"), names_to = c(".value", "tissue"), values_to = c("value"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+  group_by(human.seg.id) %>%
+  filter(any(!pattern %in% c("-", "n"))) %>%
+  ungroup()
+
+# Number orthologous segments that are devAS in at least one species/tissue pair
+OrthologousEffects.WithAtLeastOneDevAS$human.seg.id %>% unique() %>% length()
+
+
+OrthologousEffects.WithAtLeastOneDevAS %>%
+  count(pattern)
+
+# Number orthologous segments species that a tissue:segment pair is significant in.
+OrthologousEffects.WithAtLeastOneDevAS %>%
+  mutate(IsDevAS = !pattern %in% c("-", "n")) %>%
+  filter(IsDevAS) %>%
+  count(tissue, human.seg.id) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,7)) +
+  labs(y='ecdf', x='Number species (out of 7) that segment:tissue shows sig devAS')
+```
+
+Let's check for concordance of directions for these cases of devAS that are identified in more than one species... start with ones that are significant in humans... I know this is perhaps unnecessarily a human centric way to filter things, but the whole experiment design (choice of animals to probe) is human centric in some sense.
+
+```{r}
+Conserved.DevAS.Segments <- OrthologousEffects.WithAtLeastOneDevAS %>%
+  mutate(IsDevAS = !pattern %in% c("-", "n")) %>%
+  filter(IsDevAS) %>%
+  add_count(tissue, human.seg.id) %>%
+  filter(n>1) %>%
+  mutate(species = str_extract(seg.id, "(^.+?)\\."))
+
+
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs <- inner_join(
+  Conserved.DevAS.Segments %>%
+    filter(species == "hum.") %>%
+    dplyr::select(seg.id, human.seg.id, tissue, pattern, dpsi, species),
+  Conserved.DevAS.Segments %>%
+    filter(!species == "hum.") %>%
+    dplyr::select(seg.id, human.seg.id, tissue, pattern, dpsi, species),
+  by=c("tissue", "human.seg.id")
+)
+
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  count(pattern.x, pattern.y) %>%
+  ggplot(aes(x=pattern.x, y=n, fill=pattern.y)) +
+  geom_col(position='fill') +
+  labs(x="pattern in human", y='fraction of patterns of significiant\northologous devAS segment', fill='pattern in species B')
+
+# Number of 'conserved' othologous segments... didn't filter for concordance yet
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs$human.seg.id %>% unique() %>% length()
+
+
+```
+
+Ok, so there is clearly some noise or nonsensible results (where 'u' devAS effect in species A sometimes correspond with a sigificant devAS effect in the corresponding tissue in other species but in the opposite direction). But there is also clearly an enrichment for sensible results...
+
+We could consider moving on with all the sensible results (the u/u and d/d pairs that a presumably true). How many conserved events are there then?
+
+```{r}
+# Also filtered for concordance
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(pattern.x == pattern.y) %>%
+  pull(human.seg.id) %>%
+  unique() %>% length()
+
+# let's see how many of these conserved devAS segment:tissue pairs exist for each species (where species A is always human)
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(pattern.x %in% c('u', 'd')) %>%
+  mutate(IsPatternConcordant = pattern.x == pattern.y) %>%
+  count(species.y, IsPatternConcordant, tissue) %>%
+  mutate(species.y = factor(species.y, levels=c("mac.", "mou.", "rat.", "rab.", "opo.", "chi."))) %>%
+  ggplot(aes(x=tissue, y=n, fill=tissue, alpha=IsPatternConcordant)) +
+  geom_col() +
+  scale_alpha_discrete(range=c(0.5, 1)) +
+  facet_wrap(~species.y, scales="free") +
+  Rotate_x_labels +
+  labs(y="Number devAS conserved with human")
+  
+```
+Hmm, somewhat surprisingly, the number doesn't obviously correspond to evolutionary distance...
+
+let's make the plot but counting unique events, regardless of tissue...
+
+```{r}
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(pattern.x %in% c('u', 'd')) %>%
+  mutate(IsPatternConcordant = pattern.x == pattern.y) %>%
+  distinct(seg.id.x, seg.id.y, .keep_all=T) %>%
+  count(species.y, IsPatternConcordant) %>%
+  mutate(species.y = factor(species.y, levels=c("mac.", "mou.", "rat.", "rab.", "opo.", "chi."))) %>%
+  ggplot(aes(x=species.y, y=n, alpha=IsPatternConcordant)) +
+  geom_col() +
+  scale_alpha_discrete(range=c(0.5, 1)) +
+  Rotate_x_labels +
+  labs(y="Number devAS conserved with human", x="species")
+```
+Ok, that makes more sense... It might be that there are random differences in power between different tissues, such that you get the more sensible answer only when you aggregate across all tissues. Note that rabbit, mouse, and rat are all equally distant from humans.
+
+Let's see how many unique events we left with looking at those most conserved ones that go back all the way to chicken (and are concordant)
+
+```{r}
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(pattern.x %in% c('u', 'd')) %>%
+  mutate(IsPatternConcordant = pattern.x == pattern.y) %>%
+  filter(species.y == 'chi.') %>%
+  distinct(human.seg.id)
+
+```
+
+Ok, that leaves only 583... How many of those are symmetric?
+
+```{r}
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(pattern.x %in% c('u', 'd')) %>%
+  mutate(IsPatternConcordant = pattern.x == pattern.y) %>%
+  filter(species.y == 'chi.') %>%
+  distinct(human.seg.id, .keep_all=T) %>%
+  separate(human.seg.id, into=c("seq.id.hum", "chrom", "strand", "start", "stop"), convert=T, sep=":") %>%
+  mutate(start = start - 1) %>%
+  mutate(len = stop - start) %>%
+  mutate(LenMod3 = len %% 3) %>%
+  count(LenMod3) %>%
+  mutate(LenMod3 = factor(LenMod3)) %>%
+  ggplot(aes(x="", y=n, fill=LenMod3)) +
+  geom_col(position='fill') +
+  labs(y="Fraction", x=NULL, fill="Length/3 remainder", caption="..Among 583 human/chicken conserved devAS exons")
+```
+
+
+Let's repeat that plot for all human:species pairs...
+
+```{r}
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(pattern.x %in% c('u', 'd')) %>%
+  mutate(IsPatternConcordant = pattern.x == pattern.y) %>%
+  sample_frac(1) %>%
+  distinct(human.seg.id, species.y, .keep_all=T) %>%
+  separate(human.seg.id, into=c("seq.id.hum", "chrom", "strand", "start", "stop"), convert=T, sep=":") %>%
+  mutate(start = start - 1) %>%
+  mutate(len = stop - start) %>%
+  mutate(LenMod3 = len %% 3) %>%
+  count(LenMod3, species.y, IsPatternConcordant) %>%
+  mutate(LenMod3 = factor(LenMod3)) %>%
+  mutate(species.y = factor(species.y, levels=c("mac.", "mou.", "rat.", "rab.", "opo.", "chi."))) %>%
+  mutate(IsPatternConcordant = if_else(IsPatternConcordant, "Concordant", "Discordant")) %>%
+  ggplot(aes(x=species.y, y=n, fill=LenMod3)) +
+  geom_col(position='stack') +
+  facet_wrap(~IsPatternConcordant) +
+  labs(y="Number human:speciesX\nconserved devAS exons", x=NULL, fill="Length/3 remainder", caption="concordance assessed from one random tissue for each exon") +
+  Rotate_x_labels
+
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(pattern.x %in% c('u', 'd')) %>%
+  mutate(IsPatternConcordant = pattern.x == pattern.y) %>%
+  sample_frac(1) %>%
+  distinct(human.seg.id, species.y, .keep_all=T) %>%
+  separate(human.seg.id, into=c("seq.id.hum", "chrom", "strand", "start", "stop"), convert=T, sep=":") %>%
+  mutate(start = start - 1) %>%
+  mutate(len = stop - start) %>%
+  mutate(LenMod3 = len %% 3) %>%
+  count(LenMod3, species.y, IsPatternConcordant) %>%
+  mutate(LenMod3 = factor(LenMod3)) %>%
+  mutate(species.y = factor(species.y, levels=c("mac.", "mou.", "rat.", "rab.", "opo.", "chi."))) %>%
+  mutate(IsPatternConcordant = if_else(IsPatternConcordant, "Concordant", "Discordant")) %>%
+  ggplot(aes(x=species.y, y=n, fill=LenMod3)) +
+  geom_col(position='fill') +
+  facet_wrap(~IsPatternConcordant) +
+  labs(y="Fraction human:speciesX\nconserved devAS exons", x=NULL, fill="Length/3 remainder", caption="concordance assessed from one random tissue for each exon") +
+  Rotate_x_labels
+```
+Ok, I think it is sort of interesting that the total number of conserved devAS exons decreases with evolutionary distance, but the fraction of which that are symmetric doesn't seem to increase past mouse/rat/rabbit. So something like 1/3 of the conserved developmentally regulated AS events are likely to be unproductive switches. Let's use this list of exons to look for the expected AS-NMD expression changes...
+
+Now, it might be useful to get into the PSI and RPKM measurements for these genes across samples... Maybe start by making a PCA based on these splicing events similar to Mazin et al.
+
+First, let's write out my useful table of conserved AS events:
+
+```{r}
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  write_tsv("../output/Orthologous.DevAS.TissueSpeciesPairs.tsv.gz")
+```
+
+
+```{r, eval=F}
+
+PSI.allSpecies <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/*/PSI.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/PSI.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="species") %>%
+  rename("segment.name"="...1")
+
+#That didn't work easily... files too big and taking up too much memory
+```
+
+Actually, now that I see these PSI files are so big, it's annoying to read them all into R... Maybe I should figure a better way... Let's just read in all the orthologous exons species by species and in the segment effects file, and write to new file. I can more easily subset for the orthologous exons of interest later...
+
+
+```{r}
+# ExonsToKeep <- SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+#   filter(pattern.x %in% c('u', 'd')) %>%
+#   group_by(human.seg.id) %>%
+#   filter(any(species.y == 'chi.')) %>%
+#   ungroup()
+
+Orthologous.Segments.WithTestedEffects <- OrthologusSegments.Effects %>%
+  dplyr::select(segment.name, ens_id, human.seg.id)
+
+
+# test code to make function to repeat for all species
+human.PSI <- fread("../code/kaessman_AS_dat/FromWebApp/human/PSI.gz") %>%
+  inner_join(Orthologous.Segments.WithTestedEffects, by=c("V1"="segment.name")) %>%
+  dplyr::select(human.seg.id, everything(), -ens_id, -V1)
+
+
+
+GetOtherSpeciesPSI <- function(fn){
+  fread(fn) %>%
+    inner_join(Orthologous.Segments.WithTestedEffects, by=c("V1"="segment.name")) %>%
+    dplyr::select(human.seg.id, everything(), -ens_id, -V1) %>%
+    return()
+  }
+
+
+All.ortho.PSI <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/*/PSI.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/PSI.gz", "\\1")) %>%
+  lapply(GetOtherSpeciesPSI) %>%
+  purrr::reduce(inner_join, by = "human.seg.id") %>%
+  as_tibble()
+
+All.ortho.PSI %>%
+  write_tsv("../output/Mazin.All.ortho.exons.PSI.tsv.gz")
+```
+
+repeat multidimensional scaling...
+
+```{r}
+# filter for cassette exons like in Mazin et al
+OrthoCassetteExons <- OrthologusSegments.Effects %>%
+  distinct(human.seg.id, as.type) %>%
+  filter(as.type == 'CE')
+
+MDS.results <- All.ortho.PSI %>%
+  filter(human.seg.id %in% OrthoCassetteExons$human.seg.id) %>%
+  column_to_rownames("human.seg.id") %>%
+  scale() %>% t() %>% dist() %>%
+  cmdscale(eig=TRUE, k=2)
+MDS.results$points %>%
+  as.data.frame() %>%
+  rownames_to_column("sample") %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  ggplot(aes(x=V1, y=V2)) +
+  geom_point(aes(color=Tissue, shape=Species, size=StageOrdinal)) +
+  labs(x="Dim1", y="Dim2", title="MDS of orthologous AS segments", caption="1531 samples, 1891 AS segments")
+
+
+MDS.results <- All.ortho.PSI %>%
+  filter(human.seg.id %in% OrthoCassetteExons$human.seg.id) %>%
+  column_to_rownames("human.seg.id") %>%
+  scale() %>% t() %>% dist() %>%
+  cmdscale(eig=TRUE, k=2)
+MDS.results$points %>%
+  as.data.frame() %>%
+  rownames_to_column("sample") %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  ggplot(aes(x=V1, y=V2)) +
+  geom_point(aes(color=Tissue, shape=Species, size=StageOrdinal)) +
+  labs(x="Dim1", y="Dim2", title="MDS of orthologous AS segments", caption="1531 samples, 1149 cassette exons")
+
+```
+
+Great, that looks similar enough to the Mazin et al figure. Let's proceed. Next I want to look more at the subset of the AS segments that are conserved AS and devAS (conserved through chicken)... 
+
+```{r}
+OrthoCassetteExons.ConservedDevAS.vec <- SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(species.y == 'chi.' & pattern.x == pattern.y) %>%
+  distinct(human.seg.id) %>% pull(human.seg.id)
+
+MDS.results <- All.ortho.PSI %>%
+  filter(human.seg.id %in% OrthoCassetteExons.ConservedDevAS.vec) %>%
+  column_to_rownames("human.seg.id") %>%
+  scale() %>% t() %>% dist() %>%
+  cmdscale(eig=TRUE, k=2)
+MDS.results$points %>%
+  as.data.frame() %>%
+  rownames_to_column("sample") %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  ggplot(aes(x=V1, y=V2)) +
+  geom_point(aes(color=Tissue, shape=Species, size=StageOrdinal)) +
+  labs(x="Dim1", y="Dim2", title="MDS of orthologous AS segments", caption="1531 samples, 417 human:chicken conerved devAS events")
+```
+
+Let's also plot a random sample of these devAS events as PSI vs time... I think I first ought to look more carefully at the stages to sort of try to coordinate developmental 'time'...
+
+
+```{r}
+All.ortho.PSI %>%
+  dplyr::select(-1) %>%
+  colnames() %>%
+  as.data.frame() %>%
+  separate(".", into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  arrange(Tissue, Species, StageOrdinal) %>%
+  kable() %>%
+  kableExtra::kable_styling("striped", full_width = F) %>% 
+  kableExtra::scroll_box(width = "500px", height = "1000px")
+```
+
+I am now realizing the last number in the sample name isn't exactly just an ordinal 'psueodotime' proxy... I think I'll have to manually make sense of these stage names and create my own ordinal 'psueodotime' column.
+
+```{r}
+ManualOrdinalStages <- All.ortho.PSI %>%
+  dplyr::select(-1) %>%
+  colnames() %>%
+  as.data.frame() %>%
+  separate(".", into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  distinct(Species, StageName) %>%
+  mutate(Species.StageName = paste(Species, StageName)) %>%
+  mutate(E_or_P = case_when(
+    str_detect(StageName, '^e') ~ 'E',
+    str_detect(StageName, '^P') ~ 'P',
+    str_detect(StageName, 'wpc$') ~ 'E',
+    TRUE ~ 'P'
+  )) %>%
+  mutate(StageExtractedNumber = str_replace(StageName, "^[^0-9]*?([0-9]*+)[^0-9]*$", "\\1")) %>%
+  mutate(StageExtractedNumber = case_when(
+    StageName == "newborn" ~ 0,
+    StageName == "infant" ~ 365,
+    StageName == "toddler" ~ 700,
+    StageName == "school" ~ 3650,
+    StageName == "youngTeenager" ~ 5000,
+    StageName == "teenager" ~ 5500,
+    StageName == "oldTeenager" ~ 6000,
+    StageName == "youngAdult" ~ 10000,
+    StageName == "youngMidAge" ~ 12500,
+    StageName == "olderMidAge" ~ 17000,
+    StageName %in% c("Senior", "senior") ~ 20000,
+    TRUE ~ as.numeric(StageExtractedNumber)
+  )) %>%
+  arrange(Species, E_or_P, StageExtractedNumber) %>%
+  group_by(Species) %>%
+  mutate(OrdinalStage.Manual = row_number()) %>%
+  ungroup() %>%
+  dplyr::select(Species, StageName, OrdinalStage.Manual) %>%
+  mutate(RoughlyCalibratedStage = case_when(
+    StageName == "P0" ~ "Birth",
+    Species == "Opossum" & StageName == "13" ~ "Birth",
+    #Day13 Opossum is arguably roughly equivalent to newborn human
+    StageName == "newborn" ~ "Birth",
+    TRUE ~ NA_character_
+  ))
+
+ManualOrdinalStages %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(y=OrdinalStage.Manual, x="")) +
+  geom_text(aes(label=StageName, color=RoughlyCalibratedStage), size=2) +
+  scale_y_reverse() +
+  facet_wrap(~Species, nrow = 1)
+
+```
+
+Ok, so i have manually redefine a "OrdinalStage.Manual" column that ordinally ranks stages within each species, though the stages don't necessarily translate across species. All also add some markers to indicate roughly equivalent stages across species (ie birth)
+
+```{r}
+set.seed(0)
+All.ortho.PSI %>%
+  filter(human.seg.id %in% OrthoCassetteExons.ConservedDevAS.vec) %>%
+  sample_n(5) %>%
+  pivot_longer(-human.seg.id, names_to = "sample", values_to = "PSI") %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  inner_join(ManualOrdinalStages) %>%
+  group_by(human.seg.id, Species, Tissue, StageName, OrdinalStage.Manual) %>%
+  mutate(PSI = PSI*100) %>%
+  mutate(PSI.mean = mean(PSI, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(Species, human.seg.id, Tissue, OrdinalStage.Manual) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(x=OrdinalStage.Manual, color=Tissue)) +
+  # geom_line(data = . %>%
+  #             distinct(Species, human.seg.id, PSI.mean, OrdinalStage.Manual, Tissue),
+  #           aes(y=PSI.mean)
+  #           ) +
+  geom_point(aes(y=PSI), alpha=0.2) +
+  geom_vline(data = ManualOrdinalStages %>%
+                filter(RoughlyCalibratedStage == "Birth") %>%
+                mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))),
+             aes(xintercept = OrdinalStage.Manual), linetype='dashed') +
+  geom_smooth(aes(y=PSI),method='loess', se=F) +
+  facet_grid(human.seg.id~Species, scales="free") +
+  labs(caption="Ordinal stages not necessarily equivalent between species\nBut dashed line is birth", x="Ordinal developmental stage", y="PSI")
+```
+
+Let's do the same plot but just look at the tissues with conserved devAS effects rather than all tissues with a devAS exon in any tissue
+
+```{r}
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(species.y == 'chi.' & pattern.x == pattern.y) %>%
+  distinct(human.seg.id) %>% pull(human.seg.id)
+
+set.seed(0)
+All.ortho.PSI %>%
+  filter(human.seg.id %in% OrthoCassetteExons.ConservedDevAS.vec) %>%
+  sample_n(5) %>%
+  pivot_longer(-human.seg.id, names_to = "sample", values_to = "PSI") %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  inner_join(ManualOrdinalStages) %>%
+  inner_join(
+    SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+    filter(species.y == 'chi.' & pattern.x == pattern.y) %>%
+    dplyr::select(Tissue=tissue, human.seg.id) %>%
+    mutate(Tissue = stringr::str_to_title(Tissue))
+  ) %>%
+  group_by(human.seg.id, Species, Tissue, StageName, OrdinalStage.Manual) %>%
+  mutate(PSI = PSI*100) %>%
+  mutate(PSI.mean = mean(PSI, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(Species, human.seg.id, Tissue, OrdinalStage.Manual) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(x=OrdinalStage.Manual, color=Tissue)) +
+  # geom_line(data = . %>%
+  #             distinct(Species, human.seg.id, PSI.mean, OrdinalStage.Manual, Tissue),
+  #           aes(y=PSI.mean)
+  #           ) +
+  geom_point(aes(y=PSI), alpha=0.2) +
+  geom_vline(data = ManualOrdinalStages %>%
+                filter(RoughlyCalibratedStage == "Birth") %>%
+                mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))),
+             aes(xintercept = OrdinalStage.Manual), linetype='dashed') +
+  geom_smooth(aes(y=PSI),method='loess', se=F) +
+  facet_grid(human.seg.id~Species, scales="free") +
+  labs(caption="Ordinal stages not necessarily equivalent between species\nBut dashed line is birth", x="Ordinal developmental stage", y="PSI")
+```
+
+
+Ok I think these seem to make sense. let's look at 5 more...
+
+```{r}
+set.seed(10)
+All.ortho.PSI %>%
+  filter(human.seg.id %in% OrthoCassetteExons.ConservedDevAS.vec) %>%
+  sample_n(5) %>%
+  pivot_longer(-human.seg.id, names_to = "sample", values_to = "PSI") %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  inner_join(ManualOrdinalStages) %>%
+  inner_join(
+    SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+    filter(species.y == 'chi.' & pattern.x == pattern.y) %>%
+    dplyr::select(Tissue=tissue, human.seg.id) %>%
+    mutate(Tissue = stringr::str_to_title(Tissue))
+  ) %>%
+  group_by(human.seg.id, Species, Tissue, StageName, OrdinalStage.Manual) %>%
+  mutate(PSI = PSI*100) %>%
+  mutate(PSI.mean = mean(PSI, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(Species, human.seg.id, Tissue, OrdinalStage.Manual) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(x=OrdinalStage.Manual, color=Tissue)) +
+  # geom_line(data = . %>%
+  #             distinct(Species, human.seg.id, PSI.mean, OrdinalStage.Manual, Tissue),
+  #           aes(y=PSI.mean)
+  #           ) +
+  geom_point(aes(y=PSI), alpha=0.2) +
+  geom_vline(data = ManualOrdinalStages %>%
+                filter(RoughlyCalibratedStage == "Birth") %>%
+                mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))),
+             aes(xintercept = OrdinalStage.Manual), linetype='dashed') +
+  geom_smooth(aes(y=PSI),method='loess', se=F) +
+  facet_grid(human.seg.id~Species, scales="free") +
+  labs(caption="Ordinal stages not necessarily equivalent between species\nBut dashed line is birth", x="Ordinal developmental stage", y="PSI")
+```
+
+Cool. looks good for the most part.
+
+Let's next look at the conservation of the assymetry... Like, among the conserved devAS events that are assyemtric (as determined in human), are they also assymetric in all other species.
+
+```{r}
+
+
+OrthologusSegments.Effects %>%
+  filter(human.seg.id %in% OrthoCassetteExons.ConservedDevAS.vec) %>%
+  mutate(start = start - 1) %>%
+  mutate(len = stop - start) %>%
+  mutate(IsSymmetric = len %% 3 == 0) %>%
+  group_by(human.seg.id) %>%
+  summarise(NumOrthoExons = n(),
+            NumSymetric = sum(IsSymmetric)) %>%
+  ungroup() %>%
+  filter(NumOrthoExons == 7) %>%
+  ggplot(aes(x=NumSymetric)) +
+  stat_ecdf() +
+  labs(y='ecdf', x='Num species (out of 7)\nin which devAS cassette is symmetric', caption='417 human:chicken conserved devAS orthoExons') +
+  theme_bw()
+
+OrthologusSegments.Effects %>%
+  filter(human.seg.id %in% OrthoCassetteExons.ConservedDevAS.vec) %>%
+  mutate(start = start - 1) %>%
+  mutate(len = stop - start) %>%
+  mutate(IsSymmetric = len %% 3 == 0) %>%
+  separate(seg.id, into=c("species", "species.identifier", "segment_num"), sep="\\.") %>%
+  filter(species %in% c("hum", "chi")) %>%
+  dplyr::select(len, human.seg.id, species, segment.name, IsSymmetric) %>%
+  pivot_wider(names_from = 'species', values_from = c("segment.name", "len", "IsSymmetric")) %>%
+  mutate(HumSymmetry_ChiSymmetry = case_when(
+    IsSymmetric_hum & IsSymmetric_chi ~ "symmetric in both",
+    IsSymmetric_hum & !IsSymmetric_chi ~ "symmetric in human",
+    !IsSymmetric_hum & IsSymmetric_chi ~ "symmetric in chicken",
+    !IsSymmetric_hum & !IsSymmetric_chi ~ "symmetric in neither"
+  )) %>%
+  ggplot(aes(x= len_hum, y=len_chi, color=HumSymmetry_ChiSymmetry)) +
+  geom_point() +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  facet_wrap(~HumSymmetry_ChiSymmetry) +
+  labs(x="chicken exon length", y='human exon length', color='symmetry')
+
+```
+
+It might be useful to look at the exons which changed in length, to see whether assyemtry is usually preseverd or not despite length changes...
+
+```{r}
+OrthologusSegments.Effects %>%
+  filter(human.seg.id %in% OrthoCassetteExons.ConservedDevAS.vec) %>%
+  mutate(start = start - 1) %>%
+  mutate(len = stop - start) %>%
+  mutate(IsSymmetric = len %% 3 == 0) %>%
+  separate(seg.id, into=c("species", "species.identifier", "segment_num"), sep="\\.") %>%
+  filter(species %in% c("hum", "chi")) %>%
+  dplyr::select(len, human.seg.id, species, segment.name, IsSymmetric) %>%
+  pivot_wider(names_from = 'species', values_from = c("segment.name", "len", "IsSymmetric")) %>%
+  mutate(HumSymmetry_ChiSymmetry = case_when(
+    IsSymmetric_hum & IsSymmetric_chi ~ "symmetric in both",
+    IsSymmetric_hum & !IsSymmetric_chi ~ "symmetric in human",
+    !IsSymmetric_hum & IsSymmetric_chi ~ "symmetric in chicken",
+    !IsSymmetric_hum & !IsSymmetric_chi ~ "symmetric in neither"
+  )) %>%
+  mutate(IsLengthSame = if_else(len_hum == len_chi, "same length", "different length")) %>%
+  ggplot(aes(x= len_hum, y=len_chi, color=HumSymmetry_ChiSymmetry)) +
+  geom_point() +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  facet_wrap(~IsLengthSame) +
+  labs(x="chicken exon length", y='human exon length', color='symmetry')
+```
+
+I'm wondering whether there is an overabundance is conservation of assyemtry compared to expectation. My 'null' expectation that I'm setting up (I can see why it is debateable whether it is a reasonable null, since 1nt indels are probably more likely to occur than 3nt indels) is that if the ancestral state is symetric, and there is a length change, there is a 2/3 chance it will be symmetric-->assyemtric (assyemtric in one). Similarly, if the ancestral is assyemtric, there is a 2/3 chance it will remain asymetric (assyemtric in both).
+
+So in other words, my expectation is that... (still haven't figured it i'm thinking here..)
+
+```{r}
+OrthologusSegments.Effects %>%
+  filter(human.seg.id %in% OrthoCassetteExons.ConservedDevAS.vec) %>%
+  mutate(start = start - 1) %>%
+  mutate(len = stop - start) %>%
+  mutate(IsSymmetric = len %% 3 == 0) %>%
+  separate(seg.id, into=c("species", "species.identifier", "segment_num"), sep="\\.") %>%
+  filter(species %in% c("hum", "chi")) %>%
+  dplyr::select(len, human.seg.id, species, segment.name, IsSymmetric) %>%
+  pivot_wider(names_from = 'species', values_from = c("segment.name", "len", "IsSymmetric")) %>%
+  mutate(HumSymmetry_ChiSymmetry = case_when(
+    IsSymmetric_hum & IsSymmetric_chi ~ "symmetric in both",
+    IsSymmetric_hum & !IsSymmetric_chi ~ "symmetric in human",
+    !IsSymmetric_hum & IsSymmetric_chi ~ "symmetric in chicken",
+    !IsSymmetric_hum & !IsSymmetric_chi ~ "symmetric in neither"
+  )) %>%
+  mutate(IsLengthSame = if_else(len_hum == len_chi, "same length", "different length")) %>%
+  filter(IsLengthSame=="different length") %>%
+  count(HumSymmetry_ChiSymmetry)
+
+```
+
+I still haven't figured out what this means... but it's not convincing in the sense that it's not like all of the length-changing assyemtric ones are conserved as assyemtric. Maybe this analysis is kind of uninformative anyway, since I should probably also consider in-frame PTCs... I think I'll have to code that out work in python, so I'll do that and start a new notebook later. While I'm at it, I will also look through the ensembl gtfs of the Mazin et al species as well as lamprey and look at the extent of annotated AS, and intron size, and what not, since we were considering experiments with lamprey and I just know nothing about the nature of (gtf annotated) splicing in that species
