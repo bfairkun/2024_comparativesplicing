@@ -1,0 +1,138 @@
+---
+title: "2024-07-04_SimulateIndirectlyComparingTreatments"
+output: html_document
+date: '2024-07-04'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+
+## Intro
+
+Simple model for expression change after treatment for a single gene
+
+$Y = Y_0 + \beta + \epsilon$
+
+$Y$ is measured expression level of a gene after treatment, $Y_0$ is expression of control, $\beta$ is effect size, $\epsilon$ is some random error ($\mathcal{N}(\mu=0, \sigma)$). Similarly, the measured expression of a control sample is
+
+$Y = Y_0 + \epsilon$
+
+One could expand this to vector notation for multiple samples, but why bother for this toy example.
+
+And of course, real DE analysis is more complicated than these simple models because of how it borrows information across genes to estimate dispersion per gene... But let's keep this simple.
+
+Now, consider 10000 genes. I'm going to simulate some stuff, saving the variable names similar to notation above but keeping in mind each is a vector now representing $Y_0$, $Y$, etc, across 10000 genes...
+
+
+```{r}
+
+# "baseline" (control) expression level.
+# Let's say true control expression across genes is lognormal, or rather normal on a log scale
+# let's use some parameters that somewhat resemble real RNA-seq data for log2RPKM across 1000 genes.
+Y_0 <- rnorm(mean = 4, sd = 3, n = 10000)
+hist(Y_0)
+```
+
+Now simulate some betas. Let's say the betas (representing log2FC) are also normally distributed. And let's make two different vectors of betas, for two different (and completely independent treatments with uncorrellated) true effects. I'm trying to pick parameters for these normal distributions that sort of match my intuitinos on what would be really measured in an RNA-seq experiment, where like ~90% of genes have less than two-fold change. But different treatments have different beta vectors (across genes), and my intuitions might be off on what the distribution of "true" effects is. We can play with these parameters later.
+
+```{r}
+beta_treatment1 <- rnorm(mean=0, sd=0.5, n=10000)
+hist(beta_treatment1)
+
+beta_treatment2 <- rnorm(mean=0, sd=0.5, n=10000)
+hist(beta_treatment2)
+
+plot(beta_treatment1, beta_treatment2)
+
+# betas are uncorrelated
+correlation <- cor.test(beta_treatment1, beta_treatment2)
+print(correlation$estimate)
+```
+
+
+betas for two treatments are uncorrelated (R=`r correlation$estimate`).
+
+Ok, now let's simulate some real observed values by adding the random error term. Let's simulate two control samples, and one of each treatment. How does the random measurement error compare to the true effect sizes. Well I suppose that depends on the nature of the treatment (eg, the amount of drug, the amount of hypoxia, etc) among other things.
+
+```{r}
+# Let's use a slightly smaller sigma for the error term for now
+error_sigma <- 0.5
+
+observed.control.1 <- Y_0 + rnorm(mean=0, sd=error_sigma, n=10000)
+observed.control.2 <- Y_0 + rnorm(mean=0, sd=error_sigma, n=10000)
+
+observed.treatment.1 <- Y_0 + beta_treatment1 +  rnorm(mean=0, sd=error_sigma, n=10000)
+
+observed.treatment.2 <- Y_0 + beta_treatment2 +  rnorm(mean=0, sd=error_sigma, n=10000)
+```
+
+Now let's compare the differences in observed expression between different samples.
+
+```{r}
+plot(observed.control.1, observed.control.2)
+
+print(cor(observed.control.1, observed.control.2))
+```
+
+Just like real RNA-seq, control replicates correlate very well (R>0.95)
+
+Now let's plot $Y-Y_0$, an estimate of treatment effects. Let's estimate effects both treatments, using independent control samples for each... start with treatment 1...
+
+```{r}
+# estimate of betas (across genes)
+beta_treatment1_estimate <- observed.treatment.1 - observed.control.1
+hist(beta_treatment1_estimate)
+
+# true betas
+hist(beta_treatment1)
+
+# scatter plot
+plot(beta_treatment1, beta_treatment1_estimate)
+```
+
+...And same for treatment2
+
+```{r}
+# estimate of betas (across genes)
+beta_treatment2_estimate <- observed.treatment.2 - observed.control.2
+hist(beta_treatment2_estimate)
+
+# true betas
+hist(beta_treatment2)
+
+# scatter plot
+qplot(beta_treatment2, beta_treatment2_estimate)
+```
+
+And confirm that beta estimates for two treatments are uncorrelated across genes...
+
+```{r}
+qplot(beta_treatment1_estimate, beta_treatment2_estimate) +
+  geom_smooth(method='lm') +
+  geom_hline(yintercept = 0)
+
+print(cor.test(beta_treatment1_estimate, beta_treatment2_estimate))
+```
+
+Ok, now let's repeat this the less kosher way, that reuses controls... In this case I will just average the controls. Not really what is done, but I think this simpler example still highlights the issue. While it makes sense to combine controls for maximum power if you are just concerned with estimating betas for one treatment, when comparing the beta estimates between treatments, this can lead to some misleading results.
+
+```{r}
+beta_treatment1_estimate2 <- observed.treatment.1 - (observed.control.1 + observed.control.2)/2
+
+beta_treatment2_estimate2 <- observed.treatment.2 - (observed.control.1 + observed.control.2)/2
+
+qplot(beta_treatment1_estimate2, beta_treatment2_estimate2) +
+  geom_smooth(method='lm') +
+  geom_hline(yintercept = 0)
+
+cor.test(beta_treatment1_estimate2, beta_treatment2_estimate2)
+
+```
+
+Ok, that introduced some artificial correlation. Not sure how realistic these simulations are though. Maybe the signal to noise of the treatments in real life is such that it doesn't matter. Especially with more than just the couple replicates I simulated here. Or maybe not. And maybe downstream anaysis like GSEA aren't sensitive enough to pick up on this small artificial correlation. Or maybe it is. Using independent controls before comparing betas between treatments leaves less room for question. Depending on the question, directly comparing treatments might also be applicable.

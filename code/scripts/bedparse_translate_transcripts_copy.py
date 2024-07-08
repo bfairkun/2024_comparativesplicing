@@ -49,9 +49,6 @@ def reorder_gtf(gtf_stringio, output_gtf):
     # Fill NaNs in start_parent_transcript with start_parent_gene for gene lines
     df['start_parent_transcript'] = df['start_parent_transcript'].fillna(df['start_parent_gene'])
 
-    df = df.copy()
-    df.loc[:, 'seqname'] = df['seqname'].astype(str)
-
     # Sort by seqname, start_parent_gene, gene_id, is_gene, start_parent_transcript, transcript_id, start
     df_sorted = df.sort_values(by=['seqname', 'start_parent_gene', 'gene_id', 'is_gene', 'start_parent_transcript', 'transcript_id', 'start'], ascending=[True, True, True, False, True, True, True]).reset_index(drop=True)
 
@@ -61,7 +58,6 @@ def reorder_gtf(gtf_stringio, output_gtf):
     # Write the sorted DataFrame to the output GTF file
     df_sorted.to_csv(output_gtf, sep='\t', header=False, index=False, quoting=csv.QUOTE_NONE)
 # reorder_gtf("scratch/Chicken_ensemblv84.Reannotated.gtf", "scratch/Chicken_ensemblv84.Reannotated.sorted.gtf")
-# reorder_gtf("GenomeFiles/Chicken_ensemblv84/Reannotated.B.gtf", "scratch/Chicken_ensemblv84.Reannotated.sorted.gtf")
 
 def run_bedparse_gtf2bed(gtf_file, *args):
     """
@@ -429,8 +425,6 @@ def Fill_A_and_B_to_same(A, B):
         A = B
     elif B == "." and A != ".":
         B = A
-    elif B != A:
-        B = A
     return(A, B)
 
 def get_absolute_pos(bedline, coord):
@@ -629,8 +623,7 @@ def main(args=None):
 if __name__ == "__main__":
     if hasattr(sys, 'ps1'):
         # main("-i /project2/yangili1/bjf79/2024_comparativesplicing/code/GenomeFiles/Human_ensemblv75/Reference.gtf -o scratch/Human_ensemblv75.Reannotated.gtf -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v -translation_approach A".split(' '))
-        main("-i /project2/yangili1/bjf79/2024_comparativesplicing/code/GenomeFiles/Chicken_ensemblv84/Reference.gtf -o scratch/Chicken_ensemblv84.Reannotated.gtf -fa /project2/yangili1/bjf79/ReferenceGenomes/Chicken_ensemblv84/Reference.fa -v -translation_approach A".split(' '))
-        # main("-i /project2/yangili1/bjf79/2024_comparativesplicing/code/GenomeFiles/Human_ensemblv75/Reference.gtf -o scratch/Human_ensemblv75.Reannotated.gtf -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v -translation_approach A".split(' '))
+        main("-i /project2/yangili1/bjf79/2024_comparativesplicing/code/GenomeFiles/Chicken_ensemblv84/Reference.gtf -o scratch/Chicken_ensemblv84.Reannotated.gtf -fa /project2/yangili1/bjf79/ReferenceGenomes/Chicken_ensemblv84/Reference.fa -v -bed12_out scratch/Chicken_ensemblv84.Reannotated.bed -translation_approach A".split(' '))
     else:
         main()
 

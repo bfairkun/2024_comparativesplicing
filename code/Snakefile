@@ -15,6 +15,7 @@ rule all:
     input:
         # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
         # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.fa.fai", GenomeName = STAR_genomes.index),
+        expand("kaessman_AS_dat/AS_segment_lists/{GenomeName}.bed", GenomeName = MazinGenomes),
         expand("GenomeFiles/{GenomeName}/SpliceSites.seq.bed.gz", GenomeName = STAR_genomes.index),
         expand("GenomeFiles/{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
         # expand("GenomeFiles/{GenomeName}/Reference.gtf", GenomeName = STAR_genomes.index),

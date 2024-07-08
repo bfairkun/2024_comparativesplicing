@@ -97,6 +97,8 @@ rule SortAndTabixReannotated:
         "logs/SortAndTabixReannotated/{GenomeName}.{TranslationApproach}.log"
     params:
         tabix_params = GetIndexingParams
+    resources:
+        mem_mb = 16000
     shell:
         """
         bedtools sort -i {input.bed} | bgzip -c /dev/stdin > {output.bed}
@@ -105,3 +107,18 @@ rule SortAndTabixReannotated:
         tabix {params.tabix_params} -f -p gff {output.gtf} && touch {output.gtf_index}
         """
 
+rule MakeMazin_AS_SegmentBeds:
+    input:
+        "kaessman_AS_dat/Supplementary_Data/Supplementary_Data_9.csv"
+    output:
+        expand("kaessman_AS_dat/AS_segment_lists/{GenomeName}.bed", GenomeName = MazinGenomes)
+    params:
+        Prefix = "kaessman_AS_dat/AS_segment_lists/"
+    log:
+        "logs/MakeMazin_AS_SegmentBeds"
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        Rscript scripts/Mazin_AS_Segments_ToBed9.R {input} {params.Prefix} &> {log}
+        """

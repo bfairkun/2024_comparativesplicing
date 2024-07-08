@@ -586,4 +586,34 @@ Here is a pseudocode approach to accomplishing this:
 1. bedtools intersect protein coding transcripts with cassette exons, then read into python and with bedparse...
 2. get junctions uniquely made from including/excluding the exon. 
 
+Note that Yang's script requires gene_name and transcript_name in the gtf attributes. Not all ensembl transcripts have these, even when there is a gene_id... see below...
+
+```{r}
+bed12.reannotated.ApproachE %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  mutate(IsGeneNameEmpty = gene_name == ".") %>%
+  distinct(gene_id, Genome, .keep_all=T) %>%
+  count(Genome, IsGeneNameEmpty) %>%
+  ggplot(aes(x=Genome, y=n, fill=IsGeneNameEmpty)) +
+  geom_col(position='fill') +
+  scale_fill_manual(values = c("red", "black"), labels=c("TRUE"="No gene_name attribute", "FALSE"="Has gene_name"), name=NULL) +
+  Rotate_x_labels +
+  labs(y="Fraction of genes")
+
+bed12.reannotated.ApproachE %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(tag, "_NF")) %>%
+  mutate(IsGeneNameEmpty = transcript_name == ".") %>%
+  distinct(transcript_id, Genome, .keep_all=T) %>%
+  count(Genome, IsGeneNameEmpty) %>%
+  ggplot(aes(x=Genome, y=n, fill=IsGeneNameEmpty)) +
+  geom_col(position='fill') +
+  scale_fill_manual(values = c("red", "black"), labels=c("TRUE"="No transcript_name attribute", "FALSE"="Has transcript_name"), name=NULL) +
+  Rotate_x_labels +
+  labs(y="Fraction of transcripts")
+```
+
+Therefore, when creating gtf for Yang's script, just use gene_id and transcript_id as gene_name and transcript_name
+
 

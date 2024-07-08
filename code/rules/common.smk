@@ -11,6 +11,8 @@ except (NameError, KeyError) as NameOrKeyError:
     samples = pd.read_csv("config/samples.tsv",sep='\t', index_col=0)
     STAR_genomes = pd.read_csv("config/STAR_Genome_List.tsv",sep='\t', index_col=0)
 
+MazinGenomes = [g for g in STAR_genomes.index if g not in ["Lamprey_ensemblv_112"]]
+
 # Add code for function definitions and other things that must be defined prior
 # to rest of workflow (eg custom snakemake input functions)
 def GetIndexingParams(wildcards):

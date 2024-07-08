@@ -86,7 +86,6 @@ def insert_marks_for_first_ORF(sequence, require_STOP=True, min_ORF_len=0):
     else:
         regex = r"^.*?(\|?A\|?T\|?G\|?(?:(?!\|?T\|?A\|?A|\|?T\|?A\|?G|\|?T\|?G\|?A)\|?[ACGTN]\|?[ACGTN]\|?[ACGTN]){" + str(min_ORF_len) + r",}((?:\|?T\|?A\|?A|\|?T\|?A\|?G|\|?T\|?G\|?A))?).*$"
     first_ORF_match = re.match(regex, sequence, flags=re.IGNORECASE)
-    # import pdb; pdb.set_trace()
     if first_ORF_match:
         start_codon_pos = first_ORF_match.start(1)
         if first_ORF_match.group(2):
@@ -327,11 +326,11 @@ def main(args=None):
     # Read the input BED files
     # AS type coded as color column:
     # "CE"="#1b9e77", "RI"="#d95f02", "AA"="#7570b3", "AD"="#e7298a"
-    adjusted_orth_segs = pybedtools.BedTool(args.ASsegments_fn).each(adjust_start).saveas()
+    adjusted_orth_segs = pybedtools.BedTool(args.ASsegments_fn).saveas()
     logging.debug(f'read in {len(adjusted_orth_segs)} AS segments')
 
     # Get protein_coding transcripts
-    protein_coding_bed = pybedtools.BedTool(args.transcripts_fn).filter(lambda x: x.fields[17] == "protein_coding" and "NF" not in x.fields[21]).each(lambda x: x[0:12]).saveas()
+    protein_coding_bed = pybedtools.BedTool(args.transcripts_fn).filter(lambda x: x.fields[16] == "protein_coding" and "NF" not in x.fields[20]).each(lambda x: x[0:12]).saveas()
     logging.debug(f'read in {len(protein_coding_bed)} full length protein coding transcripts...')
 
     # convert protein_coding transcripts to dictionary of bedparse.bedline objects, becasue some weird bug in bedtools that modifies the transcript blocks after intersection
@@ -345,13 +344,20 @@ def main(args=None):
     # Intersect the exons with the adjusted orth_segs_bed
     intersected = protein_coding_exons.intersect(adjusted_orth_segs, s=True, wo=True)
 
-    # Filter the intersected results to remove lines where the start and end positions are the same
-    filtered_intersections = intersected.filter(lambda x: not (x.fields[1] == x.fields[7] and x.fields[2] == x.fields[8]))
+    # Filter the intersected results to remove lines where the start and end positions are the same. I want to exclude these later
+    SegmentsToExclude1 = intersected.filter(lambda x: not (x.fields[1] == x.fields[7] and x.fields[2] == x.fields[8]))
 
-    CassetteExonsToExclude = set([i[9] for i in filtered_intersections])
-    logging.info(f"Excluding {len(CassetteExonsToExclude)} cassette exons that partially overlap exons...")
+    # I also want to exclude AS_segments where that totally enclose an annotated exon
+    SegmentsToExclude2 = protein_coding_exons.intersect(adjusted_orth_segs, s=True, wo=True, f=1).filter(lambda x: (int(x.fields[8]) - int(x.fields[7])) > int(x.fields[15]))
+    # SegmentsToExclude2_temp = protein_coding_exons.intersect(adjusted_orth_segs, s=True, wo=True, f=1).filter(lambda x: (int(x.fields[8]) - int(x.fields[7])) > int(x.fields[15])).saveas()
+    # for segment in SegmentsToExclude2_temp:
+    #     if segment.fields[3] == "chi.868.s2":
+    #         print(segment)
 
-    Filtered_AS_Segments = adjusted_orth_segs.filter(lambda x: (x[3] not in CassetteExonsToExclude and x[8]=="#1b9e77") or  (x[8] in ["#7570b3", "#e7298a"])).saveas()
+    SegmentsToExcludeUnion = set([i[9] for i in SegmentsToExclude1] + [i[9] for i in SegmentsToExclude2])
+    logging.info(f"Excluding {len(SegmentsToExcludeUnion)} segments that partially overlap exons...")
+
+    Filtered_AS_Segments = adjusted_orth_segs.filter(lambda x: (x[3] not in SegmentsToExcludeUnion) or  (x[8] not in ["#7570b3", "#e7298a", "#1b9e77"])).saveas()
     logging.debug(f"{len(Filtered_AS_Segments)} Filtered AS segments will be intersected with transcripts...")
     logging.debug(f'types of AS_segments to intersect: {Counter([l[8] for l in Filtered_AS_Segments])}')
 
@@ -367,42 +373,42 @@ def main(args=None):
     rows = []
     UniqJuncsSet = set()
     for i, l in enumerate(SegmentsOverlapTranscripts):
-        # try:
-        transcript = protein_coding_bedline_dict[l[12]]
-        AS_segment = bedparse.bedline(l[0:9] + ["1", str(int(l[2])-int(l[1])), "0"])
-        row = {"transcript": transcript.name, "AS_segment": AS_segment.name, "color":AS_segment.color, "strand":transcript.strand} 
-        # if AS_segment.name == "hum.55945.s6" and transcript.name: break
-        # if i ==39: break
-        if AS_segment.color == "#1b9e77":  # CE
-            long_isoform, short_isoform = process_ce_segment(AS_segment, transcript)
-        elif AS_segment.color in ["#7570b3", "#e7298a"]:  # AA or AD
-            long_isoform, short_isoform = process_aa_ad_segment(AS_segment, transcript)
-        if long_isoform and short_isoform and not bedlines_are_equal(long_isoform, short_isoform) and short_isoform.introns():
-            SuccessfullyAssembledIsoformPairs.append(AS_segment.color)
-            # print(bedlines_are_equal(long_isoform, transcript), bedlines_are_equal(short_isoform, transcript))
-            WhichIsoformIsAnnotated = "LongIsoform" if bedlines_are_equal(long_isoform, transcript) else "ShortIsoform"
-            long_junctions = set([Get_bedline_coords(junc) for junc in long_isoform.introns().bed12tobed6()])
-            short_junctions = set([Get_bedline_coords(junc) for junc in short_isoform.introns().bed12tobed6()])
-            unique_long_junctions = ','.join([f'{chr}_{start}_{stop}_{strand}' for chr, start, stop, strand in (long_junctions - short_junctions)])
-            unique_short_junctions = ','.join([f'{chr}_{start}_{stop}_{strand}' for chr, start, stop, strand in (short_junctions - long_junctions)])
-            UniqJuncsSet.update(long_junctions ^ short_junctions)
-            long_isoform_exons = long_isoform.bed12tobed6()
-            Notes = ""
-            NMDFinderB_long = get_NMD_detective_B_classification(translate_from_cds_startCodon(long_isoform, transcript.cdsStart, transcript.cdsEnd, fasta_obj))
-            NMDFinderB_short = get_NMD_detective_B_classification(translate_from_cds_startCodon(short_isoform, transcript.cdsStart, transcript.cdsEnd, fasta_obj))
-            ExIndexForAS = GetLongIsoformBlockForAS_Event(long_isoform, short_isoform)
-            # print(ExIndexForAS, len(long_isoform_exons))
-            if ExIndexForAS == 0 or ExIndexForAS == len(long_isoform_exons) - 1:
-                Notes = "AS at terminal exon"
-            elif Get_bedline_coords(long_isoform_exons[ExIndexForAS-1]) in AS_segments_coords_set:
-                Notes = "Left ex is also AS segment"
-            elif Get_bedline_coords(long_isoform_exons[ExIndexForAS+1]) in AS_segments_coords_set:
-                Notes = "Right ex is also AS segment"
-            row.update({"LongIsoform_UniqueJuncs":unique_long_junctions, "ShortIsoform_UniqueJuncs":unique_short_junctions, "LongIsoform_NMDFinderB":NMDFinderB_long, "ShortIsoform_NMDFinderB":NMDFinderB_short, "Notes":Notes, "WhichIsoformIsAnnotated":WhichIsoformIsAnnotated})
-            # if WhichIsoformIsAnnotated=="LongIsoform" and NMDFinderB_long=="No CDS": break
-        rows.append(row)
-    Counter(SuccessfullyAssembledIsoformPairs)  
-
+        try:
+            transcript = protein_coding_bedline_dict[l[12]]
+            AS_segment = bedparse.bedline(l[0:9] + ["1", str(int(l[2])-int(l[1])), "0"])
+            row = {"transcript": transcript.name, "AS_segment": AS_segment.name, "color":AS_segment.color, "strand":transcript.strand} 
+            # if AS_segment.name == "hum.55945.s6" and transcript.name: break
+            # if i ==39: break
+            if AS_segment.color == "#1b9e77":  # CE
+                long_isoform, short_isoform = process_ce_segment(AS_segment, transcript)
+            elif AS_segment.color in ["#7570b3", "#e7298a"]:  # AA or AD
+                long_isoform, short_isoform = process_aa_ad_segment(AS_segment, transcript)
+            if long_isoform and short_isoform and not bedlines_are_equal(long_isoform, short_isoform) and short_isoform.introns():
+                SuccessfullyAssembledIsoformPairs.append(AS_segment.color)
+                # print(bedlines_are_equal(long_isoform, transcript), bedlines_are_equal(short_isoform, transcript))
+                WhichIsoformIsAnnotated = "LongIsoform" if bedlines_are_equal(long_isoform, transcript) else "ShortIsoform"
+                long_junctions = set([Get_bedline_coords(junc) for junc in long_isoform.introns().bed12tobed6()])
+                short_junctions = set([Get_bedline_coords(junc) for junc in short_isoform.introns().bed12tobed6()])
+                unique_long_junctions = ','.join([f'{chr}_{start}_{stop}_{strand}' for chr, start, stop, strand in (long_junctions - short_junctions)])
+                unique_short_junctions = ','.join([f'{chr}_{start}_{stop}_{strand}' for chr, start, stop, strand in (short_junctions - long_junctions)])
+                UniqJuncsSet.update(long_junctions ^ short_junctions)
+                long_isoform_exons = long_isoform.bed12tobed6()
+                Notes = ""
+                NMDFinderB_long = get_NMD_detective_B_classification(translate_from_cds_startCodon(long_isoform, transcript.cdsStart, transcript.cdsEnd, fasta_obj))
+                NMDFinderB_short = get_NMD_detective_B_classification(translate_from_cds_startCodon(short_isoform, transcript.cdsStart, transcript.cdsEnd, fasta_obj))
+                ExIndexForAS = GetLongIsoformBlockForAS_Event(long_isoform, short_isoform)
+                # print(ExIndexForAS, len(long_isoform_exons))
+                if ExIndexForAS == 0 or ExIndexForAS == len(long_isoform_exons) - 1:
+                    Notes = "AS at terminal exon"
+                elif Get_bedline_coords(long_isoform_exons[ExIndexForAS-1]) in AS_segments_coords_set:
+                    Notes = "Left ex is also AS segment"
+                elif Get_bedline_coords(long_isoform_exons[ExIndexForAS+1]) in AS_segments_coords_set:
+                    Notes = "Right ex is also AS segment"
+                row.update({"LongIsoform_UniqueJuncs":unique_long_junctions, "ShortIsoform_UniqueJuncs":unique_short_junctions, "LongIsoform_NMDFinderB":NMDFinderB_long, "ShortIsoform_NMDFinderB":NMDFinderB_short, "Notes":Notes, "WhichIsoformIsAnnotated":WhichIsoformIsAnnotated})
+                # if WhichIsoformIsAnnotated=="LongIsoform" and NMDFinderB_long=="No CDS": break
+                Counter(SuccessfullyAssembledIsoformPairs)  
+            rows.append(row)
+        except: breakpoint()
     Results = pd.DataFrame(rows)
 
     logging.info("Writing output...")
@@ -412,7 +418,10 @@ def main(args=None):
         for chr,start,stop,strand in UniqJuncsSet:
             _ = fout.write(f'{chr}:{start+1}:{stop}:clu_n_{strand}\n')
 
-# main("-TsvOut scratch/test_ASSegmentResults.tsv.gz -JuncListOut scratch/test_ASSegmentResults.juncs.gz -AS_segmentsIn kaessman_AS_dat/human.hg19.orth_segs.bed.gz -AnnotatedTranscriptsIn GenomeFiles/Human_ensemblv75/Reannotated.A.bed.gz -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v".split(' '))
 
 if __name__ == "__main__":
-    main()
+    if hasattr(sys, 'ps1'):
+        # main("-TsvOut scratch/test_ASSegmentResults.tsv.gz -JuncListOut scratch/test_ASSegmentResults.juncs.gz -AS_segmentsIn scratch/AS_segments.Human_ensemblv75.bed -AnnotatedTranscriptsIn GenomeFiles/Human_ensemblv75/Reannotated.A.bed.gz -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v".split(' '))
+        main("-TsvOut scratch/test.Chicken_ensemblv84.ASSegmentResults.tsv.gz -JuncListOut scratch/test.Chicken_ensemblv84.ASSegmentResults.juncs.gz -AS_segmentsIn scratch/AS_segments.Chicken_ensemblv84.bed -AnnotatedTranscriptsIn GenomeFiles/Chicken_ensemblv84/Reannotated.B.bed.gz -fa /project2/yangili1/bjf79/ReferenceGenomes/Chicken_ensemblv84/Reference.fa -v".split(' '))
+    else:
+        main()
