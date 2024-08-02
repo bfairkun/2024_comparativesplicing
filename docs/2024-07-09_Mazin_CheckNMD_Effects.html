@@ -1,0 +1,3562 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2024-07-09" />
+
+<title>2024-07-09_Mazin_CheckNMD_Effects</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">2024_ComparativeSplicing</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">2024-07-09_Mazin_CheckNMD_Effects</h1>
+<h4 class="date">2024-07-09</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#intro" id="toc-intro">Intro</a></li>
+<li><a href="#analysis" id="toc-analysis">Analysis</a>
+<ul>
+<li><a href="#beta-beta-sctter-for-chicken-devas"
+id="toc-beta-beta-sctter-for-chicken-devas">beta beta sctter for chicken
+devAS</a></li>
+<li><a href="#beta-beta-scatter-for-human-devas"
+id="toc-beta-beta-scatter-for-human-devas">beta beta scatter for human
+devAS</a></li>
+<li><a href="#betabeta-scatter-summary-of-all-species"
+id="toc-betabeta-scatter-summary-of-all-species">beta/beta scatter
+summary of all species</a></li>
+<li><a
+href="#beta-beta-scatter-for-all-revisted-as-productive-vs-unproductive"
+id="toc-beta-beta-scatter-for-all-revisted-as-productive-vs-unproductive">beta
+beta scatter for all… revisted as “productive” vs
+“unproductive”</a></li>
+</ul></li>
+</ul>
+</div>
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-07-11
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>2024_comparativesplicing/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed19900924code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(19900924)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed19900924code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(19900924)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrong5495e15">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong> 5495e15
+</a>
+</p>
+</div>
+<div id="strongRepositoryversionstrong5495e15"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version 5495e15.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    code/.snakemake/
+    Ignored:    code/GenomeFiles/
+    Ignored:    code/SJC_annotations_d5d1043c36aa60f014dee37e6f54418aeac524c63858131c0c68769dba597410.pckle
+    Ignored:    code/Session.vim
+    Ignored:    code/kaessmanAnalysis/
+    Ignored:    code/kaessman_AS_dat/
+    Ignored:    code/logs/
+    Ignored:    code/rules/.GenomeAnnotations.smk.swp
+    Ignored:    code/scratch/
+
+Untracked files:
+    Untracked:  analysis/2024-07-08_CheckLeafcutter2_Classifications.Rmd
+    Untracked:  analysis/2024-07-09_Mazin_CheckNMD_Effects.Rmd
+    Untracked:  code/scripts/LeafcutterJuncClassificationsToAS_segments.R
+
+Unstaged changes:
+    Modified:   analysis/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/envs/bedparse.yml
+    Modified:   code/rules/GenomeAnnotations.smk
+    Modified:   code/scripts/AS_ExonSegments_to_AS_Junctions.py
+    Modified:   code/scripts/leafcutter2
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>I previously explored Mazin splicing quantifications. They
+communicate splicing in an exon-centric method, defining AS_segments
+that can either be included or excluded in the transcript, and use some
+PSI metric for each segment in each sample. I will use their
+quantifications. For each AS_segment, I have additionally identified the
+unique junctions associated with inclusion or exlcusion of that segment
+(using annotated protein_coding transcript scrutctures as reference to
+determine splice junctions), then ran those junctions through
+leafcutter2 SpliceJunctionClassifier.py script to determine whether each
+segment corresponds to a coding (productive) or unproductive transcript.
+Now I will check whether changes in PSI of these segments correlate with
+changes in expression in the expected manner.</p>
+<p>As a starting point, I previously tidied their data into a long table
+of orthologous AS_segments with PSI values for each sample… But I still
+need to do a bit of data tidying to combinate the splicing
+quantifications with their unproductive/productive classifications and
+the host gene RPKM</p>
+</div>
+<div id="analysis" class="section level2">
+<h2>Analysis</h2>
+<pre class="r"><code>library(tidyverse)
+library(data.table)
+library(biomaRt)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+PSI &lt;- read_tsv(&quot;../code/kaessman_AS_dat/All.ortho.exons.PSI.tsv.gz&quot;)
+
+RPKM &lt;- Sys.glob(&quot;../code/kaessman_AS_dat/FromWebApp/*/RPKM.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/kaessman_AS_dat/FromWebApp/(.+?)/RPKM.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, sep=&#39; &#39;)
+
+dim(PSI)</code></pre>
+<pre><code>[1] 1532 1891</code></pre>
+<p>Do the column (sample) names all match between these two tables?</p>
+<pre class="r"><code>RPKM.sampleList &lt;- lapply(RPKM, colnames) %&gt;%
+  lapply(data.frame) %&gt;%
+  bind_rows(.id=&quot;Species&quot;) %&gt;%
+  dplyr::rename(&quot;sample&quot;=2) %&gt;%
+  filter(!sample==&quot;Names&quot;) %&gt;%
+  mutate(Species = str_to_title(Species)) %&gt;%
+  mutate(sample = paste(Species, sample, sep = &quot;.&quot;))
+
+head(RPKM.sampleList)</code></pre>
+<pre><code>  Species              sample
+1 Chicken Chicken.Brain.e10.1
+2 Chicken Chicken.Brain.e10.2
+3 Chicken Chicken.Brain.e10.3
+4 Chicken Chicken.Brain.e10.4
+5 Chicken Chicken.Brain.e12.1
+6 Chicken Chicken.Brain.e12.2</code></pre>
+<pre class="r"><code>dim(RPKM.sampleList)</code></pre>
+<pre><code>[1] 1890    2</code></pre>
+<pre class="r"><code>inner_join(RPKM.sampleList,
+           data.frame(sample = colnames(PSI)[-1])) %&gt;%
+  dim()</code></pre>
+<pre><code>[1] 1890    2</code></pre>
+<p>Ok. success. we can join RPKM and PSI by sample name. The next thing
+to do is ordinally stage by sample name… I did this in a previous
+notebook, and will repeat code here, with minor modifications…</p>
+<pre class="r"><code>ManualOrdinalStages &lt;- RPKM.sampleList %&gt;%
+  separate(sample, into=c(&quot;Species&quot;, &quot;Tissue&quot;, &quot;StageName&quot;, &quot;StageOrdinal&quot;), convert=T, remove=F) %&gt;%
+  distinct(Species, StageName) %&gt;%
+  mutate(Species.StageName = paste(Species, StageName)) %&gt;%
+  mutate(E_or_P = case_when(
+    str_detect(StageName, &#39;^e&#39;) ~ &#39;E&#39;,
+    str_detect(StageName, &#39;^P&#39;) ~ &#39;P&#39;,
+    str_detect(StageName, &#39;wpc$&#39;) ~ &#39;E&#39;,
+    TRUE ~ &#39;P&#39;
+  )) %&gt;%
+  mutate(StageExtractedNumber = str_replace(StageName, &quot;^[^0-9]*?([0-9]*+)[^0-9]*$&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(StageExtractedNumber = case_when(
+    StageName == &quot;newborn&quot; ~ 0,
+    StageName == &quot;infant&quot; ~ 365,
+    StageName == &quot;toddler&quot; ~ 700,
+    StageName == &quot;school&quot; ~ 3650,
+    StageName == &quot;youngTeenager&quot; ~ 5000,
+    StageName == &quot;teenager&quot; ~ 5500,
+    StageName == &quot;oldTeenager&quot; ~ 6000,
+    StageName == &quot;youngAdult&quot; ~ 10000,
+    StageName == &quot;youngMidAge&quot; ~ 12500,
+    StageName == &quot;olderMidAge&quot; ~ 17000,
+    StageName %in% c(&quot;Senior&quot;, &quot;senior&quot;) ~ 20000,
+    TRUE ~ as.numeric(StageExtractedNumber)
+  )) %&gt;%
+  arrange(Species, E_or_P, StageExtractedNumber) %&gt;%
+  group_by(Species) %&gt;%
+  mutate(OrdinalStage.Manual = row_number()) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(Species, StageName, OrdinalStage.Manual) %&gt;%
+  # Roughly Calibrated Stages from Cardosa-Moreira et al, Fig2A
+  mutate(RoughlyCalibratedStage = case_when(
+    StageName == &quot;P0&quot; ~ &quot;Birth&quot;,
+    Species == &quot;Opossum&quot; &amp; StageName == &quot;14&quot; ~ &quot;Birth&quot;,
+    #Day13 Opossum is arguably roughly equivalent to newborn human
+    StageName == &quot;newborn&quot; ~ &quot;Birth&quot;,
+    Species == &quot;Chicken&quot; &amp; StageName == &quot;e14&quot; ~ &quot;Onset meiosis oogenesis&quot;,
+    Species == &quot;Opossum&quot; &amp; StageName == &quot;28&quot; ~ &quot;Onset meiosis oogenesis&quot;,
+    Species == &quot;Human&quot; &amp; StageName == &quot;10wpc&quot; ~ &quot;Onset meiosis oogenesis&quot;,
+    Species == &quot;Rabbit&quot; &amp; StageName == &quot;e27&quot; ~ &quot;Onset meiosis oogenesis&quot;,
+    Species == &quot;Rat&quot; &amp; StageName == &quot;e16&quot; ~ &quot;Onset meiosis oogenesis&quot;,
+    Species == &quot;Mouse&quot; &amp; StageName == &quot;e11&quot; ~ &quot;Onset meiosis oogenesis&quot;,
+    Species == &quot;Chicken&quot; &amp; StageName == &quot;P70&quot; ~ &quot;Onset meiosis spermatogenesis&quot;,
+    Species == &quot;Opossum&quot; &amp; StageName == &quot;74&quot; ~ &quot;Onset meiosis spermatogenesis&quot;,
+    Species == &quot;Macaque&quot; &amp; StageName == &quot;P1095&quot; ~ &quot;Onset meiosis spermatogenesis&quot;,
+    Species == &quot;Human&quot; &amp; StageName == &quot;youngTeenager&quot; ~ &quot;Onset meiosis spermatogenesis&quot;,
+    Species == &quot;Rabbit&quot; &amp; StageName == &quot;P84&quot; ~ &quot;Onset meiosis spermatogenesis&quot;,
+    Species == &quot;Rat&quot; &amp; StageName == &quot;P14&quot; ~ &quot;Onset meiosis spermatogenesis&quot;,
+    Species == &quot;Mouse&quot; &amp; StageName == &quot;P14&quot; ~ &quot;Onset meiosis spermatogenesis&quot;,
+    TRUE ~ NA_character_
+  ))
+
+ManualOrdinalStages %&gt;%
+  mutate(Species = factor(Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(y=OrdinalStage.Manual, x=&quot;&quot;)) +
+  geom_text(aes(label=StageName, color=RoughlyCalibratedStage), size=2) +
+  scale_y_reverse() +
+  facet_wrap(~Species, nrow = 1) +
+  labs(x=NULL)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>For easier joining, let’s first pivot_longer the RPKM tables</p>
+<pre class="r"><code>RPKM$chicken %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;, values_to = &quot;RPKM&quot;, -Names) %&gt;%
+  dim()</code></pre>
+<pre><code>[1] 3614795       3</code></pre>
+<p>I’m now realizing these tables might be too big… I might end up with
+a table of &gt;30 million rows… Maybe I should first just filter for the
+relevant genes for the orthologous exons</p>
+<pre class="r"><code>OrthologousSegmentList &lt;- read_csv(&quot;../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_8.csv&quot;)
+
+OrthologousSegmentList.long &lt;- OrthologousSegmentList %&gt;%
+  mutate(human.seg.id = human) %&gt;%
+  filter(human %in% PSI$human.seg.id) %&gt;%
+  pivot_longer(names_to = &quot;Species&quot;, values_to = &quot;segid&quot;, -human.seg.id) %&gt;%
+  separate(segid, into=c(&quot;AS_segment&quot;, &quot;chrom&quot;, &quot;strand&quot;, &quot;start&quot;, &quot;stop&quot;), sep=&quot;:&quot;, convert=T)
+
+AS_segment_classifications &lt;- Sys.glob(&quot;../code/kaessmanAnalysis/leaf2_to_AS_segments/*.collapsed.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/kaessmanAnalysis/leaf2_to_AS_segments/(.+?).collapsed.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;Species&quot;) %&gt;% pivot_wider(names_from = &quot;isoform&quot;, values_from = c(&quot;PercentCoding&quot;, &quot;n&quot;), names_sep=&quot;.&quot;) %&gt;%
+  mutate(ChangeInCoding_InclusionToExclusion = PercentCoding.AS_seg_included - PercentCoding.AS_seg_excluded)
+  
+
+OrthologousSegmentsAndEffects &lt;- AS_segment_classifications %&gt;%
+  dplyr::select(-Species) %&gt;%
+  inner_join(OrthologousSegmentList.long)</code></pre>
+<p>Before we try to match expression to splicing effects, I’m curious
+how conserved these predicted NMD effects are for othoologous
+segments…</p>
+<pre class="r"><code>OrthologousSegmentsAndEffects %&gt;%
+  filter(Species %in% c(&quot;human&quot;, &quot;chicken&quot;)) %&gt;%
+  dplyr::select(Species, ChangeInCoding_InclusionToExclusion, human.seg.id) %&gt;%
+  add_count(Species, human.seg.id) %&gt;%
+  add_count(human.seg.id) %&gt;%
+  filter(n==1 &amp; nn==2) %&gt;%
+  pivot_wider(names_from = &quot;Species&quot;, values_from = &quot;ChangeInCoding_InclusionToExclusion&quot;) %&gt;%
+  ggplot(aes(x=chicken, y=human)) +
+  scale_x_continuous(breaks=-1:1, labels=c(&quot;UnproductiveToProductive&quot;, &quot;NoChange&quot;, &quot;ProductiveToUnproductive&quot;)) +
+  scale_y_continuous(breaks=-1:1, labels=c(&quot;UnproductiveToProductive&quot;, &quot;NoChange&quot;, &quot;ProductiveToUnproductive&quot;)) +
+  geom_jitter(alpha=0.1) +
+  labs(x=&quot;Chicken, effect of inclusion&quot;, y=&quot;Human, effect of inclusion&quot;)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>OrthologousSegmentsAndEffects %&gt;%
+  count(Species)</code></pre>
+<pre><code># A tibble: 7 × 2
+  Species     n
+  &lt;chr&gt;   &lt;int&gt;
+1 chicken  1152
+2 human     979
+3 macaque  1048
+4 mouse    1062
+5 opossum  1178
+6 rabbit   1141
+7 rat      1136</code></pre>
+<p>I’ll think of a different way to analyze this later…</p>
+<p>Let’s first subset devAS segments, and look at the corresponding
+changes in splicing and expression… Let’s do this just for chicken
+first</p>
+<div id="beta-beta-sctter-for-chicken-devas" class="section level3">
+<h3>beta beta sctter for chicken devAS</h3>
+<pre class="r"><code>devAS.chicken &lt;- read_csv(&quot;../code/kaessman_AS_dat/FromWebApp/chicken/devAS.gz&quot;, n_max=Inf) %&gt;%
+  rename(&quot;segment.name&quot;=&quot;...1&quot;) %&gt;%
+  pivot_longer(cols=-c(1:8), names_to = c(&quot;.value&quot;, &quot;tissue&quot;), values_to = c(&quot;value&quot;), names_pattern=c(&quot;(^.+)\\.(.+$)&quot;)) %&gt;%
+  filter(pattern %in% c(&quot;d&quot;, &quot;u&quot;)) %&gt;%
+  inner_join(AS_segment_classifications, by=c(&quot;seg.id&quot;=&quot;AS_segment&quot;)) %&gt;%
+  mutate(tissue = str_to_title(tissue))
+
+PSI.chicken &lt;- read_csv(&quot;../code/kaessman_AS_dat/FromWebApp/chicken/PSI.gz&quot;) %&gt;%
+  dplyr::rename(&quot;seg.id&quot;=1) %&gt;%
+  filter(seg.id %in% devAS.chicken$seg.id) %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;,values_to = &quot;PSI&quot;,-seg.id)
+
+RPKM.chicken &lt;- read_delim(&quot;../code/kaessman_AS_dat/FromWebApp/chicken/RPKM.gz&quot;, delim=&#39; &#39;) %&gt;%
+  dplyr::rename(&quot;Gene_name&quot;=&quot;Names&quot;) %&gt;%
+  filter(Gene_name %in% devAS.chicken$Gene_name) %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;,values_to = &quot;RPKM&quot;,-Gene_name) %&gt;%
+  mutate(sample = paste(&quot;Chicken&quot;, sample, sep=&quot;.&quot;))
+
+Joined.PSI.RPKM.chicken &lt;- devAS.chicken %&gt;%
+  inner_join(PSI.chicken) %&gt;%
+  inner_join(RPKM.chicken) %&gt;%
+  separate(sample, into=c(&quot;Species&quot;, &quot;Tissue&quot;, &quot;StageName&quot;, &quot;StageOrdinal&quot;), convert=T, remove=F) %&gt;%
+  filter(Tissue == tissue) %&gt;%
+  inner_join(ManualOrdinalStages)
+
+P &lt;- Joined.PSI.RPKM.chicken %&gt;%
+  group_by(segment.name, tissue) %&gt;%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = &quot;sp&quot;),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method=&#39;sp&#39;)) %&gt;%
+  ungroup() %&gt;%
+  inner_join(
+    Joined.PSI.RPKM.chicken %&gt;%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %&gt;%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`=&quot;NMD-S&quot;, `0`=&quot;NoChange&quot;, `-1`=&quot;NMD-R&quot;)) %&gt;%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  facet_grid(~ChangeInCoding_ExclusionToInclusion.Rounded)
+
+P</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P +
+  geom_smooth(method=&#39;lm&#39;)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" />
+Ok, the slight enrichment in the upper left and lower right in the NMD-S
+facet makes sense. I’m sure we can improve on this quite a bit. For now
+I want to compare these results to human, where annotations are much
+better…</p>
+<pre class="r"><code>devAS.human &lt;- read_csv(&quot;../code/kaessman_AS_dat/FromWebApp/human/devAS.gz&quot;, n_max=Inf) %&gt;%
+  rename(&quot;segment.name&quot;=&quot;...1&quot;) %&gt;%
+  pivot_longer(cols=-c(1:8), names_to = c(&quot;.value&quot;, &quot;tissue&quot;), values_to = c(&quot;value&quot;), names_pattern=c(&quot;(^.+)\\.(.+$)&quot;)) %&gt;%
+  filter(pattern %in% c(&quot;d&quot;, &quot;u&quot;)) %&gt;%
+  inner_join(AS_segment_classifications, by=c(&quot;seg.id&quot;=&quot;AS_segment&quot;)) %&gt;%
+  mutate(tissue = str_to_title(tissue))
+
+PSI.human &lt;- read_csv(&quot;../code/kaessman_AS_dat/FromWebApp/human/PSI.gz&quot;) %&gt;%
+  dplyr::rename(&quot;seg.id&quot;=1) %&gt;%
+  filter(seg.id %in% devAS.human$seg.id) %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;,values_to = &quot;PSI&quot;,-seg.id)
+
+RPKM.human &lt;- read_delim(&quot;../code/kaessman_AS_dat/FromWebApp/human/RPKM.gz&quot;, delim=&#39; &#39;) %&gt;%
+  dplyr::rename(&quot;Gene_name&quot;=&quot;Names&quot;) %&gt;%
+  filter(Gene_name %in% devAS.human$Gene_name) %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;,values_to = &quot;RPKM&quot;,-Gene_name) %&gt;%
+  mutate(sample = paste(&quot;Human&quot;, sample, sep=&quot;.&quot;))
+
+Joined.PSI.RPKM.human &lt;- devAS.human %&gt;%
+  inner_join(PSI.human) %&gt;%
+  inner_join(RPKM.human) %&gt;%
+  separate(sample, into=c(&quot;Species&quot;, &quot;Tissue&quot;, &quot;StageName&quot;, &quot;StageOrdinal&quot;), convert=T, remove=F) %&gt;%
+  filter(Tissue == tissue) %&gt;%
+  inner_join(ManualOrdinalStages)
+
+P.human &lt;- Joined.PSI.RPKM.human %&gt;%
+  group_by(segment.name, tissue) %&gt;%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = &quot;sp&quot;),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method=&#39;sp&#39;)) %&gt;%
+  ungroup() %&gt;%
+  inner_join(
+    Joined.PSI.RPKM.human %&gt;%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %&gt;%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`=&quot;NMD-S&quot;, `0`=&quot;NoChange&quot;, `-1`=&quot;NMD-R&quot;)) %&gt;%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  facet_grid(~ChangeInCoding_ExclusionToInclusion.Rounded)
+
+P.human</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.human +
+  geom_smooth(method=&#39;lm&#39;)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hmm.. well, these results actually aren’t so obviously supporting
+what I think should happen… Maybe there is just too much noise to see
+anything from the way I’ve analyzed this… Maybe I need to better filter
+out the unsure cases, and consider a different way of plotting too.
+Using the spearman correlation on the PSI values and RPKM values might
+not be best.</p>
+</div>
+<div id="beta-beta-scatter-for-human-devas" class="section level3">
+<h3>beta beta scatter for human devAS</h3>
+<pre class="r"><code>human.full.AS_segmentClassifications &lt;- read_tsv(&quot;../code/kaessmanAnalysis/leaf2_to_AS_segments/Human_ensemblv75.full.tsv.gz&quot;)
+
+SegmentsWithNoNotes &lt;- human.full.AS_segmentClassifications %&gt;%
+  group_by(AS_segment) %&gt;%
+  filter(all(is.na(Notes))) %&gt;%
+  ungroup() %&gt;%
+  distinct(AS_segment) %&gt;% pull(AS_segment)
+
+Joined.PSI.RPKM.human %&gt;%
+  group_by(segment.name, tissue) %&gt;%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = &quot;sp&quot;),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method=&#39;sp&#39;)) %&gt;%
+  ungroup() %&gt;%
+  inner_join(
+    Joined.PSI.RPKM.human %&gt;%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %&gt;%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %&gt;%
+  filter(seg.id %in% SegmentsWithNoNotes) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`=&quot;NMD-S&quot;, `0`=&quot;NoChange&quot;, `-1`=&quot;NMD-R&quot;)) %&gt;%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=&#39;lm&#39;, se=F) +
+  facet_grid(~ChangeInCoding_ExclusionToInclusion.Rounded)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" />
+Ok I think filtering out those edge cases already helps a bit… Let’s see
+how it changes chicken too…</p>
+<pre class="r"><code>chicken.full.AS_segmentClassifications &lt;- read_tsv(&quot;../code/kaessmanAnalysis/leaf2_to_AS_segments/Chicken_ensemblv84.full.tsv.gz&quot;)
+
+SegmentsWithNoNotes.chicken &lt;- chicken.full.AS_segmentClassifications %&gt;%
+  group_by(AS_segment) %&gt;%
+  filter(all(is.na(Notes))) %&gt;%
+  ungroup() %&gt;%
+  distinct(AS_segment) %&gt;% pull(AS_segment)
+
+Joined.PSI.RPKM.chicken %&gt;%
+  group_by(segment.name, tissue) %&gt;%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = &quot;sp&quot;),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method=&#39;sp&#39;)) %&gt;%
+  ungroup() %&gt;%
+  inner_join(
+    Joined.PSI.RPKM.chicken %&gt;%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %&gt;%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %&gt;%
+  filter(seg.id %in% SegmentsWithNoNotes.chicken) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`=&quot;NMD-S&quot;, `0`=&quot;NoChange&quot;, `-1`=&quot;NMD-R&quot;)) %&gt;%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  facet_grid(~ChangeInCoding_ExclusionToInclusion.Rounded) +
+  geom_smooth(method=&#39;lm&#39;, se=F)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I may need some more data massaging to see the correlation correctly…
+Like isntead of plotting cor(PSI), maybe the metric is deltaPSI or
+logFC(PSI), maybe with or maybe without rescaling or qqnorming the PSI.
+Or maybe what I should be doing is directly correlating PSI vs RPKM
+across the timecourse…</p>
+<pre class="r"><code>Joined.PSI.RPKM.chicken %&gt;%
+  group_by(segment.name, tissue) %&gt;%
+  summarise(cor.PSI.RPKM = cor(PSI, RPKM, method = &quot;sp&quot;)) %&gt;%
+  ungroup() %&gt;%
+  inner_join(
+    Joined.PSI.RPKM.chicken %&gt;%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %&gt;%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %&gt;%
+  filter(seg.id %in% SegmentsWithNoNotes.chicken) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`=&quot;NMD-S&quot;, `0`=&quot;NoChange&quot;, `-1`=&quot;NMD-R&quot;)) %&gt;%
+  ggplot(aes(x=cor.PSI.RPKM, color=ChangeInCoding_ExclusionToInclusion.Rounded)) +
+  stat_ecdf() +
+  geom_vline(xintercept = 0, linetype=&#39;dashed&#39;)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, so again, NMD-S category has slightly more negative correlation
+but this doesn’t look any more convincing than the previous analyses…
+Let’s try renormalizing PSI… And also, let’s do all species at once for
+all devAS events, instead of manually looking at just chicken and
+human…</p>
+</div>
+<div id="betabeta-scatter-summary-of-all-species"
+class="section level3">
+<h3>beta/beta scatter summary of all species</h3>
+<pre class="r"><code>devAS.events.all &lt;- read_csv(&quot;../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_9.csv&quot;) %&gt;%
+  rename(&quot;segment.name&quot;=&quot;...1&quot;) %&gt;%
+  pivot_longer(cols=-c(1:8), names_to = c(&quot;.value&quot;, &quot;tissue&quot;), values_to = c(&quot;value&quot;), names_pattern=c(&quot;(^.+)\\.(.+$)&quot;)) %&gt;%
+  filter(pattern %in% c(&quot;d&quot;, &quot;u&quot;)) %&gt;%
+  inner_join(AS_segment_classifications, by=c(&quot;seg.id&quot;=&quot;AS_segment&quot;)) %&gt;%
+  mutate(tissue = str_to_title(tissue)) %&gt;%
+  dplyr::select(-ens_id)
+
+PSI.all &lt;- Sys.glob(&quot;../code/kaessman_AS_dat/FromWebApp/*/PSI.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/kaessman_AS_dat/FromWebApp/(.+?)/PSI.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, sep=&#39;,&#39;) %&gt;%
+  lapply(function(x) filter(x, V1 %in% devAS.events.all$segment.name)) %&gt;%
+  lapply(function(x) pivot_longer(x, names_to = &quot;sample&quot;,values_to = &quot;PSI&quot;,-V1)) %&gt;%
+  bind_rows() %&gt;%
+  dplyr::rename(&quot;seg.id&quot;=&quot;V1&quot;)
+
+RPKM.all &lt;- Sys.glob(&quot;../code/kaessman_AS_dat/FromWebApp/*/RPKM.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/kaessman_AS_dat/FromWebApp/(.+?)/RPKM.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, sep=&#39; &#39;) %&gt;%
+  lapply(function(x) filter(x, Names %in% devAS.events.all$Gene_name)) %&gt;%
+  lapply(function(x) pivot_longer(x, names_to = &quot;sample&quot;,values_to = &quot;RPKM&quot;,-Names)) %&gt;%
+  bind_rows(.id=&quot;Species&quot;) %&gt;%
+  mutate(sample = paste(str_to_title(Species), sample, sep=&quot;.&quot;))
+
+Joined.PSI.RPKM.all &lt;- devAS.events.all %&gt;%
+  inner_join(PSI.all) %&gt;%
+  inner_join(RPKM.all %&gt;%
+               dplyr::select(Gene_name=Names, sample, RPKM)) %&gt;%
+  separate(sample, into=c(&quot;Species&quot;, &quot;Tissue&quot;, &quot;StageName&quot;, &quot;StageOrdinal&quot;), convert=T, remove=F) %&gt;%
+  filter(Tissue == tissue) %&gt;%
+  inner_join(ManualOrdinalStages)
+
+
+
+dat.toPlot &lt;- Joined.PSI.RPKM.all %&gt;%
+  group_by(segment.name, tissue, Species) %&gt;%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = &quot;sp&quot;),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method=&#39;sp&#39;)) %&gt;%
+  ungroup() %&gt;%
+  inner_join(
+    Joined.PSI.RPKM.all %&gt;%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %&gt;%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`=&quot;NMD-S&quot;, `0`=&quot;NoChange&quot;, `-1`=&quot;NMD-R&quot;))
+
+dat.toPlot %&gt;%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=&#39;lm&#39;, se=F) +
+  facet_grid(Species~ChangeInCoding_ExclusionToInclusion.Rounded)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.toPlot %&gt;%
+  group_by(Species, tissue, ChangeInCoding_ExclusionToInclusion.Rounded) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ChangeInCoding_ExclusionToInclusion.Rounded, ncol=1) +
+  theme(legend.position = &#39;bottom&#39;)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" />
+Ok, that actually looks decent visually. It’s not like every cell in
+NMD-S is clearly red, but overall the picture is clearly showing the
+expected direction of effects.</p>
+<p>There’s a few questions this brings up and ways I can improve
+this:</p>
+<ul>
+<li><p>Why is there slight positive correlation in the NoChange
+category? One hypothesis is that it is because the extra exon adds to
+gene expression counts. Note that in all these PSI measures inclusion of
+the AS_segment, such that an increase in PSI means an increase in the
+longer isoform. This could just add extra gene counts for calculating
+RPKM, without actually increasing the true number transcripts.</p></li>
+<li><p>To improve interpretability of this plot, it might be simpler to
+just think of this analysis as “productive” AS vs “unproductive”,
+without distinguishing between NMD-S and NMD-R… This would be more
+in-line with how an analysis would go if it was just based on leafcutter
+“junction-centric” splicing quantifications. Therefore, I could
+basically just reverse the sign of the NMD-R AS_segments and then merge
+the NMD-R and NMD-S categories. But then I’d also want to think about
+how to most fairly “polarize” the PSI for productive AS_segments. One
+idea is that I could match the number of exon-lengthening to
+exon-shortening events to the unproductive group, to sort of account for
+the hypothesis about the slight positive trend in the NoChange category
+being because of the added exon.</p></li>
+<li><p>I’d also like visually plot how many of the devAS events (in each
+species/tissue) are unrpoductive?</p></li>
+<li><p>…and what of the conserved devAS events?</p></li>
+</ul>
+<div id="what-is-the-positive-correlation-in-nochange"
+class="section level4">
+<h4>What is the positive correlation in NoChange?</h4>
+<p>I think it is just because devAS segments add to the gene counts, so
+more inclusion means higher RPKM… To test this, I would have to seperate
+AS_segments that are annotated (and thus count towards gene expression
+count) versus those that aren’t… Only ones that are annotated should
+have this effect. Also, the degree of this effect should correlate with
+the fraction of exonic gene length that the devAS segment takes up…</p>
+<p>I have previously intersected each AS_segment with each
+protein_coding transcript, from which I can check if the AS_segment is
+annotated and thus would count towards RPKM. However, since RPKM (<a
+href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6658352/">from
+Cardoso-Moreira et al</a>) was probably calculated using all transcripts
+for genes, I think my analysis will make most sense if I only consider
+species for which there are only protein_coding transcripts annotated
+for genes (ie, not human or mouse)</p>
+<pre class="r"><code>SegmentsWithNoNotes.all &lt;- Sys.glob(&quot;../code/kaessmanAnalysis/NMDFinderB_ASSegments/*.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/kaessmanAnalysis/NMDFinderB_ASSegments/(.+?).tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows() %&gt;%
+  inner_join(
+    devAS.events.all %&gt;%
+      dplyr::select(AS_segment = seg.id, as.type, Gene_name, Species)
+  )
+  
+
+Are.devAS.AnnotatedEvents &lt;- SegmentsWithNoNotes.all %&gt;%
+  mutate(IsNA_Notes = is.na(Notes)) %&gt;%
+  group_by(AS_segment, Species) %&gt;%
+  summarise(Is_AS_segment_inclusion_annotated = any(WhichIsoformIsAnnotated==&quot;LongIsoform&quot;),
+            AreNotes_all_NA = all(IsNA_Notes==T)) %&gt;%
+  ungroup()
+
+GeneLengths &lt;- Sys.glob(&quot;../code/GenomeFiles/*/Reannotated.B.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/GenomeFiles/(.+?)/Reannotated.B.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, select=c(4,11,13,15,17)) %&gt;%
+  bind_rows(.id=&quot;Genome&quot;) %&gt;%
+  filter(V15 == &quot;protein_coding&quot; &amp; V17 == &quot;protein_coding&quot;) %&gt;%
+  separate_rows(V11, sep = &quot;,&quot;, convert=T) %&gt;%
+  group_by(Genome, V4, V13) %&gt;%
+  summarise(TranscriptLength = sum(V11)) %&gt;%
+  ungroup() %&gt;%
+  group_by(Genome, V13) %&gt;%
+  filter(TranscriptLength == max(TranscriptLength)) %&gt;%
+  ungroup() %&gt;%
+  distinct(Genome, V13, .keep_all=T) %&gt;%
+  dplyr::rename(&quot;Gene_name&quot;=&quot;V13&quot;, &quot;LongestTranscriptName&quot;=&quot;V4&quot;)
+
+GeneLengths %&gt;%
+  count(Genome)</code></pre>
+<pre><code># A tibble: 8 × 2
+  Genome                   n
+  &lt;chr&gt;                &lt;int&gt;
+1 Chicken_ensemblv84   15508
+2 Human_ensemblv75     22625
+3 Lamprey_ensemblv_112 10415
+4 Macaque_ensemblv84   21905
+5 Mouse_ensemblv84     21990
+6 Opossum_ensemblv84   21327
+7 Rabbit_ensemblv_84   19293
+8 Rat_ensemblv_79      22776</code></pre>
+<pre class="r"><code>Are.devAS.AnnotatedEvents %&gt;%
+  count(Species, Is_AS_segment_inclusion_annotated, AreNotes_all_NA) %&gt;%
+  filter(!is.na(Is_AS_segment_inclusion_annotated)) %&gt;%
+  mutate(AreNotes_all_NA = if_else(AreNotes_all_NA, &quot;Possibly complex AS\nwith notes&quot;, &quot;No notes&quot;)) %&gt;%
+  mutate(Is_AS_segment_inclusion_annotated = if_else(Is_AS_segment_inclusion_annotated, &quot;Inclusion is annotated&quot;, &quot;Inclusion is unannotated&quot;)) %&gt;%
+  ggplot(aes(x=Species, y=n, fill=Is_AS_segment_inclusion_annotated)) +
+    geom_col(position=&#39;fill&#39;) +
+    facet_wrap(~AreNotes_all_NA) +
+    Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, fill=NULL)</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.toCheckForLengthCorrelationInNoChange &lt;- dat.toPlot %&gt;%
+  inner_join(
+    Are.devAS.AnnotatedEvents %&gt;%
+      dplyr::select(-Species) %&gt;%
+      filter(!is.na(Is_AS_segment_inclusion_annotated)),
+    by=c(&quot;segment.name&quot;=&quot;AS_segment&quot;)
+  ) %&gt;%
+  inner_join(
+    GeneLengths %&gt;%
+      dplyr::select(-Genome)
+  ) %&gt;%
+  mutate(segmentLength = stop - start) %&gt;%
+  mutate(SegmentOverGeneLen = segmentLength/TranscriptLength)
+
+dat.toCheckForLengthCorrelationInNoChange %&gt;%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == &quot;NoChange&quot;) %&gt;%
+  group_by(Species, tissue, Is_AS_segment_inclusion_annotated, AreNotes_all_NA) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(AreNotes_all_NA = if_else(AreNotes_all_NA, &quot;Possibly complex AS\nwith notes&quot;, &quot;No notes&quot;)) %&gt;%
+  mutate(Is_AS_segment_inclusion_annotated = if_else(Is_AS_segment_inclusion_annotated, &quot;Inclusion is annotated&quot;, &quot;Inclusion is unannotated&quot;)) %&gt;%
+  filter(!Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;)) %&gt;%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_grid(AreNotes_all_NA~Is_AS_segment_inclusion_annotated) +
+  theme(legend.position = &#39;bottom&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" />
+Ok, the once where inclusion is annotated on average look a bit more
+positive correlated as I expected, but the low numbers (noise) in the
+ones where inclusion is unannotated actually makes it a bit unclear…
+Let’s check for a correlation with length of AS_segment relative to gene
+length</p>
+<pre class="r"><code>dat.toCheckForLengthCorrelationInNoChange %&gt;%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == &quot;NoChange&quot;) %&gt;%
+  mutate(LengthRatioQuintile = cut_number(SegmentOverGeneLen, n=5)) %&gt;%
+  group_by(Is_AS_segment_inclusion_annotated, Species, tissue, LengthRatioQuintile) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  filter(!Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;)) %&gt;%
+  mutate(Is_AS_segment_inclusion_annotated = if_else(Is_AS_segment_inclusion_annotated, &quot;Inclusion is annotated&quot;, &quot;Inclusion is unannotated&quot;)) %&gt;%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_grid(Is_AS_segment_inclusion_annotated~LengthRatioQuintile) +
+  theme(legend.position = &#39;bottom&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.toCheckForLengthCorrelationInNoChange %&gt;%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == &quot;NoChange&quot;) %&gt;%
+  filter(!Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;)) %&gt;%
+  group_by(Is_AS_segment_inclusion_annotated) %&gt;%
+  mutate(LengthRatioQuintile = cut_number(SegmentOverGeneLen, n=5)) %&gt;%
+  ungroup() %&gt;%
+  group_by(LengthRatioQuintile, Is_AS_segment_inclusion_annotated) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(Is_AS_segment_inclusion_annotated = if_else(Is_AS_segment_inclusion_annotated, &quot;Inclusion is annotated&quot;, &quot;Inclusion is unannotated&quot;)) %&gt;%
+  ggplot(aes(x=LengthRatioQuintile, y=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_col() +
+  labs(y=&quot;spearman.of_CorPSI_vs_CorRPKM\nAcross all tissues/species&quot;, x=&quot;Quintile for AS_segmentLength/GeneLength&quot;) +
+  facet_wrap(~Is_AS_segment_inclusion_annotated, scales=&quot;free&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" />
+Not sure why the first quintile is higher… But still, I think is
+generally consistent with an effect of adding gene counts to RPKM from
+annotated NoChange cassette exons. I could consider correcting for this
+some in later plots if the results are otherwise decieving. For example,
+since the principal comparison that I want to highlight is between
+productive and unproductive AS, try to adjust for this. For example, in
+previous plots, I plotted NMD-S (unproductive when included), NMD-R
+(Productive only when included), and NoChange (where correlations where
+both inclusion and exclusion are productive) and I was using PSI
+quantifications (percent spliced <em>in</em>)… To make this more similar
+to a junction-centric approach, where each junction is either productive
+or unproductive, I could combine NMD-S and NMD-R into “unproductive” and
+re-polarize the correlation sign based on whether it is NMD-S or NMD-R…
+Then, to attempt to correct for the length bias thing, I could
+repolarize the NoChange (which I will rename as “productive”), based on
+the ratio of NMD-S to NMD-R so that I am measuring roughly the same
+number of exon-inclusion events (which have negative bias due to length
+effect) and exon-exclusion events (which will have positive bias) as in
+the “unproductive” category… With that in mind, let’s replot the beta
+beta scatter…</p>
+</div>
+</div>
+<div
+id="beta-beta-scatter-for-all-revisted-as-productive-vs-unproductive"
+class="section level3">
+<h3>beta beta scatter for all… revisted as “productive” vs
+“unproductive”</h3>
+<pre class="r"><code>dat.toPlot.Unproductive &lt;- dat.toPlot %&gt;%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded %in% c(&quot;NMD-S&quot;, &quot;NMD-R&quot;)) %&gt;%
+  mutate(cor.PSI = if_else(ChangeInCoding_ExclusionToInclusion.Rounded==&quot;NMD-R&quot;, cor.PSI * -1, cor.PSI)) %&gt;%
+  mutate(NewClassification = &quot;Unproductive&quot;)
+
+dat.toPlot.Unproductive %&gt;%
+  count(ChangeInCoding_ExclusionToInclusion.Rounded) %&gt;%
+  mutate(Percent = n/sum(n))</code></pre>
+<pre><code># A tibble: 2 × 3
+  ChangeInCoding_ExclusionToInclusion.Rounded     n Percent
+  &lt;chr&gt;                                       &lt;int&gt;   &lt;dbl&gt;
+1 NMD-R                                       10626   0.310
+2 NMD-S                                       23676   0.690</code></pre>
+<pre class="r"><code>Fraction_NMDR &lt;- dat.toPlot.Unproductive %&gt;%
+  count(ChangeInCoding_ExclusionToInclusion.Rounded) %&gt;%
+  mutate(Percent = n/sum(n)) %&gt;%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == &quot;NMD-R&quot;) %&gt;% 
+  pull(Percent)
+
+dat.toPlot.Productive &lt;- dat.toPlot %&gt;%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == &quot;NoChange&quot;) %&gt;%
+  sample_frac(1) %&gt;%
+  mutate(RowFraction = row_number()/n()) %&gt;%
+  mutate(cor.PSI = if_else(RowFraction &lt;= Fraction_NMDR, -1 * cor.PSI, cor.PSI)) %&gt;%
+  # mutate(cor.PSI = if_else(RowFraction &lt;= 0.5, -1 * cor.PSI, cor.PSI)) %&gt;%
+  mutate(NewClassification = &quot;Productive&quot;) %&gt;%
+  sample_frac(1)
+
+  
+bind_rows(dat.toPlot.Productive, dat.toPlot.Unproductive) %&gt;%
+  group_by(Species, tissue, ChangeInCoding_ExclusionToInclusion.Rounded) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2(limits=c(-.75, .75)) +
+  facet_wrap(~ChangeInCoding_ExclusionToInclusion.Rounded, ncol=1) +
+  labs(fill=&quot;Spearman\nrho&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>bind_rows(dat.toPlot.Productive, dat.toPlot.Unproductive) %&gt;%
+  group_by(Species, tissue, NewClassification) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2(limits=c(-.6, .6)) +
+  facet_wrap(~NewClassification, ncol=1) +
+  labs(fill=&quot;splicing beta\nvs\nexpression beta\nSpearman\nrho&quot;, caption=str_wrap(&quot;Productive beta signs polarized to similar exon/inclusion ratio as unproductive&quot;, 30)) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>One more time, but this time let’s randomly assign the sign for the
+productive beta (analogous to picking a random representative sQTL
+intron beta for each productive cluster)</p>
+<pre class="r"><code>set.seed(0)
+dat.toPlot.Productive.RandomSign &lt;- dat.toPlot %&gt;%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == &quot;NoChange&quot;) %&gt;%
+  sample_frac(1) %&gt;%
+  mutate(RowFraction = row_number()/n()) %&gt;%
+  mutate(cor.PSI = if_else(RowFraction &lt;= 0.5, -1 * cor.PSI, cor.PSI)) %&gt;%
+  mutate(NewClassification = &quot;Productive&quot;) %&gt;%
+  sample_frac(1)
+
+
+bind_rows(dat.toPlot.Productive.RandomSign, dat.toPlot.Unproductive) %&gt;%
+  group_by(Species, tissue, NewClassification) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2(limits=c(-.6, .6)) +
+  facet_wrap(~NewClassification, ncol=1) +
+  labs(fill=&quot;splicing beta\nvs\nexpression beta\nSpearman\nrho&quot;, caption=str_wrap(&quot;Productive beta signs polarized randomly&quot;, 30)) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" />
+### How many devAS events are there, and how many are
+productive/unproductive…</p>
+<pre class="r"><code>dat.toPlot %&gt;%
+  count(ChangeInCoding_ExclusionToInclusion.Rounded, Species, tissue) %&gt;%
+  ggplot(aes(x=Species, y=n, fill=ChangeInCoding_ExclusionToInclusion.Rounded)) +
+  geom_col() +
+  facet_wrap(~tissue) +
+  labs(fill=NULL, y=&quot;Number devAS events&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.toPlot %&gt;%
+  count(ChangeInCoding_ExclusionToInclusion.Rounded, Species, tissue) %&gt;%
+  ggplot(aes(x=Species, y=n, fill=ChangeInCoding_ExclusionToInclusion.Rounded)) +
+  geom_col(position=&#39;fill&#39;) +
+  facet_wrap(~tissue) +
+  labs(fill=NULL, y=&quot;Fraction devAS events&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" />
+Ok, so in general, about half of devAS events (not filtering for
+conserved devAS events here) are unproductive…</p>
+<p>Now let’s consider events that are conserved with human… Filter for
+both devAS in same tissue, and same direction of splicing effect</p>
+<pre class="r"><code>devAS.events.all %&gt;%
+  count(Species)</code></pre>
+<pre><code># A tibble: 7 × 2
+  Species                n
+  &lt;chr&gt;              &lt;int&gt;
+1 Chicken_ensemblv84  8758
+2 Human_ensemblv75   10898
+3 Macaque_ensemblv84  5357
+4 Mouse_ensemblv84   10315
+5 Opossum_ensemblv84  8655
+6 Rabbit_ensemblv_84  8088
+7 Rat_ensemblv_79    11460</code></pre>
+<pre class="r"><code>devAS.ConservedWithHuman &lt;- devAS.events.all %&gt;%
+  mutate(Species = str_replace(Species, &quot;^(.+?)_.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Species = factor(Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;,&quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  filter(Species == &quot;Human&quot;) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %&gt;%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %&gt;%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`=&quot;NMD-S&quot;, `0`=&quot;NoChange&quot;, `-1`=&quot;NMD-R&quot;)) %&gt;%
+  inner_join(
+      OrthologousSegmentList.long %&gt;%
+      dplyr::select(human.seg.id, seg.id = AS_segment)
+      ) %&gt;%
+  inner_join(
+    devAS.events.all %&gt;%
+      mutate(Species = str_replace(Species, &quot;^(.+?)_.+$&quot;, &quot;\\1&quot;)) %&gt;%
+      mutate(Species = factor(Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;,&quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+      filter(!Species == &quot;Human&quot;) %&gt;%
+      mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %&gt;%
+      filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %&gt;%
+      mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`=&quot;NMD-S&quot;, `0`=&quot;NoChange&quot;, `-1`=&quot;NMD-R&quot;)) %&gt;% 
+      inner_join(
+        OrthologousSegmentList.long %&gt;%
+        dplyr::select(human.seg.id, seg.id = AS_segment)
+        ),
+    by=c(&quot;tissue&quot;, &quot;human.seg.id&quot;), suffix=c(&quot;.human&quot;, &quot;.other&quot;)) %&gt;%
+  filter(pattern.human == pattern.other)
+
+devAS.ConservedWithHuman %&gt;%
+  mutate(Conserved_NMD_Result = if_else(ChangeInCoding_ExclusionToInclusion.Rounded.human == ChangeInCoding_ExclusionToInclusion.Rounded.other, &quot;Conserved result&quot;, &quot;Unconserved result&quot;)) %&gt;%
+  count(tissue, Conserved_NMD_Result, Species.other, ChangeInCoding_ExclusionToInclusion.Rounded.other) %&gt;%
+  ggplot(aes(x=Species.other, y=n, fill=ChangeInCoding_ExclusionToInclusion.Rounded.other)) +
+  geom_col() +
+  facet_grid(Conserved_NMD_Result~tissue) +
+  labs(fill=&quot;Result of inclusion&quot;, y=&quot;Number devAS events\nconserved w/ human&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" />
+Wow. So I guess the truly conserved ones are really more likely to be
+the protein coding switches… Let’s replot this same thing after
+aggregating all events across tissues, since I remember in a previous
+notebook, I didn’t really see the expected diminsihing conserved number
+of events with evolutionary distance unless I did that.</p>
+<pre class="r"><code>devAS.ConservedWithHuman %&gt;%
+  distinct(segment.name.human, Species.other, .keep_all=T) %&gt;%
+  mutate(Conserved_NMD_Result = if_else(ChangeInCoding_ExclusionToInclusion.Rounded.human == ChangeInCoding_ExclusionToInclusion.Rounded.other, &quot;Conserved result&quot;, &quot;Unconserved result&quot;)) %&gt;%
+  count(tissue, Conserved_NMD_Result, Species.other, ChangeInCoding_ExclusionToInclusion.Rounded.other) %&gt;%
+  ggplot(aes(x=Species.other, y=n, fill=ChangeInCoding_ExclusionToInclusion.Rounded.other)) +
+  geom_col() +
+  facet_grid(~Conserved_NMD_Result) +
+  labs(fill=&quot;Result of inclusion&quot;, y=&quot;Number devAS events\nconserved w/ human&quot;,
+       caption=&quot;must be conserved devAS in at least one tissue&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-09_Mazin_CheckNMD_Effects.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Not sure why macacque is so low here… In this analysis (as opposed to
+my previous notebook), there is additional filters for the interpretable
+AS events that don’t only partially overlap with protein_coding
+transcript exons. Ok, let’s look at the few conserved NMD-S and NMD-R
+events… I wonder if they are in genes that I would recognize from the
+literature, like SR proteins</p>
+<pre class="r"><code>Conserved.UnproductiveEvents &lt;- devAS.ConservedWithHuman %&gt;%
+  mutate(Conserved_NMD_Result = if_else(ChangeInCoding_ExclusionToInclusion.Rounded.human == ChangeInCoding_ExclusionToInclusion.Rounded.other, &quot;Conserved result&quot;, &quot;Unconserved result&quot;))  %&gt;%
+  filter(Conserved_NMD_Result == &quot;Conserved result&quot; &amp; ChangeInCoding_ExclusionToInclusion.Rounded.other %in% c(&quot;NMD-R&quot;, &quot;NMD-S&quot;))
+
+
+
+mart &lt;- useEnsembl(&quot;ensembl&quot;,&quot;hsapiens_gene_ensembl&quot;)
+genes &lt;- getBM(attributes = c(&#39;ensembl_gene_id&#39;, &#39;hgnc_symbol&#39;),
+               mart = mart)
+
+Conserved.UnproductiveEvents %&gt;%
+  filter(Species.other == &quot;Mouse&quot;) %&gt;%
+  # distinct(Gene_name.human, .keep_all=T) %&gt;%
+  inner_join(genes, by=c(&quot;Gene_name.human&quot;=&quot;ensembl_gene_id&quot;)) %&gt;%
+  dplyr::select(segment.name.human, Gene_name.human, hgnc_symbol, tissue,Result=ChangeInCoding_ExclusionToInclusion.Rounded.other, Species=Species.other, AS_type=as.type.human,pattern=pattern.other ) %&gt;%
+  group_by(segment.name.human, Gene_name.human,  hgnc_symbol,Result, Species, AS_type, pattern ) %&gt;% 
+  summarise(tissues = paste0(tissue,collapse = &#39;,&#39;)) %&gt;%
+  ungroup() %&gt;%
+  knitr::kable()</code></pre>
+<table>
+<colgroup>
+<col width="18%" />
+<col width="15%" />
+<col width="11%" />
+<col width="6%" />
+<col width="7%" />
+<col width="7%" />
+<col width="7%" />
+<col width="23%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">segment.name.human</th>
+<th align="left">Gene_name.human</th>
+<th align="left">hgnc_symbol</th>
+<th align="left">Result</th>
+<th align="left">Species</th>
+<th align="left">AS_type</th>
+<th align="left">pattern</th>
+<th align="left">tissues</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">hum.10154.s54</td>
+<td align="left">ENSG00000166833</td>
+<td align="left">NAV2</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">d</td>
+<td align="left">Brain,Cerebellum</td>
+</tr>
+<tr class="even">
+<td align="left">hum.10569.s18</td>
+<td align="left">ENSG00000109920</td>
+<td align="left">FNBP4</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Cerebellum</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.15686.s24</td>
+<td align="left">ENSG00000135127</td>
+<td align="left">BICDL1</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Brain</td>
+</tr>
+<tr class="even">
+<td align="left">hum.18718.s11</td>
+<td align="left">ENSG00000174373</td>
+<td align="left">RALGAPA1</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">AD</td>
+<td align="left">u</td>
+<td align="left">Brain</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.18840.s11</td>
+<td align="left">ENSG00000185246</td>
+<td align="left">PRPF39</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Liver</td>
+</tr>
+<tr class="even">
+<td align="left">hum.22489.s31</td>
+<td align="left">ENSG00000140575</td>
+<td align="left">IQGAP1</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Cerebellum</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.22773.s6</td>
+<td align="left">ENSG00000131876</td>
+<td align="left">SNRPA1</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">d</td>
+<td align="left">Brain,Cerebellum,Liver</td>
+</tr>
+<tr class="even">
+<td align="left">hum.22983.s15</td>
+<td align="left">ENSG00000138834</td>
+<td align="left">MAPK8IP3</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">d</td>
+<td align="left">Brain,Heart</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.27107.s15</td>
+<td align="left">ENSG00000161647</td>
+<td align="left">MPP3</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Brain</td>
+</tr>
+<tr class="even">
+<td align="left">hum.27234.s8</td>
+<td align="left">ENSG00000186566</td>
+<td align="left">GPATCH8</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Kidney</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.27491.s19</td>
+<td align="left">ENSG00000011258</td>
+<td align="left">MBTD1</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Cerebellum</td>
+</tr>
+<tr class="even">
+<td align="left">hum.27604.s31</td>
+<td align="left">ENSG00000153944</td>
+<td align="left">MSI2</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">d</td>
+<td align="left">Heart</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.28308.s41</td>
+<td align="left">ENSG00000055483</td>
+<td align="left">USP36</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">AA</td>
+<td align="left">u</td>
+<td align="left">Brain</td>
+</tr>
+<tr class="even">
+<td align="left">hum.2990.s11</td>
+<td align="left">ENSG00000134186</td>
+<td align="left">PRPF38B</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Brain,Liver</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.2990.s5</td>
+<td align="left">ENSG00000134186</td>
+<td align="left">PRPF38B</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">AD</td>
+<td align="left">u</td>
+<td align="left">Liver</td>
+</tr>
+<tr class="even">
+<td align="left">hum.35010.s18</td>
+<td align="left">ENSG00000116001</td>
+<td align="left">TIA1</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Kidney</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.36200.s2</td>
+<td align="left">ENSG00000163166</td>
+<td align="left">IWS1</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Heart</td>
+</tr>
+<tr class="even">
+<td align="left">hum.44181.s4</td>
+<td align="left">ENSG00000187672</td>
+<td align="left">ERC2</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Cerebellum</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.46205.s19</td>
+<td align="left">ENSG00000163660</td>
+<td align="left">CCNL1</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Brain,Cerebellum</td>
+</tr>
+<tr class="even">
+<td align="left">hum.46498.s35</td>
+<td align="left">ENSG00000058063</td>
+<td align="left">ATP11B</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Brain</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.46907.s15</td>
+<td align="left">ENSG00000075711</td>
+<td align="left">DLG1</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Brain,Cerebellum,Kidney</td>
+</tr>
+<tr class="even">
+<td align="left">hum.51645.s26</td>
+<td align="left">ENSG00000083312</td>
+<td align="left">TNPO1</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">d</td>
+<td align="left">Brain</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.5208.s35</td>
+<td align="left">ENSG00000163531</td>
+<td align="left">NFASC</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Brain</td>
+</tr>
+<tr class="even">
+<td align="left">hum.52586.s24</td>
+<td align="left">ENSG00000164398</td>
+<td align="left">ACSL6</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">AA</td>
+<td align="left">d</td>
+<td align="left">Cerebellum</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.62432.s12</td>
+<td align="left">ENSG00000168300</td>
+<td align="left">PCMTD1</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">d</td>
+<td align="left">Kidney</td>
+</tr>
+<tr class="even">
+<td align="left">hum.64667.s30</td>
+<td align="left">ENSG00000153707</td>
+<td align="left">PTPRD</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">d</td>
+<td align="left">Ovary</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.66205.s19</td>
+<td align="left">ENSG00000157654</td>
+<td align="left">PALM2AKAP2</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Brain,Cerebellum</td>
+</tr>
+<tr class="even">
+<td align="left">hum.66360.s12</td>
+<td align="left">ENSG00000041982</td>
+<td align="left">TNC</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">d</td>
+<td align="left">Heart</td>
+</tr>
+<tr class="odd">
+<td align="left">hum.7914.s8</td>
+<td align="left">ENSG00000138326</td>
+<td align="left">RPS24</td>
+<td align="left">NMD-S</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">u</td>
+<td align="left">Cerebellum,Heart</td>
+</tr>
+<tr class="even">
+<td align="left">hum.8254.s10</td>
+<td align="left">ENSG00000166348</td>
+<td align="left">USP54</td>
+<td align="left">NMD-R</td>
+<td align="left">Mouse</td>
+<td align="left">CE</td>
+<td align="left">d</td>
+<td align="left">Brain,Cerebellum</td>
+</tr>
+</tbody>
+</table>
+<p>DLG1, and IQGAP1, TIA1 look famaliar… Quick google search also seems
+to validate those. Let’s make a slightly more extensive table, to find
+all events conserved with human from this dataset…</p>
+<pre class="r"><code>Conserved.UnproductiveEvents %&gt;%
+  inner_join(genes, by=c(&quot;Gene_name.human&quot;=&quot;ensembl_gene_id&quot;)) %&gt;%
+  dplyr::select(segment.name.human, Gene_name.human, hgnc_symbol, tissue,Result=ChangeInCoding_ExclusionToInclusion.Rounded.other, Species=Species.other, AS_type=as.type.human,pattern=pattern.other ) %&gt;%
+  mutate(Species.Tissue = paste(Species, tissue)) %&gt;%
+  arrange(Species, tissue) %&gt;%
+  group_by(segment.name.human, Gene_name.human,  hgnc_symbol,Result, AS_type, pattern ) %&gt;%
+  summarise(Species.Tissues = paste0(Species.Tissue,collapse = &#39;, &#39;), NumberConservedSpeciesTissuePairs=n()) %&gt;%
+  ungroup() %&gt;%
+  arrange(desc(NumberConservedSpeciesTissuePairs), hgnc_symbol) %&gt;%
+  knitr::kable() %&gt;%
+  kableExtra::kable_styling(&quot;striped&quot;, full_width = F) %&gt;% 
+  kableExtra::scroll_box(width = &quot;500px&quot;, height = &quot;200px&quot;)</code></pre>
+<div
+style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:200px; overflow-x: scroll; width:500px; ">
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+segment.name.human
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Gene_name.human
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+hgnc_symbol
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Result
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+AS_type
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+pattern
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+Species.Tissues
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+NumberConservedSpeciesTissuePairs
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+hum.46907.s15
+</td>
+<td style="text-align:left;">
+ENSG00000075711
+</td>
+<td style="text-align:left;">
+DLG1
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Brain, Mouse Cerebellum, Mouse Kidney, Rat Brain, Rat Cerebellum,
+Rat Kidney, Rat Ovary, Opossum Brain, Opossum Cerebellum, Opossum
+Kidney, Opossum Ovary, Chicken Cerebellum, Chicken Kidney, Chicken Ovary
+</td>
+<td style="text-align:right;">
+14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.21842.s6
+</td>
+<td style="text-align:left;">
+ENSG00000067225
+</td>
+<td style="text-align:left;">
+PKM
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Macaque Cerebellum, Macaque Heart, Macaque Testis, Rabbit Brain, Rabbit
+Cerebellum, Rabbit Heart, Rabbit Testis, Opossum Brain, Opossum
+Cerebellum, Opossum Heart, Opossum Testis
+</td>
+<td style="text-align:right;">
+11
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.10154.s54
+</td>
+<td style="text-align:left;">
+ENSG00000166833
+</td>
+<td style="text-align:left;">
+NAV2
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Brain, Macaque Cerebellum, Mouse Brain, Mouse Cerebellum, Rat
+Brain, Rat Cerebellum, Rabbit Brain, Rabbit Cerebellum, Opossum Brain,
+Opossum Cerebellum
+</td>
+<td style="text-align:right;">
+10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.7914.s8
+</td>
+<td style="text-align:left;">
+ENSG00000138326
+</td>
+<td style="text-align:left;">
+RPS24
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Macaque Brain, Macaque Cerebellum, Macaque Kidney, Mouse Cerebellum,
+Mouse Heart, Rat Heart, Rabbit Brain, Rabbit Cerebellum, Rabbit Kidney,
+Chicken Cerebellum
+</td>
+<td style="text-align:right;">
+10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.8254.s10
+</td>
+<td style="text-align:left;">
+ENSG00000166348
+</td>
+<td style="text-align:left;">
+USP54
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Mouse Brain, Mouse Cerebellum, Rat Brain, Rat Cerebellum, Rabbit Brain,
+Rabbit Cerebellum, Opossum Brain, Opossum Cerebellum, Chicken Brain,
+Chicken Cerebellum
+</td>
+<td style="text-align:right;">
+10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.6692.s20
+</td>
+<td style="text-align:left;">
+ENSG00000148481
+</td>
+<td style="text-align:left;">
+MINDY3
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Heart, Rat Heart, Rabbit Cerebellum, Rabbit Heart, Opossum
+Cerebellum, Opossum Heart, Chicken Cerebellum, Chicken Heart
+</td>
+<td style="text-align:right;">
+8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.8792.s33
+</td>
+<td style="text-align:left;">
+ENSG00000076685
+</td>
+<td style="text-align:left;">
+NT5C2
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Rat Brain, Rabbit Brain, Rabbit Cerebellum, Opossum Brain, Opossum
+Cerebellum, Chicken Brain, Chicken Cerebellum, Chicken Heart
+</td>
+<td style="text-align:right;">
+8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.66360.s12
+</td>
+<td style="text-align:left;">
+ENSG00000041982
+</td>
+<td style="text-align:left;">
+TNC
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Kidney, Mouse Heart, Rat Heart, Rat Kidney, Rabbit Heart,
+Opossum Heart, Chicken Heart, Chicken Kidney
+</td>
+<td style="text-align:right;">
+8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.22773.s6
+</td>
+<td style="text-align:left;">
+ENSG00000131876
+</td>
+<td style="text-align:left;">
+SNRPA1
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Cerebellum, Mouse Brain, Mouse Cerebellum, Mouse Liver, Rabbit
+Brain, Rabbit Cerebellum, Chicken Kidney
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.28308.s41
+</td>
+<td style="text-align:left;">
+ENSG00000055483
+</td>
+<td style="text-align:left;">
+USP36
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+AA
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Macaque Cerebellum, Mouse Brain, Rat Brain, Rat Cerebellum, Rabbit
+Cerebellum, Opossum Brain, Opossum Cerebellum
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.46498.s35
+</td>
+<td style="text-align:left;">
+ENSG00000058063
+</td>
+<td style="text-align:left;">
+ATP11B
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Macaque Cerebellum, Mouse Brain, Rat Brain, Rat Cerebellum, Rabbit
+Brain, Rabbit Cerebellum
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.49594.s28
+</td>
+<td style="text-align:left;">
+ENSG00000170390
+</td>
+<td style="text-align:left;">
+DCLK2
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Brain, Rat Cerebellum, Rabbit Cerebellum, Opossum Brain, Opossum
+Cerebellum
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.27234.s8
+</td>
+<td style="text-align:left;">
+ENSG00000186566
+</td>
+<td style="text-align:left;">
+GPATCH8
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Kidney, Rabbit Cerebellum, Rabbit Kidney, Opossum Cerebellum,
+Chicken Kidney
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.13920.s7
+</td>
+<td style="text-align:left;">
+ENSG00000050405
+</td>
+<td style="text-align:left;">
+LIMA1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Macaque Cerebellum, Rat Cerebellum, Rabbit Cerebellum, Opossum
+Cerebellum, Chicken Cerebellum
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.27604.s31
+</td>
+<td style="text-align:left;">
+ENSG00000153944
+</td>
+<td style="text-align:left;">
+MSI2
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Mouse Heart, Rabbit Heart, Rabbit Kidney, Opossum Heart, Opossum Kidney
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.15808.s6
+</td>
+<td style="text-align:left;">
+ENSG00000188026
+</td>
+<td style="text-align:left;">
+RILPL1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Rat Heart, Rabbit Heart, Opossum Heart, Opossum Heart, Chicken Heart
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.45771.s15
+</td>
+<td style="text-align:left;">
+ENSG00000114120
+</td>
+<td style="text-align:left;">
+SLC25A36
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Kidney, Rat Cerebellum, Rat Kidney, Rabbit Cerebellum, Rabbit
+Kidney
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.48268.s15
+</td>
+<td style="text-align:left;">
+ENSG00000083896
+</td>
+<td style="text-align:left;">
+YTHDC1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Testis, Rat Testis, Rabbit Testis, Opossum Testis, Chicken
+Testis
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.46205.s19
+</td>
+<td style="text-align:left;">
+ENSG00000163660
+</td>
+<td style="text-align:left;">
+CCNL1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Brain, Mouse Cerebellum, Rat Cerebellum, Rabbit Cerebellum
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.36200.s2
+</td>
+<td style="text-align:left;">
+ENSG00000163166
+</td>
+<td style="text-align:left;">
+IWS1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Macaque Heart, Mouse Heart, Rabbit Heart, Opossum Heart
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.22983.s15
+</td>
+<td style="text-align:left;">
+ENSG00000138834
+</td>
+<td style="text-align:left;">
+MAPK8IP3
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Mouse Brain, Mouse Heart, Rat Brain, Chicken Brain
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.66205.s19
+</td>
+<td style="text-align:left;">
+ENSG00000157654
+</td>
+<td style="text-align:left;">
+PALM2AKAP2
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Brain, Mouse Cerebellum, Rat Brain, Rat Cerebellum
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.2990.s11
+</td>
+<td style="text-align:left;">
+ENSG00000134186
+</td>
+<td style="text-align:left;">
+PRPF38B
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Brain, Mouse Liver, Rat Cerebellum, Rabbit Cerebellum
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.18718.s11
+</td>
+<td style="text-align:left;">
+ENSG00000174373
+</td>
+<td style="text-align:left;">
+RALGAPA1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Macaque Heart, Mouse Brain, Rat Brain, Opossum Heart
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.29046.s11
+</td>
+<td style="text-align:left;">
+ENSG00000067900
+</td>
+<td style="text-align:left;">
+ROCK1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Rabbit Cerebellum, Opossum Cerebellum, Chicken Brain, Chicken Cerebellum
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.35010.s18
+</td>
+<td style="text-align:left;">
+ENSG00000116001
+</td>
+<td style="text-align:left;">
+TIA1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Kidney, Rat Brain, Rat Kidney, Rabbit Kidney
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.52586.s24
+</td>
+<td style="text-align:left;">
+ENSG00000164398
+</td>
+<td style="text-align:left;">
+ACSL6
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+AA
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Mouse Cerebellum, Opossum Brain, Opossum Cerebellum
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.18035.s24
+</td>
+<td style="text-align:left;">
+ENSG00000088448
+</td>
+<td style="text-align:left;">
+ANKRD10
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Rat Liver, Opossum Cerebellum, Chicken Liver
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.15686.s24
+</td>
+<td style="text-align:left;">
+ENSG00000135127
+</td>
+<td style="text-align:left;">
+BICDL1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Brain, Rat Brain, Chicken Cerebellum
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.3129.s16
+</td>
+<td style="text-align:left;">
+ENSG00000134255
+</td>
+<td style="text-align:left;">
+CEPT1
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Rabbit Heart, Rabbit Liver, Chicken Liver
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.10569.s18
+</td>
+<td style="text-align:left;">
+ENSG00000109920
+</td>
+<td style="text-align:left;">
+FNBP4
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Cerebellum, Rat Cerebellum, Rabbit Cerebellum
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.1641.s21
+</td>
+<td style="text-align:left;">
+ENSG00000086015
+</td>
+<td style="text-align:left;">
+MAST2
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Rat Brain, Rabbit Brain, Rabbit Heart
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.27107.s15
+</td>
+<td style="text-align:left;">
+ENSG00000161647
+</td>
+<td style="text-align:left;">
+MPP3
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Brain, Rat Brain, Rabbit Brain
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.5208.s33
+</td>
+<td style="text-align:left;">
+ENSG00000163531
+</td>
+<td style="text-align:left;">
+NFASC
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Macaque Brain, Rabbit Brain, Opossum Brain
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.5208.s35
+</td>
+<td style="text-align:left;">
+ENSG00000163531
+</td>
+<td style="text-align:left;">
+NFASC
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Brain, Rabbit Brain, Opossum Brain
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.62432.s12
+</td>
+<td style="text-align:left;">
+ENSG00000168300
+</td>
+<td style="text-align:left;">
+PCMTD1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Kidney, Mouse Kidney, Rat Kidney
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.52859.s18
+</td>
+<td style="text-align:left;">
+ENSG00000146005
+</td>
+<td style="text-align:left;">
+PSD2
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+AA
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Brain, Rat Brain, Chicken Brain
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.8078.s20
+</td>
+<td style="text-align:left;">
+ENSG00000107771
+</td>
+<td style="text-align:left;">
+CCSER2
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Rat Brain, Rabbit Brain
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.37533.s22
+</td>
+<td style="text-align:left;">
+ENSG00000013441
+</td>
+<td style="text-align:left;">
+CLK1
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Rat Cerebellum, Rabbit Cerebellum
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.194.s10
+</td>
+<td style="text-align:left;">
+ENSG00000074800
+</td>
+<td style="text-align:left;">
+ENO1
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Rat Heart, Chicken Heart
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.194.s12
+</td>
+<td style="text-align:left;">
+ENSG00000074800
+</td>
+<td style="text-align:left;">
+ENO1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Rat Heart, Chicken Heart
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.22489.s31
+</td>
+<td style="text-align:left;">
+ENSG00000140575
+</td>
+<td style="text-align:left;">
+IQGAP1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Cerebellum, Rat Cerebellum
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.14759.s5
+</td>
+<td style="text-align:left;">
+ENSG00000111052
+</td>
+<td style="text-align:left;">
+LIN7A
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Macaque Brain, Rabbit Brain
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.18840.s11
+</td>
+<td style="text-align:left;">
+ENSG00000185246
+</td>
+<td style="text-align:left;">
+PRPF39
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Liver, Rabbit Liver
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.799.s6
+</td>
+<td style="text-align:left;">
+ENSG00000133226
+</td>
+<td style="text-align:left;">
+SRRM1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Rat Cerebellum, Chicken Cerebellum
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.51645.s26
+</td>
+<td style="text-align:left;">
+ENSG00000083312
+</td>
+<td style="text-align:left;">
+TNPO1
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Mouse Brain, Opossum Brain
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.65069.s12
+</td>
+<td style="text-align:left;">
+ENSG00000198467
+</td>
+<td style="text-align:left;">
+TPM2
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Rabbit Kidney, Opossum Kidney
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.16846.s14
+</td>
+<td style="text-align:left;">
+ENSG00000023516
+</td>
+<td style="text-align:left;">
+AKAP11
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Testis
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.16846.s14
+</td>
+<td style="text-align:left;">
+ENSG00000023516
+</td>
+<td style="text-align:left;">
+AKAP11
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Opossum Brain
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.36414.s15
+</td>
+<td style="text-align:left;">
+ENSG00000082258
+</td>
+<td style="text-align:left;">
+CCNT2
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Macaque Brain
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.45644.s70
+</td>
+<td style="text-align:left;">
+ENSG00000138246
+</td>
+<td style="text-align:left;">
+DNAJC13
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Chicken Cerebellum
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.44181.s4
+</td>
+<td style="text-align:left;">
+ENSG00000187672
+</td>
+<td style="text-align:left;">
+ERC2
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Cerebellum
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.36710.s47
+</td>
+<td style="text-align:left;">
+ENSG00000157827
+</td>
+<td style="text-align:left;">
+FMNL2
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Rabbit Brain
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.49595.s13
+</td>
+<td style="text-align:left;">
+ENSG00000198589
+</td>
+<td style="text-align:left;">
+LRBA
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+AA
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Chicken Cerebellum
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.1641.s21
+</td>
+<td style="text-align:left;">
+ENSG00000086015
+</td>
+<td style="text-align:left;">
+MAST2
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Chicken Testis
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.27491.s19
+</td>
+<td style="text-align:left;">
+ENSG00000011258
+</td>
+<td style="text-align:left;">
+MBTD1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Cerebellum
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.12335.s7
+</td>
+<td style="text-align:left;">
+ENSG00000076706
+</td>
+<td style="text-align:left;">
+MCAM
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Rabbit Cerebellum
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.12414.s48
+</td>
+<td style="text-align:left;">
+ENSG00000019144
+</td>
+<td style="text-align:left;">
+PHLDB1
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Rat Cerebellum
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.2990.s5
+</td>
+<td style="text-align:left;">
+ENSG00000134186
+</td>
+<td style="text-align:left;">
+PRPF38B
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Mouse Liver
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.64667.s30
+</td>
+<td style="text-align:left;">
+ENSG00000153707
+</td>
+<td style="text-align:left;">
+PTPRD
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Mouse Ovary
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.45790.s23
+</td>
+<td style="text-align:left;">
+ENSG00000155903
+</td>
+<td style="text-align:left;">
+RASA2
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Chicken Cerebellum
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.43213.s20
+</td>
+<td style="text-align:left;">
+ENSG00000131389
+</td>
+<td style="text-align:left;">
+SLC6A6
+</td>
+<td style="text-align:left;">
+NMD-R
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+d
+</td>
+<td style="text-align:left;">
+Rabbit Cerebellum
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.1171.s24
+</td>
+<td style="text-align:left;">
+ENSG00000054118
+</td>
+<td style="text-align:left;">
+THRAP3
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Chicken Liver
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hum.65591.s5
+</td>
+<td style="text-align:left;">
+ENSG00000083223
+</td>
+<td style="text-align:left;">
+TUT7
+</td>
+<td style="text-align:left;">
+NMD-S
+</td>
+<td style="text-align:left;">
+CE
+</td>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:left;">
+Rat Kidney
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] biomaRt_2.52.0    data.table_1.14.2 forcats_0.5.1     stringr_1.4.0    
+ [5] dplyr_1.0.9       purrr_0.3.4       readr_2.1.2       tidyr_1.2.0      
+ [9] tibble_3.1.7      ggplot2_3.3.6     tidyverse_1.3.1  
+
+loaded via a namespace (and not attached):
+  [1] nlme_3.1-157           bitops_1.0-7           fs_1.5.2              
+  [4] lubridate_1.8.0        bit64_4.0.5            webshot_0.5.3         
+  [7] filelock_1.0.2         progress_1.2.2         httr_1.4.3            
+ [10] rprojroot_2.0.3        GenomeInfoDb_1.32.2    tools_4.2.0           
+ [13] backports_1.4.1        bslib_0.3.1            utf8_1.2.2            
+ [16] R6_2.5.1               mgcv_1.8-40            DBI_1.1.2             
+ [19] BiocGenerics_0.42.0    colorspace_2.0-3       withr_2.5.0           
+ [22] prettyunits_1.1.1      tidyselect_1.1.2       curl_4.3.2            
+ [25] bit_4.0.4              compiler_4.2.0         git2r_0.30.1          
+ [28] cli_3.6.2              rvest_1.0.2            Biobase_2.56.0        
+ [31] xml2_1.3.3             labeling_0.4.2         sass_0.4.1            
+ [34] scales_1.3.0           rappdirs_0.3.3         systemfonts_1.0.4     
+ [37] digest_0.6.29          svglite_2.1.0          R.utils_2.11.0        
+ [40] rmarkdown_2.14         XVector_0.36.0         pkgconfig_2.0.3       
+ [43] htmltools_0.5.2        highr_0.9              dbplyr_2.1.1          
+ [46] fastmap_1.1.0          rlang_1.0.2            readxl_1.4.0          
+ [49] rstudioapi_0.13        RSQLite_2.2.14         farver_2.1.0          
+ [52] jquerylib_0.1.4        generics_0.1.2         jsonlite_1.8.0        
+ [55] vroom_1.5.7            R.oo_1.24.0            RCurl_1.98-1.7        
+ [58] magrittr_2.0.3         kableExtra_1.3.4       GenomeInfoDbData_1.2.8
+ [61] Matrix_1.5-3           Rcpp_1.0.12            munsell_0.5.0         
+ [64] S4Vectors_0.34.0       fansi_1.0.3            R.methodsS3_1.8.1     
+ [67] lifecycle_1.0.1        stringi_1.7.6          yaml_2.3.5            
+ [70] zlibbioc_1.42.0        BiocFileCache_2.4.0    grid_4.2.0            
+ [73] blob_1.2.3             parallel_4.2.0         promises_1.2.0.1      
+ [76] crayon_1.5.1           lattice_0.20-45        splines_4.2.0         
+ [79] Biostrings_2.64.0      haven_2.5.0            hms_1.1.1             
+ [82] KEGGREST_1.36.2        knitr_1.39             pillar_1.7.0          
+ [85] stats4_4.2.0           reprex_2.0.1           XML_3.99-0.14         
+ [88] glue_1.6.2             evaluate_0.15          modelr_0.1.8          
+ [91] vctrs_0.4.1            png_0.1-7              tzdb_0.3.0            
+ [94] httpuv_1.6.5           cellranger_1.1.0       gtable_0.3.0          
+ [97] assertthat_0.2.1       cachem_1.0.6           xfun_0.30             
+[100] broom_0.8.0            later_1.3.0            viridisLite_0.4.0     
+[103] AnnotationDbi_1.58.0   memoise_2.0.1          IRanges_2.30.0        
+[106] workflowr_1.7.0        ellipsis_0.3.2        </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

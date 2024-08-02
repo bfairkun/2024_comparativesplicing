@@ -1,0 +1,151 @@
+---
+title: "2024-07-16_Download_CordosoMoreira_Fastq"
+output: html_document
+date: '2024-07-16'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Yang suggested we process all the RNA-seq data in [Cordoso-Moreira](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6658352/) et al and reprocess it ourselves using leafcutter tools and more update reference genomes and such... In the paper, they provide accession codes to [ArrayExpress](https://www.ebi.ac.uk/biostudies/arrayexpress), but as far as I can tell, ArrayExpress only provides ftp links, which in my experience might be painfully slow to transfer compared to aspera. ENA also hosts the same data with aspera links. Let's use that. So I'm going to manually search the accession codes at ArrayExpress, get the corresponding ENA accession codes, and from there download a table of all sample aspera links. Here are the ArrayExpress codes from the paper:
+
+> Raw and processed RNA-seq data have been deposited in ArrayExpress with the accession codes: E-MTAB-6769 (chicken), E-MTAB-6782 (rabbit) E-MTAB-6798 (mouse), E-MTAB-6811 (rat), E-MTAB-6813 (rhesus), E-MTAB-6814 (human) and E-MTAB-6833 (opossum) (https://www.ebi.ac.uk/arrayexpress/).
+
+Then I get the following ENA accessions:
+
+- mouse: PRJEB26869
+- rabbit: PRJEB26840
+- chicken: PRJEB26695
+- rhesus: PRJEB26956
+- human: PRJEB26969
+- rat: PRJEB26889
+- opossum: PRJEB27035
+
+I downloaded the tsv sample list with aspera links for each of those ENA projects... Let's confirm I have all roughly 1800 samples in these lists...
+
+```{r}
+library(tidyverse)
+
+sample_list <- Sys.glob("../data/SampleLists_Cordoso_Moreira/filereport_read_run_*_tsv.txt") %>%
+  lapply(read_tsv) %>%
+  bind_rows()
+
+sample_list %>%
+  nrow()
+
+sample_list %>%
+  count(scientific_name)
+```
+
+There's a few more samples than I was anticipating... I somewhat recall Cordoso-Moreira and/or Mazin et al may have dropped some samples from some of their analysis. let's see what's going on...
+
+```{r}
+PSI <- read_tsv("../code/kaessman_AS_dat/All.ortho.exons.PSI.tsv.gz", n_max = 1)
+
+SamplesUsedInFinalAnalysis <- data.frame(sample = colnames(PSI)[-1]) %>%
+  separate(sample, into=c("Species", "Tissue", "Stage", "Number"), sep="\\.", remove = F, convert=T)
+
+SamplesUsedInFinalAnalysis %>%
+  count(Species, Tissue, Stage)
+
+SamplesUsedInFinalAnalysis %>%
+  count(Species,Tissue,Stage,Number )
+
+SamplesUsedInFinalAnalysis %>%
+  arrange(Species, Tissue, Stage, Number)
+
+SamplesUsedInFinalAnalysis %>%
+  distinct(Species, Number) %>%
+  arrange(Species, Number)
+
+```
+
+Ok, I think that last number in the sample name is the individual donor... If that's the case, there should be no switches between the sex and the species:number pair. Also, each species:number should correspond to one stage, which can be assayed in up to 7 different tissues
+
+
+```{r}
+SamplesUsedInFinalAnalysis %>%
+  count(Species, Number, Stage)
+
+SamplesUsedInFinalAnalysis %>%
+  distinct(Species, Number) %>%
+  count(Species)
+```
+
+Ok, this doesn't quite make sense... But in any case, I now notice that Table S2 from Cordoso-Moreira et al has a full sample list with all samples and noting which ones are included in final analysis (though unfortuanely it doesn't have an exact mapping to sample names used in the PSI table)... Oh well, I can figure that out later if it's important... For now I am just happy to know we have all the important metadata somewhere..
+
+```{r}
+TableS2 <- read_tsv("../data/SampleLists_Cordoso_Moreira/NIHMS1530688-supplement-2.txt", skip = 2)
+
+TableS2 %>%
+  count(`Used library?`)
+
+```
+
+
+
+```{r}
+
+Joined <- sample_list %>%
+  # dplyr::select(sample_alias) %>%
+  mutate(sample =  str_replace(sample_alias, "^.+?:([0-9]+)[A-Za-z0-9]*\\.(.+?)\\.(.+?)\\.(.+)\\.(.+)$", "\\1;\\2;\\3;\\4;\\5")) %>%
+  separate(sample, into=c("library ID", "Species", "Tissue", "Stage","Sex"), sep=';', convert=T) %>%
+  mutate(`library ID` = as.numeric(`library ID`)) %>%
+  inner_join(TableS2, by="library ID")
+
+Joined %>%
+  filter(!Sex.x == Sex.y)
+
+Joined %>%
+  filter(is.na(`library ID`))
+```
+
+Ok, something still isn't quite right with a few samples... But since I joined on the library, and most of the metadata matches, but not for sex for a few samples, I suspect this is actually a data entry error on behalf of the authors. So for now let's just get to downloading the data, and maybe worry about these metadata details later
+
+
+```{r}
+
+Joined %>%
+  dplyr::select(`sample_alias`:`Stage (detail)`) %>%
+  filter(if_any(everything(), is.na))
+
+Joined %>%
+  distinct(`library ID`)
+
+Joined %>%
+  mutate(ID = str_glue("{Species}_{Tissue}_{Stage}_{`library ID`}")) %>%
+  dplyr::select(ID, everything()) %>%
+  write_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+
+```
+
+Let's also write a samples.tsv config file... Include Yang's samples that he wanted to process...
+
+```{r}
+Genomes <- read_tsv("../code/config/STAR_Genome_List.tsv")
+
+
+cordosa.samples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+
+
+bind_rows(
+  cordosa.samples %>%
+    mutate(R1 = str_glue("/project2/yangili1/bjf79/2024_comparativesplicing/code/CordosoMoreira_Fastq/{ID}.fastq.gz")) %>%
+    mutate(R2 = "", Strandedness = "U") %>%
+    mutate(STARGenomeName = recode(Species, "Chicken"="Chicken_ensembl_v112", "Human"="Human_ensembl_v112", "Macaque"="Macaque_ensembl_v112", "Opossum"="Opossum_ensembl_v112", "Mouse"="Mouse_ensembl_v112", "Rabbit"="Rabbit_ensembl_v112", "Rat"="Rat_ensembl_v112")) %>%
+    dplyr::select(SampleName = ID, STARGenomeName, R1:Strandedness),
+  data.frame(fn = Sys.glob("/project2/yangili1/yangili/evol/data/rnaseq/*/*/*gz")) %>%
+    mutate(Species_Sample_R = str_replace(fn, "/project2/yangili1/yangili/evol/data/rnaseq/(.+?)/(.+?)/.+?_([12]).fastq.gz", "\\1;\\2;R\\3")) %>%
+    separate(Species_Sample_R, into=c("Species", "SampleName", "R1orR2"), sep=';') %>%
+    pivot_wider(names_from = "R1orR2", values_from = "fn") %>%
+    mutate(STARGenomeName = recode(Species, "rsosetta"="SalpingoecaRosetta_ensemblv_59", "nvectensis"="StarletSeaAnemone_RefSeq_GCF_932526225.1")) %>%
+    mutate(Strandedness = "U") %>%
+    dplyr::select(SampleName, STARGenomeName, R1, R2, Strandedness)
+) %>%
+  write_tsv("../code/config/samples.tsv")
+
+```
+

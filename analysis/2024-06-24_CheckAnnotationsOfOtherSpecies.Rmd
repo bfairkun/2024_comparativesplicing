@@ -92,7 +92,7 @@ Ok so only human and mouse have lots of the unproductive 'processed_transcript' 
 
 Let's also check number of transcripts per protein coding gene...
 
-```{r}
+```{r, fig.width=10}
 bed12 %>%
   filter(gene_biotype == "protein_coding") %>%
   mutate(IsProteinCodingTranscript = transcript_biotype=="protein_coding") %>%
@@ -356,7 +356,7 @@ Well the only tag I see in Lamprey is "Ensembl_canonical", so these are largely 
 ```{r}
 bed12.reannotated <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.A.bed.gz") %>%
   setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.A.bed.gz", "\\1")) %>%
-  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
   bind_rows(.id="Genome")
 
 ```
@@ -419,7 +419,7 @@ Just to make sure of my understanding of the 'processed_transcript' transcript_t
 ```{r}
 bed12.reannotated.usingOriginalAnnotations <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.B.bed.gz") %>%
   setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.B.bed.gz", "\\1")) %>%
-  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
   bind_rows(.id="Genome")
 
 bed12.reannotated.usingOriginalAnnotations %>%
@@ -465,7 +465,7 @@ So let's replot using that strategy (translate from first ATG, but require ORF t
 ```{r}
 bed12.reannotated.ApproachC <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.C.bed.gz") %>%
   setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.C.bed.gz", "\\1")) %>%
-  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
   bind_rows(.id="Genome")
 
 
@@ -501,7 +501,7 @@ Same plots but using approach of translating from first start_codon if no annota
 ```{r}
 bed12.reannotated.ApproachD <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.D.bed.gz") %>%
   setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.D.bed.gz", "\\1")) %>%
-  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
   bind_rows(.id="Genome")
 
 
@@ -539,7 +539,7 @@ I also have another approach to identifying ORF, which is to ignore annotations 
 ```{r}
 bed12.reannotated.ApproachE <- Sys.glob("../code/GenomeFiles/*[0-9]/Reannotated.E.bed.gz") %>%
   setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.E.bed.gz", "\\1")) %>%
-  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "gene_name","transcript_name","transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickStop", "color", "NumBlocks", "BlockLengths", "BlockStarts", "gene_id", "transcript_id", "gene_biotype", "gene_type", "transcript_biotype", "transcript_type", "transcript_support_level","tag","ccds_id", "NMDFinderB", "CDSLen" )) %>%
   bind_rows(.id="Genome")
 
 
@@ -588,11 +588,11 @@ Here is a pseudocode approach to accomplishing this:
 
 Note that Yang's script requires gene_name and transcript_name in the gtf attributes. Not all ensembl transcripts have these, even when there is a gene_id... see below...
 
-```{r}
+```{r, eval=F}
 bed12.reannotated.ApproachE %>%
   filter(gene_type == "protein_coding") %>%
   filter(!str_detect(tag, "_NF")) %>%
-  mutate(IsGeneNameEmpty = gene_name == ".") %>%
+  mutate(IsGeneNameEmpty = gene_id == ".") %>%
   distinct(gene_id, Genome, .keep_all=T) %>%
   count(Genome, IsGeneNameEmpty) %>%
   ggplot(aes(x=Genome, y=n, fill=IsGeneNameEmpty)) +

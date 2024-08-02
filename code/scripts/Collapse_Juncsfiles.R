@@ -1,0 +1,1 @@
+/project2/yangili1/bjf79/2024_comparativesplicing/code/module_workflows/snakemake-workflow_rna-seq/scripts/Collapse_Juncsfiles.R

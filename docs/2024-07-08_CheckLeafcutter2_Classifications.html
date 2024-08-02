@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2024-07-08" />
+
+<title>2024-07-08_CheckLeafcutter2_Classifications</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">2024_ComparativeSplicing</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">2024-07-08_CheckLeafcutter2_Classifications</h1>
+<h4 class="date">2024-07-08</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#intro" id="toc-intro">Intro</a></li>
+<li><a href="#final-approach" id="toc-final-approach">Final approach</a>
+<ul>
+<li><a href="#human" id="toc-human">Human</a></li>
+<li><a href="#chicken" id="toc-chicken">Chicken</a></li>
+</ul></li>
+</ul>
+</div>
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-07-10
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>2024_comparativesplicing/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed19900924code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(19900924)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed19900924code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(19900924)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrong5495e15">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong> 5495e15
+</a>
+</p>
+</div>
+<div id="strongRepositoryversionstrong5495e15"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version 5495e15.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    code/.snakemake/
+    Ignored:    code/GenomeFiles/
+    Ignored:    code/SJC_annotations_d5d1043c36aa60f014dee37e6f54418aeac524c63858131c0c68769dba597410.pckle
+    Ignored:    code/Session.vim
+    Ignored:    code/kaessmanAnalysis/
+    Ignored:    code/kaessman_AS_dat/
+    Ignored:    code/logs/
+    Ignored:    code/rules/.GenomeAnnotations.smk.swp
+    Ignored:    code/scratch/
+
+Untracked files:
+    Untracked:  analysis/2024-07-08_CheckLeafcutter2_Classifications.Rmd
+    Untracked:  analysis/2024-07-09_Mazin_CheckNMD_Effects.Rmd
+    Untracked:  code/scripts/LeafcutterJuncClassificationsToAS_segments.R
+
+Unstaged changes:
+    Modified:   analysis/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/envs/bedparse.yml
+    Modified:   code/rules/GenomeAnnotations.smk
+    Modified:   code/scripts/AS_ExonSegments_to_AS_Junctions.py
+    Modified:   code/scripts/leafcutter2
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>First, I took Mazin’s AS_segments and associated each with a pair of
+relevant junctions for the included/excluded isoform (cassette exons
+will actually have two junctions for the included isoform, and another
+junction for the excluded, so actually there is a trio of relevant
+junctions). I then used Yang’s scripts to classify whether these
+junctions are expected to be productive/unproductive… Now I want to
+check that these make sense. I can also compare to the results of
+NMDFinderB algorithm for each isoform (using annotated “protein_coding”
+transcript isoforms as a reference for the resulting isoform when
+AS_segment is included/excluded).</p>
+<p>At first, I just did this for human:</p>
+<pre class="bash"><code>cd ../code
+
+python scripts/AS_ExonSegments_to_AS_Junctions.py -TsvOut kaessmanAnalysis/NMDFinderB_ASSegments/Human_ensemblv75.tsv.gz -JuncListOut kaessmanAnalysis/JuncListsForLeafcutter2/Human_ensemblv75.juncs.gz -AS_segmentsIn kaessman_AS_dat/AS_segment_lists/Human_ensemblv75.bed -AnnotatedTranscriptsIn GenomeFiles/Human_ensemblv75/Reannotated.B.bed.gz -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v &amp;&gt; NMDFinderB_EffectsOfMazinSegments/Human_ensemblv75.log
+
+python scripts/leafcutter2/scripts/SpliceJunctionClassifier.py -c kaessmanAnalysis/JuncListsForLeafcutter2/Human_ensemblv75.juncs.gz -G /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -A GenomeFiles/Human_ensemblv75/Reannotated.B.gtf -v -r kaessmanAnalysis/JuncListsForLeafcutter2/ -o Human_ensemblv75.</code></pre>
+<p>Now, let’s check the results…</p>
+<pre class="r"><code>library(tidyverse)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+JunctionsAnnotations &lt;- read_tsv(&quot;../code/kaessmanAnalysis/JuncListsForLeafcutter2/Human_ensemblv75._junction_classifications.txt&quot;)
+
+JunctionsAnnotations %&gt;%
+  count(Annot, Coding, UTR)</code></pre>
+<pre><code># A tibble: 6 × 4
+  Annot Coding UTR        n
+  &lt;lgl&gt; &lt;lgl&gt;  &lt;lgl&gt;  &lt;int&gt;
+1 FALSE FALSE  FALSE  22293
+2 FALSE FALSE  TRUE    5028
+3 FALSE TRUE   FALSE   9074
+4 TRUE  FALSE  FALSE  22335
+5 TRUE  FALSE  TRUE    4665
+6 TRUE  TRUE   FALSE 155819</code></pre>
+<pre class="r"><code>AS_segmentAnnotations &lt;- read_tsv(&quot;../code/kaessmanAnalysis/NMDFinderB_ASSegments/Human_ensemblv75.tsv.gz&quot;)
+
+AS_segmentAnnotations.tidy &lt;- AS_segmentAnnotations %&gt;%
+  filter(!is.na(WhichIsoformIsAnnotated)) %&gt;%
+  distinct() %&gt;%
+  # head(1000) %&gt;%
+  separate_rows(LongIsoform_UniqueJuncs, ShortIsoform_UniqueJuncs, sep=&quot;,&quot;) %&gt;%
+  pivot_longer(cols=LongIsoform_UniqueJuncs:ShortIsoform_NMDFinderB, names_pattern=&quot;^(.+?)_(.+)$&quot;, names_to = c(&quot;isoform&quot;, &quot;.value&quot;))
+
+JoinedAnnotations &lt;- AS_segmentAnnotations.tidy %&gt;%
+  separate(UniqueJuncs, into=c(&quot;junc_chrom&quot;, &quot;junc_start&quot;, &quot;junc_end&quot;, &quot;junc_strand&quot;), sep=&quot;_&quot;, convert=T, remove=F) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{junc_chrom}:{junc_start}-{junc_end+1}&quot;)) %&gt;%
+  inner_join(JunctionsAnnotations)
+
+JoinedAnnotations %&gt;%
+  distinct(UniqueJuncs, .keep_all=T) %&gt;%
+  distinct(AS_segment, isoform, .keep_all=T) %&gt;%
+  mutate(Productive = Coding) %&gt;%
+  count(Productive, NMDFinderB) %&gt;%
+  group_by(NMDFinderB) %&gt;%
+  mutate(Total = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(NMDFinderB = str_glue(&quot;{NMDFinderB}; n={Total}&quot;)) %&gt;%
+  ggplot(aes(x=NMDFinderB, y=n, fill=Productive)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;NMDFinderB, tx with junction&quot;, fill=&quot;leafcutter2\nIsCoding&quot;, caption=&quot;NMDFinderB collapsed to first distinct reference isoform&quot;)</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" />
+Ok that makes sense…</p>
+<p>Maybe I should think of a more sensible way to collapse things as
+from the original splicing quantifications based on AS_segments… For
+example, cassette exons will have two unique inclusion junctions, and it
+is possible their junction-level leafcutter2 classifications won’t
+agree. Since I want to use the exon-level quantifications from Mazin et
+al, it will be important to figure out how to do this… Maybe I should
+just see how often they don’t agree, and if it doesn’t happen much I’ll
+just filter out those ambiguous cases.</p>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  distinct() %&gt;%
+  distinct(UniqueJuncs, AS_segment, .keep_all=T) %&gt;%
+  add_count(AS_segment) %&gt;%
+  # filter(n==3)
+  distinct(AS_segment, .keep_all=T) %&gt;%
+  ggplot(aes(x=n, color=color)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  distinct(UniqueJuncs, AS_segment, .keep_all=T) %&gt;%
+  add_count(AS_segment) %&gt;%
+  filter((n == 3 &amp; color==&quot;#1b9e77&quot;) | (n==2 &amp; color %in% c(&quot;#7570b3&quot;, &quot;#e7298a&quot;))) %&gt;%
+  filter(isoform == &quot;LongIsoform&quot; &amp; n ==3) %&gt;%
+  dplyr::select(AS_segment, UniqueJuncs, Coding) %&gt;%
+  group_by(AS_segment) %&gt;%
+  mutate(rn = row_number()) %&gt;%
+  ungroup() %&gt;%
+  pivot_wider(names_from = &quot;rn&quot;, values_from=c(&quot;Coding&quot;, &quot;UniqueJuncs&quot;)) %&gt;%
+  mutate(DoClassificationsMatch = Coding_1 == Coding_2) %&gt;%
+  mutate(sum = Coding_1 + Coding_2) %&gt;%
+  count(DoClassificationsMatch, sum)</code></pre>
+<pre><code># A tibble: 3 × 3
+  DoClassificationsMatch   sum     n
+  &lt;lgl&gt;                  &lt;int&gt; &lt;int&gt;
+1 FALSE                      1    25
+2 TRUE                       0  2484
+3 TRUE                       2  9565</code></pre>
+<p>Ok, so for this (subset) of cassette exons that straightforwardly map
+to a trio of junctions, for the long isoform, the annotations basically
+always match, and it is safe to just drop these edge cases.</p>
+<p>I’m confused at those cases that don’t just map to a trio of
+junctions… Let’s try to understand what those are…</p>
+<pre class="r"><code># Check that original AS_segment/transcript pairs all are defined by junction duos or trios
+AS_segmentAnnotations.tidy %&gt;%
+  distinct() %&gt;%
+  count(transcript, AS_segment, color) %&gt;%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf()</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok that makes sense… I think there is some duplication when joining
+to leafcutter results… Could it be because introns are duplicated in
+leafcutter output?</p>
+<pre class="r"><code>AS_segmentAnnotations.tidy %&gt;%
+  distinct() %&gt;%
+  separate(UniqueJuncs, into=c(&quot;junc_chrom&quot;, &quot;junc_start&quot;, &quot;junc_end&quot;, &quot;junc_strand&quot;), sep=&quot;_&quot;, convert=T, remove=F) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{junc_chrom}:{junc_start}-{junc_end+1}&quot;)) %&gt;%
+  inner_join(JunctionsAnnotations) %&gt;%
+  count(transcript, AS_segment, color) %&gt;%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JunctionsAnnotations %&gt;%
+  count(Intron_coord) %&gt;%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, yes, some introns overlap more than one gene… Let’s collapse
+that, and then check…</p>
+<pre class="r"><code>AS_segmentAnnotations.tidy %&gt;%
+  distinct() %&gt;%
+  separate(UniqueJuncs, into=c(&quot;junc_chrom&quot;, &quot;junc_start&quot;, &quot;junc_end&quot;, &quot;junc_strand&quot;), sep=&quot;_&quot;, convert=T, remove=F) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{junc_chrom}:{junc_start}-{junc_end+1}&quot;)) %&gt;%
+  inner_join(
+    JunctionsAnnotations %&gt;%
+      distinct(Intron_coord, .keep_all=T)
+  ) %&gt;%
+  count(transcript, AS_segment, color) %&gt;%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, that makes sense. So each AS_segment:transcript pair is defined
+by exactly 2 unique juncs (for AS donor or AS acceptor) and 3 unique
+juncs (for cassette exon). But for some AS_segments, there will be more
+than one transcript, which complicates things. Let’s check how many
+transcripts for each AS_segment…</p>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  distinct() %&gt;%
+  count(transcript, AS_segment, color) %&gt;%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  count(transcript, AS_segment, color) %&gt;%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I think the pivot_longer somewhere is adding extra rows… but we can
+“distinct” the df…</p>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  distinct() %&gt;%
+  distinct(transcript, AS_segment) %&gt;%
+  count(AS_segment) %&gt;%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So a lot of these AS_segments overlap multiple transcripts, and
+therefore have basically duplicated “unique” junctions rows… Let’s see
+how many of them are complicated with different junction sets between
+the transcripts…</p>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  distinct() %&gt;%
+  distinct(AS_segment, color, UniqueJuncs) %&gt;%
+  count(AS_segment, color) %&gt;%
+  ggplot(aes(x=n, color=color)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok I think this is the crux of the problem… This could arise from
+cassette exon that is nieghboring another cassette exon.</p>
+<p>Luckily I took notes of some of these cases, and can easily filter
+out some of them…</p>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  filter(is.na(Notes)) %&gt;%
+  distinct() %&gt;%
+  distinct(AS_segment, color, UniqueJuncs) %&gt;%
+  count(AS_segment, color) %&gt;%
+  ggplot(aes(x=n, color=color)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>AS_segmentAnnotations %&gt;%
+  filter(!is.na(WhichIsoformIsAnnotated)) %&gt;%
+  count(Notes)</code></pre>
+<pre><code># A tibble: 4 × 2
+  Notes                           n
+  &lt;chr&gt;                       &lt;int&gt;
+1 AS at terminal exon          3195
+2 Left ex is also AS segment  28282
+3 Right ex is also AS segment 14088
+4 &lt;NA&gt;                        56862</code></pre>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  distinct(UniqueJuncs, .keep_all=T) %&gt;%
+  distinct(AS_segment, isoform, .keep_all=T) %&gt;%
+  mutate(Productive = Coding) %&gt;%
+  count(Productive, NMDFinderB, Notes) %&gt;%
+  group_by(NMDFinderB, Notes) %&gt;%
+  mutate(Total = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(NMDFinderB = str_glue(&quot;{NMDFinderB}; n={Total}&quot;)) %&gt;%
+  ggplot(aes(x=NMDFinderB, y=n, fill=Productive)) +
+  geom_col(position=&#39;fill&#39;) +
+  facet_wrap(~Notes, scales=&quot;free&quot;, nrow = 1) +
+  Rotate_x_labels +
+  theme(legend.position=&#39;bottom&#39;) +
+  labs(y=&quot;fraction&quot;, x=&quot;NMDFinderB, tx with junction&quot;, fill=&quot;leafcutter2\nIsCoding&quot;, caption=&quot;NMDFinderB collapsed to first distinct reference isoform&quot;)</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" />
+But even though I could easily filter out these odd cases, it’s not like
+these cases are more discordant with NMDFinderB. Are these AS_events
+defined by more than 2 or 3 splice junctions generally concordant with
+eachother?</p>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  distinct() %&gt;%
+  distinct(transcript, AS_segment, UniqueJuncs, .keep_all=T) %&gt;%
+  group_by(isoform, AS_segment) %&gt;%
+  summarise(PercentCoding = sum(Coding)/n(), n=n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(isoform = recode(isoform, &quot;LongIsoform&quot;=&quot;AS_seg included&quot;, &quot;ShortIsoform&quot;=&quot;AS_seg excluded&quot;)) %&gt;%
+  ggplot(aes(x=PercentCoding)) +
+  stat_ecdf() +
+  facet_wrap(~isoform) +
+  labs(y=&#39;ecdf&#39;, x=&#39;fraction juncs that are &quot;coding&quot; within AS_segment&#39;)</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JoinedAnnotations %&gt;%
+  distinct() %&gt;%
+  distinct(transcript, AS_segment, UniqueJuncs, .keep_all=T) %&gt;%
+  group_by(isoform, AS_segment) %&gt;%
+  summarise(PercentCoding = sum(Coding)/n(), n=n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(n = case_when(
+    n &gt; 12 ~ as.numeric(12),
+    TRUE ~ as.numeric(n)
+  )) %&gt;%
+  add_count(n) %&gt;%
+  mutate(group = str_glue(&quot;{n} juncs for segment; n={nn}&quot;)) %&gt;%
+  mutate(isoform = recode(isoform, &quot;LongIsoform&quot;=&quot;AS_seg included&quot;, &quot;ShortIsoform&quot;=&quot;AS_seg excluded&quot;)) %&gt;%
+  ggplot(aes(x=PercentCoding, color=group)) +
+  stat_ecdf() +
+  facet_wrap(~isoform) +
+  labs(y=&#39;ecdf&#39;, x=&#39;fraction juncs that are &quot;coding&quot; within AS_segment&#39;, color=&#39;num juncs in AS_seg:isoform pair&#39;)</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, so for the most part, even when there are say 10 juncs for a the
+AS_segment included isoform, they mostly all agree in terms of coding
+capacity. I could reasonably just go with majority rules or say they all
+must match.</p>
+<p>Let’s just calculate the fraction that are coding for each
+AS_segment:isoform pair and consider thresholds for that later…</p>
+<p>So let’s prototype some code to go from the leafcutter junc
+classifications (which are defined as gene:junc pairs) to
+AS_segment:gene:isoform trios (where isoform refers to either being
+included or excluded) where each trio is summarised with a single
+number: the percent of associated junctions that are coding by
+leafcutter classification.</p>
+</div>
+<div id="final-approach" class="section level2">
+<h2>Final approach</h2>
+<div id="human" class="section level3">
+<h3>Human</h3>
+<pre class="r"><code>JunctionsAnnotations_final &lt;- read_tsv(&quot;../code/kaessmanAnalysis/JuncListsForLeafcutter2/Human_ensemblv75._junction_classifications.txt&quot;)
+
+AS_segmentAnnotations_final &lt;- read_tsv(&quot;../code/kaessmanAnalysis/NMDFinderB_ASSegments/Human_ensemblv75.tsv.gz&quot;)
+
+transcripts_to_genes_final &lt;- read_tsv(&quot;../code/GenomeFiles/Human_ensemblv75/Reannotated.B.bed.gz&quot;, col_select = c(4, 13), col_names=F) %&gt;%
+  dplyr::rename(&quot;transcript&quot;=&quot;X4&quot;, &quot;Gene_name&quot;=&quot;X13&quot;) %&gt;%
+  distinct()
+
+AS_segmentAnnotations.tidy_final &lt;- AS_segmentAnnotations_final %&gt;%
+  filter(!is.na(WhichIsoformIsAnnotated)) %&gt;%
+  distinct() %&gt;%
+  separate_rows(LongIsoform_UniqueJuncs, ShortIsoform_UniqueJuncs, sep=&quot;,&quot;) %&gt;%
+  pivot_longer(cols=LongIsoform_UniqueJuncs:ShortIsoform_NMDFinderB, names_pattern=&quot;^(.+?)_(.+)$&quot;, names_to = c(&quot;isoform&quot;, &quot;.value&quot;)) %&gt;%
+  distinct()
+
+JoinedAnnotations_final &lt;- AS_segmentAnnotations.tidy_final %&gt;%
+  separate(UniqueJuncs, into=c(&quot;junc_chrom&quot;, &quot;junc_start&quot;, &quot;junc_end&quot;, &quot;junc_strand&quot;), sep=&quot;_&quot;, convert=T, remove=F) %&gt;%
+  inner_join(transcripts_to_genes_final) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{junc_chrom}:{junc_start}-{junc_end+1}&quot;)) %&gt;%
+  inner_join(JunctionsAnnotations_final)
+
+
+AS_segment_AnnotationsFromJuncs_final &lt;- JoinedAnnotations_final %&gt;%
+  group_by(isoform, AS_segment, Gene_name) %&gt;%
+  summarise(PercentCoding = sum(Coding)/n(), n=n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(isoform = recode(isoform, &quot;LongIsoform&quot;=&quot;AS_seg_included&quot;, &quot;ShortIsoform&quot;=&quot;AS_seg_excluded&quot;)) 
+
+AS_segment_AnnotationsFromJuncs_final %&gt;%
+  ggplot(aes(x=n, color=isoform)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,10)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;Number juncs defining isoform&#39;)</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>AS_segment_AnnotationsFromJuncs_final %&gt;%
+  pivot_wider(names_from = &quot;isoform&quot;, values_from = c(&quot;PercentCoding&quot;, &quot;n&quot;), names_sep=&quot;.&quot;) %&gt;%
+  mutate(ChangeInCoding_InclusionToExclusion = PercentCoding.AS_seg_included - PercentCoding.AS_seg_excluded) %&gt;%
+  ggplot(aes(x=ChangeInCoding_InclusionToExclusion)) +
+  stat_ecdf() +
+  scale_x_continuous(breaks=-1:1, labels=c(&quot;UnproductiveToProductive&quot;, &quot;NoChange&quot;, &quot;ProductiveToUnproductive&quot;)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;Consequence of AS_segment inclusion&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JoinedAnnotations_final %&gt;%
+  distinct(UniqueJuncs, .keep_all=T) %&gt;%
+  distinct(AS_segment, isoform, .keep_all=T) %&gt;%
+  mutate(Productive = Coding) %&gt;%
+  count(Productive, NMDFinderB) %&gt;%
+  group_by(NMDFinderB) %&gt;%
+  mutate(Total = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(NMDFinderB = str_glue(&quot;{NMDFinderB}; n={Total}&quot;)) %&gt;%
+  ggplot(aes(x=NMDFinderB, y=n, fill=Productive)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;NMDFinderB, tx with junction&quot;, fill=&quot;leafcutter2\nIsCoding&quot;, caption=&quot;NMDFinderB collapsed to first distinct reference isoform&quot;)</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, that all makes sense… Let’s write this code to a script and
+repeat on the other species… Then I can start to look at how changes in
+splicing of these UnproductiveToProductive or ProductiveToProductive
+AS_segments correlate with changes in expression.</p>
+<p>Before I do that… I want to repeat just a few of these analyses with
+a less well annotated genome… Like chicken…</p>
+</div>
+<div id="chicken" class="section level3">
+<h3>Chicken</h3>
+<pre class="r"><code>JunctionsAnnotations_final_chicken &lt;- read_tsv(&quot;../code/kaessmanAnalysis/JuncListsForLeafcutter2/Chicken_ensemblv84._junction_classifications.txt&quot;)
+
+AS_segmentAnnotations_final_chicken &lt;- read_tsv(&quot;../code/kaessmanAnalysis/NMDFinderB_ASSegments/Chicken_ensemblv84.tsv.gz&quot;)
+
+transcripts_to_genes_final_chicken &lt;- read_tsv(&quot;../code/GenomeFiles/Chicken_ensemblv84/Reannotated.B.bed.gz&quot;, col_select = c(4, 13), col_names=F) %&gt;%
+  dplyr::rename(&quot;transcript&quot;=&quot;X4&quot;, &quot;Gene_name&quot;=&quot;X13&quot;) %&gt;%
+  distinct()
+
+AS_segmentAnnotations.tidy_final_chicken &lt;- AS_segmentAnnotations_final_chicken %&gt;%
+  filter(!is.na(WhichIsoformIsAnnotated)) %&gt;%
+  distinct() %&gt;%
+  separate_rows(LongIsoform_UniqueJuncs, ShortIsoform_UniqueJuncs, sep=&quot;,&quot;) %&gt;%
+  pivot_longer(cols=LongIsoform_UniqueJuncs:ShortIsoform_NMDFinderB, names_pattern=&quot;^(.+?)_(.+)$&quot;, names_to = c(&quot;isoform&quot;, &quot;.value&quot;)) %&gt;%
+  distinct()
+
+JoinedAnnotations_final_chicken &lt;- AS_segmentAnnotations.tidy_final_chicken %&gt;%
+  separate(UniqueJuncs, into=c(&quot;junc_chrom&quot;, &quot;junc_start&quot;, &quot;junc_end&quot;, &quot;junc_strand&quot;), sep=&quot;_&quot;, convert=T, remove=F) %&gt;%
+  inner_join(transcripts_to_genes_final_chicken) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{junc_chrom}:{junc_start}-{junc_end+1}&quot;)) %&gt;%
+  inner_join(JunctionsAnnotations_final_chicken)
+
+
+AS_segment_AnnotationsFromJuncs_final_chicken &lt;- JoinedAnnotations_final_chicken %&gt;%
+  group_by(isoform, AS_segment, Gene_name) %&gt;%
+  summarise(PercentCoding = sum(Coding)/n(), n=n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(isoform = recode(isoform, &quot;LongIsoform&quot;=&quot;AS_seg_included&quot;, &quot;ShortIsoform&quot;=&quot;AS_seg_excluded&quot;)) 
+
+AS_segment_AnnotationsFromJuncs_final_chicken %&gt;%
+  ggplot(aes(x=n, color=isoform)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,10)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;Number juncs defining isoform&#39;)</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>AS_segment_AnnotationsFromJuncs_final_chicken %&gt;%
+  pivot_wider(names_from = &quot;isoform&quot;, values_from = c(&quot;PercentCoding&quot;, &quot;n&quot;), names_sep=&quot;.&quot;) %&gt;%
+  mutate(ChangeInCoding_InclusionToExclusion = PercentCoding.AS_seg_included - PercentCoding.AS_seg_excluded) %&gt;%
+  ggplot(aes(x=ChangeInCoding_InclusionToExclusion)) +
+  stat_ecdf() +
+  scale_x_continuous(breaks=-1:1, labels=c(&quot;UnproductiveToProductive&quot;, &quot;NoChange&quot;, &quot;ProductiveToUnproductive&quot;)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;Consequence of AS_segment inclusion&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JoinedAnnotations_final_chicken %&gt;%
+  distinct(UniqueJuncs, .keep_all=T) %&gt;%
+  distinct(AS_segment, isoform, .keep_all=T) %&gt;%
+  mutate(Productive = Coding) %&gt;%
+  count(Productive, NMDFinderB) %&gt;%
+  group_by(NMDFinderB) %&gt;%
+  mutate(Total = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(NMDFinderB = str_glue(&quot;{NMDFinderB}; n={Total}&quot;)) %&gt;%
+  ggplot(aes(x=NMDFinderB, y=n, fill=Productive)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;NMDFinderB, tx with junction&quot;, fill=&quot;leafcutter2\nIsCoding&quot;, caption=&quot;NMDFinderB collapsed to first distinct reference isoform&quot;)</code></pre>
+<p><img src="figure/2024-07-08_CheckLeafcutter2_Classifications.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok all looks good. In chicken as well as human, the leafcutter2
+JunctionClassifier.py script seems to work as intended and is similarly
+concordant with results of NMDFinderB translating isoforms with or
+without Mazin’s AS_segments.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] forcats_0.5.1   stringr_1.4.0   dplyr_1.0.9     purrr_0.3.4    
+[5] readr_2.1.2     tidyr_1.2.0     tibble_3.1.7    ggplot2_3.3.6  
+[9] tidyverse_1.3.1
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.12      lubridate_1.8.0  assertthat_0.2.1 rprojroot_2.0.3 
+ [5] digest_0.6.29    utf8_1.2.2       R6_2.5.1         cellranger_1.1.0
+ [9] backports_1.4.1  reprex_2.0.1     evaluate_0.15    highr_0.9       
+[13] httr_1.4.3       pillar_1.7.0     rlang_1.0.2      readxl_1.4.0    
+[17] rstudioapi_0.13  jquerylib_0.1.4  rmarkdown_2.14   labeling_0.4.2  
+[21] bit_4.0.4        munsell_0.5.0    broom_0.8.0      compiler_4.2.0  
+[25] httpuv_1.6.5     modelr_0.1.8     xfun_0.30        pkgconfig_2.0.3 
+[29] htmltools_0.5.2  tidyselect_1.1.2 workflowr_1.7.0  fansi_1.0.3     
+[33] crayon_1.5.1     tzdb_0.3.0       dbplyr_2.1.1     withr_2.5.0     
+[37] later_1.3.0      grid_4.2.0       jsonlite_1.8.0   gtable_0.3.0    
+[41] lifecycle_1.0.1  DBI_1.1.2        git2r_0.30.1     magrittr_2.0.3  
+[45] scales_1.3.0     cli_3.6.2        stringi_1.7.6    vroom_1.5.7     
+[49] farver_2.1.0     fs_1.5.2         promises_1.2.0.1 xml2_1.3.3      
+[53] bslib_0.3.1      ellipsis_0.3.2   generics_0.1.2   vctrs_0.4.1     
+[57] tools_4.2.0      bit64_4.0.5      glue_1.6.2       hms_1.1.1       
+[61] parallel_4.2.0   fastmap_1.1.0    yaml_2.3.5       colorspace_2.0-3
+[65] rvest_1.0.2      knitr_1.39       haven_2.5.0      sass_0.4.1      </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

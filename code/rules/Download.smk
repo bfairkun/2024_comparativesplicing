@@ -1,3 +1,57 @@
+#rule DownloadFastqFromLink:
+#    """
+#    Download w aspera if possible, then try ftp link, then try fasterq-dump
+#    """
+#    input:
+#        aspera_key = config['aspera_key']
+#    output:
+#        fastq = "CordosoMoreira_Fastq/{sample}.fastq.gz",
+#    log:
+#        "logs/DownloadFastqFromAsperaLink/{sample}.log"
+#    wildcard_constraints:
+#    shadow: "shallow"
+#    params:
+#        aspera_link  = lambda wildcards: CordosoMoreira_df.loc[wildcards.sample]['fastq_aspera']
+#    shell:
+#        """
+#        #Use aspera if aspera key file and aspera links parameters are defined (not empty strings)
+#        if [[ ! -z "{input.aspera_key}" && ! -z "{params.aspera_link}" ]]; then
+#            for link in {params.aspera_link}
+#            do
+#                tmpfile=$(mktemp -p . tmp.download.XXXXXXXX.fastq.gz)
+#                ascp -v -QT -l 300m -P33001 -i {input.aspera_key} era-fasp@${{link}} $tmpfile &>> {log}
+#                cat $tmpfile >> {output.fastq}
+#                rm $tmpfile
+#            done
+#        fi
+#        """
+
+# rule Download_CordosoMoreira_globus_batch_MakeBatches:
+#     output:
+#         expand("Downloads/Cordos_Moreira_DownloadBatches/{n}.txt", n=range(5))
+#     run:
+#         def process_group(group, mod_value):
+#             output_file = f'Downloads/Cordos_Moreira_DownloadBatches/{mod_value}.txt'
+#             with open(output_file, 'w') as f:
+#                 for idx, row in group.iterrows():
+#                     col1 = row['fastq_aspera'].replace('fasp.sra.ebi.ac.uk:', '')
+#                     col2 = f"{os.getcwd()}/CordosoMoreira_Fastq/{idx}.fastq.gz"
+#                     f.write(f"{col1} {col2}\n")
+#         # Group by the RowNumber_mod_5 column and process each group
+#         for mod_value, group in CordosoMoreira_df.groupby('RowNumber_mod_5'):
+#             process_group(group, mod_value)
+
+
+rule Download_CordosoMoreira_globus_batch_Transfer:
+    input:
+    output:
+        expand("CordosoMoreira_Fastq/{SampleTitle}.fastq.gz", SampleTitle = CordosoMoreira_df.index),
+    shell:
+        """
+        globus transfer --batch {input} 47772002-3e5b-4fd3-b97c-18cee38d6df2 af7bda53-6d04-11e5-ba46-22000b92c6ec
+        """
+
+
 rule DownloadFastaAndGtf:
     output:
         fa = config['GenomesPrefix'] + "{GenomeName}/Reference.fa",

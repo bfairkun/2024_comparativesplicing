@@ -1,0 +1,403 @@
+---
+title: "2024-07-08_CheckLeafcutter2_Classifications"
+output: html_document
+date: '2024-07-08'
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+First, I took Mazin's AS_segments and associated each with a pair of relevant junctions for the included/excluded isoform (cassette exons will actually have two junctions for the included isoform, and another junction for the excluded, so actually there is a trio of relevant junctions). I then used Yang's scripts to classify whether these junctions are expected to be productive/unproductive... Now I want to check that these make sense. I can also compare to the results of NMDFinderB algorithm for each isoform (using annotated "protein_coding" transcript isoforms as a reference for the resulting isoform when AS_segment is included/excluded).
+
+
+At first, I just did this for human:
+
+```{bash, eval=F}
+cd ../code
+
+python scripts/AS_ExonSegments_to_AS_Junctions.py -TsvOut kaessmanAnalysis/NMDFinderB_ASSegments/Human_ensemblv75.tsv.gz -JuncListOut kaessmanAnalysis/JuncListsForLeafcutter2/Human_ensemblv75.juncs.gz -AS_segmentsIn kaessman_AS_dat/AS_segment_lists/Human_ensemblv75.bed -AnnotatedTranscriptsIn GenomeFiles/Human_ensemblv75/Reannotated.B.bed.gz -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v &> NMDFinderB_EffectsOfMazinSegments/Human_ensemblv75.log
+
+python scripts/leafcutter2/scripts/SpliceJunctionClassifier.py -c kaessmanAnalysis/JuncListsForLeafcutter2/Human_ensemblv75.juncs.gz -G /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -A GenomeFiles/Human_ensemblv75/Reannotated.B.gtf -v -r kaessmanAnalysis/JuncListsForLeafcutter2/ -o Human_ensemblv75.
+```
+
+Now, let's check the results...
+
+```{r}
+library(tidyverse)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+JunctionsAnnotations <- read_tsv("../code/kaessmanAnalysis/JuncListsForLeafcutter2/Human_ensemblv75._junction_classifications.txt")
+
+JunctionsAnnotations %>%
+  count(Annot, Coding, UTR)
+
+AS_segmentAnnotations <- read_tsv("../code/kaessmanAnalysis/NMDFinderB_ASSegments/Human_ensemblv75.tsv.gz")
+
+AS_segmentAnnotations.tidy <- AS_segmentAnnotations %>%
+  filter(!is.na(WhichIsoformIsAnnotated)) %>%
+  distinct() %>%
+  # head(1000) %>%
+  separate_rows(LongIsoform_UniqueJuncs, ShortIsoform_UniqueJuncs, sep=",") %>%
+  pivot_longer(cols=LongIsoform_UniqueJuncs:ShortIsoform_NMDFinderB, names_pattern="^(.+?)_(.+)$", names_to = c("isoform", ".value"))
+
+JoinedAnnotations <- AS_segmentAnnotations.tidy %>%
+  separate(UniqueJuncs, into=c("junc_chrom", "junc_start", "junc_end", "junc_strand"), sep="_", convert=T, remove=F) %>%
+  mutate(Intron_coord = str_glue("{junc_chrom}:{junc_start}-{junc_end+1}")) %>%
+  inner_join(JunctionsAnnotations)
+
+JoinedAnnotations %>%
+  distinct(UniqueJuncs, .keep_all=T) %>%
+  distinct(AS_segment, isoform, .keep_all=T) %>%
+  mutate(Productive = Coding) %>%
+  count(Productive, NMDFinderB) %>%
+  group_by(NMDFinderB) %>%
+  mutate(Total = sum(n)) %>%
+  ungroup() %>%
+  mutate(NMDFinderB = str_glue("{NMDFinderB}; n={Total}")) %>%
+  ggplot(aes(x=NMDFinderB, y=n, fill=Productive)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="NMDFinderB, tx with junction", fill="leafcutter2\nIsCoding", caption="NMDFinderB collapsed to first distinct reference isoform")
+```
+Ok that makes sense... 
+
+Maybe I should think of a more sensible way to collapse things as from the original splicing quantifications based on AS_segments... For example, cassette exons will have two unique inclusion junctions, and it is possible their junction-level leafcutter2 classifications won't agree. Since I want to use the exon-level quantifications from Mazin et al, it will be important to figure out how to do this... Maybe I should just see how often they don't agree, and if it doesn't happen much I'll just filter out those ambiguous cases.
+
+```{r}
+JoinedAnnotations %>%
+  distinct() %>%
+  distinct(UniqueJuncs, AS_segment, .keep_all=T) %>%
+  add_count(AS_segment) %>%
+  # filter(n==3)
+  distinct(AS_segment, .keep_all=T) %>%
+  ggplot(aes(x=n, color=color)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))
+
+JoinedAnnotations %>%
+  distinct(UniqueJuncs, AS_segment, .keep_all=T) %>%
+  add_count(AS_segment) %>%
+  filter((n == 3 & color=="#1b9e77") | (n==2 & color %in% c("#7570b3", "#e7298a"))) %>%
+  filter(isoform == "LongIsoform" & n ==3) %>%
+  dplyr::select(AS_segment, UniqueJuncs, Coding) %>%
+  group_by(AS_segment) %>%
+  mutate(rn = row_number()) %>%
+  ungroup() %>%
+  pivot_wider(names_from = "rn", values_from=c("Coding", "UniqueJuncs")) %>%
+  mutate(DoClassificationsMatch = Coding_1 == Coding_2) %>%
+  mutate(sum = Coding_1 + Coding_2) %>%
+  count(DoClassificationsMatch, sum)
+```
+
+Ok, so for this (subset) of cassette exons that straightforwardly map to a trio of junctions, for the long isoform, the annotations basically always match, and it is safe to just drop these edge cases.
+
+I'm confused at those cases that don't just map to a trio of junctions... Let's try to understand what those are...
+
+```{r}
+# Check that original AS_segment/transcript pairs all are defined by junction duos or trios
+AS_segmentAnnotations.tidy %>%
+  distinct() %>%
+  count(transcript, AS_segment, color) %>%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf()
+```
+
+Ok that makes sense... I think there is some duplication when joining to leafcutter results... Could it be because introns are duplicated in leafcutter output?
+
+
+```{r}
+AS_segmentAnnotations.tidy %>%
+  distinct() %>%
+  separate(UniqueJuncs, into=c("junc_chrom", "junc_start", "junc_end", "junc_strand"), sep="_", convert=T, remove=F) %>%
+  mutate(Intron_coord = str_glue("{junc_chrom}:{junc_start}-{junc_end+1}")) %>%
+  inner_join(JunctionsAnnotations) %>%
+  count(transcript, AS_segment, color) %>%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))
+
+JunctionsAnnotations %>%
+  count(Intron_coord) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))
+
+```
+
+Ok, yes, some introns overlap more than one gene... Let's collapse that, and then check...
+
+```{r}
+AS_segmentAnnotations.tidy %>%
+  distinct() %>%
+  separate(UniqueJuncs, into=c("junc_chrom", "junc_start", "junc_end", "junc_strand"), sep="_", convert=T, remove=F) %>%
+  mutate(Intron_coord = str_glue("{junc_chrom}:{junc_start}-{junc_end+1}")) %>%
+  inner_join(
+    JunctionsAnnotations %>%
+      distinct(Intron_coord, .keep_all=T)
+  ) %>%
+  count(transcript, AS_segment, color) %>%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))
+```
+
+
+Ok, that makes sense. So each AS_segment:transcript pair is defined by exactly 2 unique juncs (for AS donor or AS acceptor) and 3 unique juncs (for cassette exon). But for some AS_segments, there will be more than one transcript, which complicates things. Let's check how many transcripts for each AS_segment...
+
+```{r}
+JoinedAnnotations %>%
+  distinct() %>%
+  count(transcript, AS_segment, color) %>%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))
+
+JoinedAnnotations %>%
+  count(transcript, AS_segment, color) %>%
+  ggplot(aes(x=n, color=color)) + 
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))
+```
+
+I think the pivot_longer somewhere is adding extra rows... but we can "distinct" the df...
+
+```{r}
+JoinedAnnotations %>%
+  distinct() %>%
+  distinct(transcript, AS_segment) %>%
+  count(AS_segment) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))
+```
+
+So a lot of these AS_segments overlap multiple transcripts, and therefore have basically duplicated "unique" junctions rows... Let's see how many of them are complicated with different junction sets between the transcripts...
+
+```{r}
+JoinedAnnotations %>%
+  distinct() %>%
+  distinct(AS_segment, color, UniqueJuncs) %>%
+  count(AS_segment, color) %>%
+  ggplot(aes(x=n, color=color)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))
+
+```
+
+Ok I think this is the crux of the problem... This could arise from cassette exon that is nieghboring another cassette exon.
+
+Luckily I took notes of some of these cases, and can easily filter out some of them...
+
+```{r}
+JoinedAnnotations %>%
+  filter(is.na(Notes)) %>%
+  distinct() %>%
+  distinct(AS_segment, color, UniqueJuncs) %>%
+  count(AS_segment, color) %>%
+  ggplot(aes(x=n, color=color)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5))
+
+AS_segmentAnnotations %>%
+  filter(!is.na(WhichIsoformIsAnnotated)) %>%
+  count(Notes)
+
+JoinedAnnotations %>%
+  distinct(UniqueJuncs, .keep_all=T) %>%
+  distinct(AS_segment, isoform, .keep_all=T) %>%
+  mutate(Productive = Coding) %>%
+  count(Productive, NMDFinderB, Notes) %>%
+  group_by(NMDFinderB, Notes) %>%
+  mutate(Total = sum(n)) %>%
+  ungroup() %>%
+  mutate(NMDFinderB = str_glue("{NMDFinderB}; n={Total}")) %>%
+  ggplot(aes(x=NMDFinderB, y=n, fill=Productive)) +
+  geom_col(position='fill') +
+  facet_wrap(~Notes, scales="free", nrow = 1) +
+  Rotate_x_labels +
+  theme(legend.position='bottom') +
+  labs(y="fraction", x="NMDFinderB, tx with junction", fill="leafcutter2\nIsCoding", caption="NMDFinderB collapsed to first distinct reference isoform")
+```
+But even though I could easily filter out these odd cases, it's not like these cases are more discordant with NMDFinderB. Are these AS_events defined by more than 2 or 3 splice junctions generally concordant with eachother?
+
+
+```{r}
+JoinedAnnotations %>%
+  distinct() %>%
+  distinct(transcript, AS_segment, UniqueJuncs, .keep_all=T) %>%
+  group_by(isoform, AS_segment) %>%
+  summarise(PercentCoding = sum(Coding)/n(), n=n()) %>%
+  ungroup() %>%
+  mutate(isoform = recode(isoform, "LongIsoform"="AS_seg included", "ShortIsoform"="AS_seg excluded")) %>%
+  ggplot(aes(x=PercentCoding)) +
+  stat_ecdf() +
+  facet_wrap(~isoform) +
+  labs(y='ecdf', x='fraction juncs that are "coding" within AS_segment')
+
+JoinedAnnotations %>%
+  distinct() %>%
+  distinct(transcript, AS_segment, UniqueJuncs, .keep_all=T) %>%
+  group_by(isoform, AS_segment) %>%
+  summarise(PercentCoding = sum(Coding)/n(), n=n()) %>%
+  ungroup() %>%
+  mutate(n = case_when(
+    n > 12 ~ as.numeric(12),
+    TRUE ~ as.numeric(n)
+  )) %>%
+  add_count(n) %>%
+  mutate(group = str_glue("{n} juncs for segment; n={nn}")) %>%
+  mutate(isoform = recode(isoform, "LongIsoform"="AS_seg included", "ShortIsoform"="AS_seg excluded")) %>%
+  ggplot(aes(x=PercentCoding, color=group)) +
+  stat_ecdf() +
+  facet_wrap(~isoform) +
+  labs(y='ecdf', x='fraction juncs that are "coding" within AS_segment', color='num juncs in AS_seg:isoform pair')
+
+```
+
+Ok, so for the most part, even when there are say 10 juncs for a the AS_segment included isoform, they mostly all agree in terms of coding capacity. I could reasonably just go with majority rules or say they all must match.
+
+Let's just calculate the fraction that are coding for each AS_segment:isoform pair and consider thresholds for that later...
+
+So let's prototype some code to go from the leafcutter junc classifications (which are defined as gene:junc pairs) to AS_segment:gene:isoform trios (where isoform refers to either being included or excluded) where each trio is summarised with a single number: the percent of associated junctions that are coding by leafcutter classification.
+
+## Final approach
+
+### Human
+
+```{r}
+JunctionsAnnotations_final <- read_tsv("../code/kaessmanAnalysis/JuncListsForLeafcutter2/Human_ensemblv75._junction_classifications.txt")
+
+AS_segmentAnnotations_final <- read_tsv("../code/kaessmanAnalysis/NMDFinderB_ASSegments/Human_ensemblv75.tsv.gz")
+
+transcripts_to_genes_final <- read_tsv("../code/GenomeFiles/Human_ensemblv75/Reannotated.B.bed.gz", col_select = c(4, 13), col_names=F) %>%
+  dplyr::rename("transcript"="X4", "Gene_name"="X13") %>%
+  distinct()
+
+AS_segmentAnnotations.tidy_final <- AS_segmentAnnotations_final %>%
+  filter(!is.na(WhichIsoformIsAnnotated)) %>%
+  distinct() %>%
+  separate_rows(LongIsoform_UniqueJuncs, ShortIsoform_UniqueJuncs, sep=",") %>%
+  pivot_longer(cols=LongIsoform_UniqueJuncs:ShortIsoform_NMDFinderB, names_pattern="^(.+?)_(.+)$", names_to = c("isoform", ".value")) %>%
+  distinct()
+
+JoinedAnnotations_final <- AS_segmentAnnotations.tidy_final %>%
+  separate(UniqueJuncs, into=c("junc_chrom", "junc_start", "junc_end", "junc_strand"), sep="_", convert=T, remove=F) %>%
+  inner_join(transcripts_to_genes_final) %>%
+  mutate(Intron_coord = str_glue("{junc_chrom}:{junc_start}-{junc_end+1}")) %>%
+  inner_join(JunctionsAnnotations_final)
+
+
+AS_segment_AnnotationsFromJuncs_final <- JoinedAnnotations_final %>%
+  group_by(isoform, AS_segment, Gene_name) %>%
+  summarise(PercentCoding = sum(Coding)/n(), n=n()) %>%
+  ungroup() %>%
+  mutate(isoform = recode(isoform, "LongIsoform"="AS_seg_included", "ShortIsoform"="AS_seg_excluded")) 
+
+AS_segment_AnnotationsFromJuncs_final %>%
+  ggplot(aes(x=n, color=isoform)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,10)) +
+  labs(y='ecdf', x='Number juncs defining isoform')
+
+AS_segment_AnnotationsFromJuncs_final %>%
+  pivot_wider(names_from = "isoform", values_from = c("PercentCoding", "n"), names_sep=".") %>%
+  mutate(ChangeInCoding_InclusionToExclusion = PercentCoding.AS_seg_included - PercentCoding.AS_seg_excluded) %>%
+  ggplot(aes(x=ChangeInCoding_InclusionToExclusion)) +
+  stat_ecdf() +
+  scale_x_continuous(breaks=-1:1, labels=c("UnproductiveToProductive", "NoChange", "ProductiveToUnproductive")) +
+  labs(y='ecdf', x='Consequence of AS_segment inclusion') +
+  Rotate_x_labels
+
+JoinedAnnotations_final %>%
+  distinct(UniqueJuncs, .keep_all=T) %>%
+  distinct(AS_segment, isoform, .keep_all=T) %>%
+  mutate(Productive = Coding) %>%
+  count(Productive, NMDFinderB) %>%
+  group_by(NMDFinderB) %>%
+  mutate(Total = sum(n)) %>%
+  ungroup() %>%
+  mutate(NMDFinderB = str_glue("{NMDFinderB}; n={Total}")) %>%
+  ggplot(aes(x=NMDFinderB, y=n, fill=Productive)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="NMDFinderB, tx with junction", fill="leafcutter2\nIsCoding", caption="NMDFinderB collapsed to first distinct reference isoform")
+```
+
+
+Ok, that all makes sense... Let's write this code to a script and repeat on the other species... Then I can start to look at how changes in splicing of these UnproductiveToProductive or ProductiveToProductive AS_segments correlate with changes in expression.
+
+Before I do that... I want to repeat just a few of these analyses with a less well annotated genome... Like chicken...
+
+### Chicken
+
+```{r}
+JunctionsAnnotations_final_chicken <- read_tsv("../code/kaessmanAnalysis/JuncListsForLeafcutter2/Chicken_ensemblv84._junction_classifications.txt")
+
+AS_segmentAnnotations_final_chicken <- read_tsv("../code/kaessmanAnalysis/NMDFinderB_ASSegments/Chicken_ensemblv84.tsv.gz")
+
+transcripts_to_genes_final_chicken <- read_tsv("../code/GenomeFiles/Chicken_ensemblv84/Reannotated.B.bed.gz", col_select = c(4, 13), col_names=F) %>%
+  dplyr::rename("transcript"="X4", "Gene_name"="X13") %>%
+  distinct()
+
+AS_segmentAnnotations.tidy_final_chicken <- AS_segmentAnnotations_final_chicken %>%
+  filter(!is.na(WhichIsoformIsAnnotated)) %>%
+  distinct() %>%
+  separate_rows(LongIsoform_UniqueJuncs, ShortIsoform_UniqueJuncs, sep=",") %>%
+  pivot_longer(cols=LongIsoform_UniqueJuncs:ShortIsoform_NMDFinderB, names_pattern="^(.+?)_(.+)$", names_to = c("isoform", ".value")) %>%
+  distinct()
+
+JoinedAnnotations_final_chicken <- AS_segmentAnnotations.tidy_final_chicken %>%
+  separate(UniqueJuncs, into=c("junc_chrom", "junc_start", "junc_end", "junc_strand"), sep="_", convert=T, remove=F) %>%
+  inner_join(transcripts_to_genes_final_chicken) %>%
+  mutate(Intron_coord = str_glue("{junc_chrom}:{junc_start}-{junc_end+1}")) %>%
+  inner_join(JunctionsAnnotations_final_chicken)
+
+
+AS_segment_AnnotationsFromJuncs_final_chicken <- JoinedAnnotations_final_chicken %>%
+  group_by(isoform, AS_segment, Gene_name) %>%
+  summarise(PercentCoding = sum(Coding)/n(), n=n()) %>%
+  ungroup() %>%
+  mutate(isoform = recode(isoform, "LongIsoform"="AS_seg_included", "ShortIsoform"="AS_seg_excluded")) 
+
+AS_segment_AnnotationsFromJuncs_final_chicken %>%
+  ggplot(aes(x=n, color=isoform)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,10)) +
+  labs(y='ecdf', x='Number juncs defining isoform')
+
+AS_segment_AnnotationsFromJuncs_final_chicken %>%
+  pivot_wider(names_from = "isoform", values_from = c("PercentCoding", "n"), names_sep=".") %>%
+  mutate(ChangeInCoding_InclusionToExclusion = PercentCoding.AS_seg_included - PercentCoding.AS_seg_excluded) %>%
+  ggplot(aes(x=ChangeInCoding_InclusionToExclusion)) +
+  stat_ecdf() +
+  scale_x_continuous(breaks=-1:1, labels=c("UnproductiveToProductive", "NoChange", "ProductiveToUnproductive")) +
+  labs(y='ecdf', x='Consequence of AS_segment inclusion') +
+  Rotate_x_labels
+
+JoinedAnnotations_final_chicken %>%
+  distinct(UniqueJuncs, .keep_all=T) %>%
+  distinct(AS_segment, isoform, .keep_all=T) %>%
+  mutate(Productive = Coding) %>%
+  count(Productive, NMDFinderB) %>%
+  group_by(NMDFinderB) %>%
+  mutate(Total = sum(n)) %>%
+  ungroup() %>%
+  mutate(NMDFinderB = str_glue("{NMDFinderB}; n={Total}")) %>%
+  ggplot(aes(x=NMDFinderB, y=n, fill=Productive)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="fraction", x="NMDFinderB, tx with junction", fill="leafcutter2\nIsCoding", caption="NMDFinderB collapsed to first distinct reference isoform")
+```
+
+Ok all looks good. In chicken as well as human, the leafcutter2 JunctionClassifier.py script seems to work as intended and is similarly concordant with results of NMDFinderB translating isoforms with or without Mazin's AS_segments.

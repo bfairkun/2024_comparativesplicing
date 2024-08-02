@@ -5,24 +5,44 @@ configfile: "config/config.yaml"
 include: "rules/common.smk"
 include: "rules/Download.smk"
 include: "rules/GenomeAnnotations.smk"
-localrules: DownloadFastaAndGtf
+localrules: DownloadFastaAndGtf, Download_hg19_PhyloP, DownloadFastqFromLink
 wildcard_constraints: GenomeName = "|".join(STAR_genomes.index)
 
-# Instead of using samples.tsv file, a quick/dirty way to apply rules over grob of existing files is this:
-# IDS, = glob_wildcards("Path/To/{MyFileNames}.bed.gz")
+module rna_seq:
+    snakefile: "module_workflows/snakemake-workflow_rna-seq/Snakefile"
+    prefix: "rna-seq"
+    config: config["rna_seq"]
+# Seperate rule import statements for local and non-local rules (as defined in
+# the other workflow). This way, we can keep those rules as local rules,
+# without modifying code in the other workflow and without triggering the
+# warnings about new local rules that aren't defined
+use rule * from rna_seq exclude DownloadFastaAndGtf, CopyFastq, CopyFastq_SE, STAR_make_index as rna_seq_*
+use rule DownloadFastaAndGtf, CopyFastq, CopyFastq_SE, STAR_make_index  from rna_seq as *
+# some rules in the module are shell commands which call a script assuming the workdir is the other workdir. use symlinks for scripts to fix.
+CreateSymlinksOfDir1ContentsIntoDir2("module_workflows/snakemake-workflow_rna-seq/scripts/", "scripts/")
+
+include: "rules/other.smk"
+
+ruleorder: rna_seq_faidxGenome > faidxGenome
+ruleorder: annotate_juncfiles_NoWhitespaceGtf > rna_seq_annotate_juncfiles
 
 rule all:
     input:
         # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
         # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.fa.fai", GenomeName = STAR_genomes.index),
-        expand("kaessman_AS_dat/AS_segment_lists/{GenomeName}.bed", GenomeName = MazinGenomes),
+        "conservation/human.AS_segments.bed",
+        "conservation/PhyloP.hg19.bw",
+        expand("kaessmanAnalysis/leaf2_to_AS_segments/{GenomeName}.collapsed.tsv.gz", GenomeName = MazinGenomes),
+        # expand("kaessmanAnalysis/JuncListsForLeafcutter2/{GenomeName}._junction_classifications.txt", GenomeName = "Human_ensemblv75"),
         expand("GenomeFiles/{GenomeName}/SpliceSites.seq.bed.gz", GenomeName = STAR_genomes.index),
         expand("GenomeFiles/{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
         # expand("GenomeFiles/{GenomeName}/Reference.gtf", GenomeName = STAR_genomes.index),
+        expand("rna-seq/SplicingAnalysis/juncfiles/{sample}.junccounts.tsv.gz", sample=samples.index),
         expand(config['GenomesPrefix'] + "{GenomeName}/Reference.igv.genome.json", GenomeName = STAR_genomes.index),
         expand("GenomeFiles/{GenomeName}/Reannotated.{TranslationApproach}.gtf.gz", GenomeName = STAR_genomes.index, TranslationApproach = ["A", "B", "C", "D", "E"]),
         # The first rule should define the default target files
         # Subsequent target rules can be specified below. They should start with all_*.
+        expand("CordosoMoreira_Fastq/{SampleTitle}.fastq.gz", SampleTitle = CordosoMoreira_df.index),
+        expand("Downloads/Cordos_Moreira_DownloadBatches/{n}.txt", n=range(5))
 
 
-include: "rules/other.smk"

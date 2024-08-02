@@ -368,12 +368,13 @@ def main(args=None):
     ### loop over intersections and determine NMD status of each isoform with our without the AS_segment
     AS_segments_coords_set = set([(l[0], int(l[1]), int(l[2]), l[5]) for l in adjusted_orth_segs])
 
-    logging.info("Iterating through intersections and determining effects with or without AS segment included...")
+    logging.info(f"Iterating through {len(SegmentsOverlapTranscripts)} intersections between AS_segments and protein_coding transcripts and determining effects with or without AS segment included...")
     SuccessfullyAssembledIsoformPairs = []
     rows = []
     UniqJuncsSet = set()
     for i, l in enumerate(SegmentsOverlapTranscripts):
         try:
+            if i % 1000 == 0: logging.debug(f'processed {i} intersections...')
             transcript = protein_coding_bedline_dict[l[12]]
             AS_segment = bedparse.bedline(l[0:9] + ["1", str(int(l[2])-int(l[1])), "0"])
             row = {"transcript": transcript.name, "AS_segment": AS_segment.name, "color":AS_segment.color, "strand":transcript.strand} 
@@ -383,6 +384,9 @@ def main(args=None):
                 long_isoform, short_isoform = process_ce_segment(AS_segment, transcript)
             elif AS_segment.color in ["#7570b3", "#e7298a"]:  # AA or AD
                 long_isoform, short_isoform = process_aa_ad_segment(AS_segment, transcript)
+            else:
+                long_isoform = None
+                short_isoform = None
             if long_isoform and short_isoform and not bedlines_are_equal(long_isoform, short_isoform) and short_isoform.introns():
                 SuccessfullyAssembledIsoformPairs.append(AS_segment.color)
                 # print(bedlines_are_equal(long_isoform, transcript), bedlines_are_equal(short_isoform, transcript))
@@ -406,22 +410,30 @@ def main(args=None):
                     Notes = "Right ex is also AS segment"
                 row.update({"LongIsoform_UniqueJuncs":unique_long_junctions, "ShortIsoform_UniqueJuncs":unique_short_junctions, "LongIsoform_NMDFinderB":NMDFinderB_long, "ShortIsoform_NMDFinderB":NMDFinderB_short, "Notes":Notes, "WhichIsoformIsAnnotated":WhichIsoformIsAnnotated})
                 # if WhichIsoformIsAnnotated=="LongIsoform" and NMDFinderB_long=="No CDS": break
-                Counter(SuccessfullyAssembledIsoformPairs)  
-            rows.append(row)
-        except: breakpoint()
+        except bedparse.BEDexception: pass
+        except:
+            breakpoint()
+        rows.append(row)
+    logging.debug(Counter(SuccessfullyAssembledIsoformPairs))
     Results = pd.DataFrame(rows)
 
     logging.info("Writing output...")
     Results.to_csv(args.tsv_out, sep='\t', index=False)
-    with open(args.junclist_out, 'w') as fout:
-        _ = fout.write("chrom\n")
-        for chr,start,stop,strand in UniqJuncsSet:
-            _ = fout.write(f'{chr}:{start+1}:{stop}:clu_n_{strand}\n')
+    if args.junclist_out.endswith('.gz'):
+        with gzip.open(args.junclist_out, 'wt') as fout:  # 'wt' mode opens the file in text mode for writing
+            _ = fout.write("chrom\n")
+            for chr,start,stop,strand in UniqJuncsSet:
+                _ = fout.write(f'{chr}:{start}:{stop+1}:clu_n_{strand}\n')
+    else:
+        with open(args.junclist_out, 'w') as fout:
+            _ = fout.write("chrom\n")
+            for chr,start,stop,strand in UniqJuncsSet:
+                _ = fout.write(f'{chr}:{start}:{stop+1}:clu_n_{strand}\n')
 
 
 if __name__ == "__main__":
     if hasattr(sys, 'ps1'):
-        # main("-TsvOut scratch/test_ASSegmentResults.tsv.gz -JuncListOut scratch/test_ASSegmentResults.juncs.gz -AS_segmentsIn scratch/AS_segments.Human_ensemblv75.bed -AnnotatedTranscriptsIn GenomeFiles/Human_ensemblv75/Reannotated.A.bed.gz -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v".split(' '))
+        main("-TsvOut scratch/test_ASSegmentResults.tsv.gz -JuncListOut scratch/test_ASSegmentResults.juncs.gz -AS_segmentsIn kaessman_AS_dat/AS_segment_lists/Human_ensemblv75.bed -AnnotatedTranscriptsIn GenomeFiles/Human_ensemblv75/Reannotated.B.bed.gz -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v".split(' '))
         main("-TsvOut scratch/test.Chicken_ensemblv84.ASSegmentResults.tsv.gz -JuncListOut scratch/test.Chicken_ensemblv84.ASSegmentResults.juncs.gz -AS_segmentsIn scratch/AS_segments.Chicken_ensemblv84.bed -AnnotatedTranscriptsIn GenomeFiles/Chicken_ensemblv84/Reannotated.B.bed.gz -fa /project2/yangili1/bjf79/ReferenceGenomes/Chicken_ensemblv84/Reference.fa -v".split(' '))
     else:
         main()

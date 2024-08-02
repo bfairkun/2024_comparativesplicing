@@ -1,0 +1,143 @@
+---
+title: "2024-08-01_PlotsForLabMeeting"
+output: html_document
+date: '2024-08-01'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(biomaRt)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+PSI <- read_tsv("../code/kaessman_AS_dat/All.ortho.exons.PSI.tsv.gz")
+
+RPKM <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/*/RPKM.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/RPKM.gz", "\\1")) %>%
+  lapply(fread, sep=' ')
+
+dim(PSI)
+
+RPKM.sampleList <- lapply(RPKM, colnames) %>%
+  lapply(data.frame) %>%
+  bind_rows(.id="Species") %>%
+  dplyr::rename("sample"=2) %>%
+  filter(!sample=="Names") %>%
+  mutate(Species = str_to_title(Species)) %>%
+  mutate(sample = paste(Species, sample, sep = "."))
+
+ManualOrdinalStages <- read_tsv("../output/CordosoMoreira_CalibratedStageTable.tsv")
+
+ManualOrdinalStages %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(y=OrdinalStage.Manual, x="")) +
+  geom_text(aes(label=StageName, color=RoughlyCalibratedStage), size=2) +
+  scale_y_reverse() +
+  facet_wrap(~Species, nrow = 1) +
+  labs(x=NULL)
+
+
+```
+
+```{r}
+OrthologousSegmentList <- read_csv("../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_8.csv")
+
+OrthologousSegmentList.long <- OrthologousSegmentList %>%
+  mutate(human.seg.id = human) %>%
+  filter(human %in% PSI$human.seg.id) %>%
+  pivot_longer(names_to = "Species", values_to = "segid", -human.seg.id) %>%
+  separate(segid, into=c("AS_segment", "chrom", "strand", "start", "stop"), sep=":", convert=T)
+
+AS_segment_classifications <- Sys.glob("../code/kaessmanAnalysis/leaf2_to_AS_segments/*.collapsed.tsv.gz") %>%
+  setNames(str_replace(., "../code/kaessmanAnalysis/leaf2_to_AS_segments/(.+?).collapsed.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Species") %>% pivot_wider(names_from = "isoform", values_from = c("PercentCoding", "n"), names_sep=".") %>%
+  mutate(ChangeInCoding_InclusionToExclusion = PercentCoding.AS_seg_included - PercentCoding.AS_seg_excluded)
+  
+
+OrthologousSegmentsAndEffects <- AS_segment_classifications %>%
+  dplyr::select(-Species) %>%
+  inner_join(OrthologousSegmentList.long)
+```
+
+beta beta scatters
+
+```{r}
+devAS.events.all <- read_csv("../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_9.csv") %>%
+  rename("segment.name"="...1") %>%
+  pivot_longer(cols=-c(1:8), names_to = c(".value", "tissue"), values_to = c("value"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+  filter(pattern %in% c("d", "u")) %>%
+  inner_join(AS_segment_classifications, by=c("seg.id"="AS_segment")) %>%
+  mutate(tissue = str_to_title(tissue)) %>%
+  dplyr::select(-ens_id)
+
+PSI.all <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/*/PSI.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/PSI.gz", "\\1")) %>%
+  lapply(fread, sep=',') %>%
+  lapply(function(x) filter(x, V1 %in% devAS.events.all$segment.name)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "sample",values_to = "PSI",-V1)) %>%
+  bind_rows() %>%
+  dplyr::rename("seg.id"="V1")
+
+RPKM.all <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/*/RPKM.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/RPKM.gz", "\\1")) %>%
+  lapply(fread, sep=' ') %>%
+  lapply(function(x) filter(x, Names %in% devAS.events.all$Gene_name)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "sample",values_to = "RPKM",-Names)) %>%
+  bind_rows(.id="Species") %>%
+  mutate(sample = paste(str_to_title(Species), sample, sep="."))
+
+Joined.PSI.RPKM.all <- devAS.events.all %>%
+  inner_join(PSI.all) %>%
+  inner_join(RPKM.all %>%
+               dplyr::select(Gene_name=Names, sample, RPKM)) %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  filter(Tissue == tissue) %>%
+  inner_join(ManualOrdinalStages)
+
+
+
+dat.toPlot <- Joined.PSI.RPKM.all %>%
+  group_by(segment.name, tissue, Species) %>%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = "sp"),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method='sp')) %>%
+  ungroup() %>%
+  inner_join(
+    Joined.PSI.RPKM.all %>%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %>%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`="NMD-S", `0`="NoChange", `-1`="NMD-R"))
+
+dat.toPlot %>%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method='lm', se=F) +
+  facet_grid(Species~ChangeInCoding_ExclusionToInclusion.Rounded)
+
+dat.toPlot %>%
+  group_by(Species, tissue, ChangeInCoding_ExclusionToInclusion.Rounded) %>%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ChangeInCoding_ExclusionToInclusion.Rounded, ncol=1) +
+  theme(legend.position = 'bottom')
+  
+```
+

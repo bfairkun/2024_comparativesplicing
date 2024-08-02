@@ -1,0 +1,823 @@
+---
+title: "2024-07-09_Mazin_CheckNMD_Effects"
+output: html_document
+date: '2024-07-09'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+I previously explored Mazin splicing quantifications. They communicate splicing in an exon-centric method, defining AS_segments that can either be included or excluded in the transcript, and use some PSI metric for each segment in each sample. I will use their quantifications. For each AS_segment, I have additionally identified the unique junctions associated with inclusion or exlcusion of that segment (using annotated protein_coding transcript scrutctures as reference to determine splice junctions), then ran those junctions through leafcutter2 SpliceJunctionClassifier.py script to determine whether each segment corresponds to a coding (productive) or unproductive transcript. Now I will check whether changes in PSI of these segments correlate with changes in expression in the expected manner.
+
+As a starting point, I previously tidied their data into a long table of orthologous AS_segments with PSI values for each sample... But I
+still need to do a bit of data tidying to combinate the splicing quantifications with their unproductive/productive classifications and the host gene RPKM
+
+## Analysis
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(biomaRt)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+PSI <- read_tsv("../code/kaessman_AS_dat/All.ortho.exons.PSI.tsv.gz")
+
+RPKM <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/*/RPKM.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/RPKM.gz", "\\1")) %>%
+  lapply(fread, sep=' ')
+
+dim(PSI)
+```
+
+Do the column (sample) names all match between these two tables?
+
+```{r}
+
+
+RPKM.sampleList <- lapply(RPKM, colnames) %>%
+  lapply(data.frame) %>%
+  bind_rows(.id="Species") %>%
+  dplyr::rename("sample"=2) %>%
+  filter(!sample=="Names") %>%
+  mutate(Species = str_to_title(Species)) %>%
+  mutate(sample = paste(Species, sample, sep = "."))
+
+head(RPKM.sampleList)
+dim(RPKM.sampleList)
+
+inner_join(RPKM.sampleList,
+           data.frame(sample = colnames(PSI)[-1])) %>%
+  dim()
+```
+
+Ok. success. we can join RPKM and PSI by sample name. The next thing to do is ordinally stage by sample name... I did this in a previous notebook, and will repeat code here, with minor modifications...
+
+```{r}
+ManualOrdinalStages <- RPKM.sampleList %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  distinct(Species, StageName) %>%
+  mutate(Species.StageName = paste(Species, StageName)) %>%
+  mutate(E_or_P = case_when(
+    str_detect(StageName, '^e') ~ 'E',
+    str_detect(StageName, '^P') ~ 'P',
+    str_detect(StageName, 'wpc$') ~ 'E',
+    TRUE ~ 'P'
+  )) %>%
+  mutate(StageExtractedNumber = str_replace(StageName, "^[^0-9]*?([0-9]*+)[^0-9]*$", "\\1")) %>%
+  mutate(StageExtractedNumber = case_when(
+    StageName == "newborn" ~ 0,
+    StageName == "infant" ~ 365,
+    StageName == "toddler" ~ 700,
+    StageName == "school" ~ 3650,
+    StageName == "youngTeenager" ~ 5000,
+    StageName == "teenager" ~ 5500,
+    StageName == "oldTeenager" ~ 6000,
+    StageName == "youngAdult" ~ 10000,
+    StageName == "youngMidAge" ~ 12500,
+    StageName == "olderMidAge" ~ 17000,
+    StageName %in% c("Senior", "senior") ~ 20000,
+    TRUE ~ as.numeric(StageExtractedNumber)
+  )) %>%
+  arrange(Species, E_or_P, StageExtractedNumber) %>%
+  group_by(Species) %>%
+  mutate(OrdinalStage.Manual = row_number()) %>%
+  ungroup() %>%
+  dplyr::select(Species, StageName, OrdinalStage.Manual) %>%
+  # Roughly Calibrated Stages from Cardosa-Moreira et al, Fig2A
+  mutate(RoughlyCalibratedStage = case_when(
+    StageName == "P0" ~ "Birth",
+    Species == "Opossum" & StageName == "14" ~ "Birth",
+    #Day13 Opossum is arguably roughly equivalent to newborn human
+    StageName == "newborn" ~ "Birth",
+    Species == "Chicken" & StageName == "e14" ~ "Onset meiosis oogenesis",
+    Species == "Opossum" & StageName == "28" ~ "Onset meiosis oogenesis",
+    Species == "Human" & StageName == "10wpc" ~ "Onset meiosis oogenesis",
+    Species == "Rabbit" & StageName == "e27" ~ "Onset meiosis oogenesis",
+    Species == "Rat" & StageName == "e16" ~ "Onset meiosis oogenesis",
+    Species == "Mouse" & StageName == "e11" ~ "Onset meiosis oogenesis",
+    Species == "Chicken" & StageName == "P70" ~ "Onset meiosis spermatogenesis",
+    Species == "Opossum" & StageName == "74" ~ "Onset meiosis spermatogenesis",
+    Species == "Macaque" & StageName == "P1095" ~ "Onset meiosis spermatogenesis",
+    Species == "Human" & StageName == "youngTeenager" ~ "Onset meiosis spermatogenesis",
+    Species == "Rabbit" & StageName == "P84" ~ "Onset meiosis spermatogenesis",
+    Species == "Rat" & StageName == "P14" ~ "Onset meiosis spermatogenesis",
+    Species == "Mouse" & StageName == "P14" ~ "Onset meiosis spermatogenesis",
+    TRUE ~ NA_character_
+  ))
+
+ManualOrdinalStages %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(y=OrdinalStage.Manual, x="")) +
+  geom_text(aes(label=StageName, color=RoughlyCalibratedStage), size=2) +
+  scale_y_reverse() +
+  facet_wrap(~Species, nrow = 1) +
+  labs(x=NULL)
+
+# ManualOrdinalStages %>%
+#   write_tsv("../output/CordosoMoreira_CalibratedStageTable.tsv")
+```
+
+For easier joining, let's first pivot_longer the RPKM tables
+
+```{r}
+
+
+RPKM$chicken %>%
+  pivot_longer(names_to = "sample", values_to = "RPKM", -Names) %>%
+  dim()
+```
+
+I'm now realizing these tables might be too big... I might end up with a table of >30 million rows... Maybe I should first just filter for the relevant genes for the orthologous exons
+
+```{r}
+OrthologousSegmentList <- read_csv("../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_8.csv")
+
+OrthologousSegmentList.long <- OrthologousSegmentList %>%
+  mutate(human.seg.id = human) %>%
+  filter(human %in% PSI$human.seg.id) %>%
+  pivot_longer(names_to = "Species", values_to = "segid", -human.seg.id) %>%
+  separate(segid, into=c("AS_segment", "chrom", "strand", "start", "stop"), sep=":", convert=T)
+
+AS_segment_classifications <- Sys.glob("../code/kaessmanAnalysis/leaf2_to_AS_segments/*.collapsed.tsv.gz") %>%
+  setNames(str_replace(., "../code/kaessmanAnalysis/leaf2_to_AS_segments/(.+?).collapsed.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Species") %>% pivot_wider(names_from = "isoform", values_from = c("PercentCoding", "n"), names_sep=".") %>%
+  mutate(ChangeInCoding_InclusionToExclusion = PercentCoding.AS_seg_included - PercentCoding.AS_seg_excluded)
+  
+
+OrthologousSegmentsAndEffects <- AS_segment_classifications %>%
+  dplyr::select(-Species) %>%
+  inner_join(OrthologousSegmentList.long)
+
+```
+
+Before we try to match expression to splicing effects, I'm curious how conserved these predicted NMD effects are for othoologous segments...
+
+
+```{r}
+OrthologousSegmentsAndEffects %>%
+  filter(Species %in% c("human", "chicken")) %>%
+  dplyr::select(Species, ChangeInCoding_InclusionToExclusion, human.seg.id) %>%
+  add_count(Species, human.seg.id) %>%
+  add_count(human.seg.id) %>%
+  filter(n==1 & nn==2) %>%
+  pivot_wider(names_from = "Species", values_from = "ChangeInCoding_InclusionToExclusion") %>%
+  ggplot(aes(x=chicken, y=human)) +
+  scale_x_continuous(breaks=-1:1, labels=c("UnproductiveToProductive", "NoChange", "ProductiveToUnproductive")) +
+  scale_y_continuous(breaks=-1:1, labels=c("UnproductiveToProductive", "NoChange", "ProductiveToUnproductive")) +
+  geom_jitter(alpha=0.1) +
+  labs(x="Chicken, effect of inclusion", y="Human, effect of inclusion")
+
+OrthologousSegmentsAndEffects %>%
+  count(Species)
+```
+
+I'll think of a different way to analyze this later...
+
+Let's first subset devAS segments, and look at the corresponding changes in splicing and expression... Let's do this just for chicken first
+
+### beta beta sctter for chicken devAS
+
+```{r}
+devAS.chicken <- read_csv("../code/kaessman_AS_dat/FromWebApp/chicken/devAS.gz", n_max=Inf) %>%
+  rename("segment.name"="...1") %>%
+  pivot_longer(cols=-c(1:8), names_to = c(".value", "tissue"), values_to = c("value"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+  filter(pattern %in% c("d", "u")) %>%
+  inner_join(AS_segment_classifications, by=c("seg.id"="AS_segment")) %>%
+  mutate(tissue = str_to_title(tissue))
+
+PSI.chicken <- read_csv("../code/kaessman_AS_dat/FromWebApp/chicken/PSI.gz") %>%
+  dplyr::rename("seg.id"=1) %>%
+  filter(seg.id %in% devAS.chicken$seg.id) %>%
+  pivot_longer(names_to = "sample",values_to = "PSI",-seg.id)
+
+RPKM.chicken <- read_delim("../code/kaessman_AS_dat/FromWebApp/chicken/RPKM.gz", delim=' ') %>%
+  dplyr::rename("Gene_name"="Names") %>%
+  filter(Gene_name %in% devAS.chicken$Gene_name) %>%
+  pivot_longer(names_to = "sample",values_to = "RPKM",-Gene_name) %>%
+  mutate(sample = paste("Chicken", sample, sep="."))
+
+Joined.PSI.RPKM.chicken <- devAS.chicken %>%
+  inner_join(PSI.chicken) %>%
+  inner_join(RPKM.chicken) %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  filter(Tissue == tissue) %>%
+  inner_join(ManualOrdinalStages)
+
+P <- Joined.PSI.RPKM.chicken %>%
+  group_by(segment.name, tissue) %>%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = "sp"),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method='sp')) %>%
+  ungroup() %>%
+  inner_join(
+    Joined.PSI.RPKM.chicken %>%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %>%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`="NMD-S", `0`="NoChange", `-1`="NMD-R")) %>%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  facet_grid(~ChangeInCoding_ExclusionToInclusion.Rounded)
+
+P
+
+P +
+  geom_smooth(method='lm')
+
+
+```
+Ok, the slight enrichment in the upper left and lower right in the NMD-S facet makes sense. I'm sure we can improve on this quite a bit. For now I want to compare these results to human, where annotations are much better...
+
+```{r}
+devAS.human <- read_csv("../code/kaessman_AS_dat/FromWebApp/human/devAS.gz", n_max=Inf) %>%
+  rename("segment.name"="...1") %>%
+  pivot_longer(cols=-c(1:8), names_to = c(".value", "tissue"), values_to = c("value"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+  filter(pattern %in% c("d", "u")) %>%
+  inner_join(AS_segment_classifications, by=c("seg.id"="AS_segment")) %>%
+  mutate(tissue = str_to_title(tissue))
+
+PSI.human <- read_csv("../code/kaessman_AS_dat/FromWebApp/human/PSI.gz") %>%
+  dplyr::rename("seg.id"=1) %>%
+  filter(seg.id %in% devAS.human$seg.id) %>%
+  pivot_longer(names_to = "sample",values_to = "PSI",-seg.id)
+
+RPKM.human <- read_delim("../code/kaessman_AS_dat/FromWebApp/human/RPKM.gz", delim=' ') %>%
+  dplyr::rename("Gene_name"="Names") %>%
+  filter(Gene_name %in% devAS.human$Gene_name) %>%
+  pivot_longer(names_to = "sample",values_to = "RPKM",-Gene_name) %>%
+  mutate(sample = paste("Human", sample, sep="."))
+
+Joined.PSI.RPKM.human <- devAS.human %>%
+  inner_join(PSI.human) %>%
+  inner_join(RPKM.human) %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  filter(Tissue == tissue) %>%
+  inner_join(ManualOrdinalStages)
+
+P.human <- Joined.PSI.RPKM.human %>%
+  group_by(segment.name, tissue) %>%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = "sp"),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method='sp')) %>%
+  ungroup() %>%
+  inner_join(
+    Joined.PSI.RPKM.human %>%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %>%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`="NMD-S", `0`="NoChange", `-1`="NMD-R")) %>%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  facet_grid(~ChangeInCoding_ExclusionToInclusion.Rounded)
+
+P.human
+
+P.human +
+  geom_smooth(method='lm')
+```
+
+Hmm.. well, these results actually aren't so obviously supporting what I think should happen... Maybe there is just too much noise to see anything from the way I've analyzed this... Maybe I need to better filter out the unsure cases, and consider a different way of plotting too. Using the spearman correlation on the PSI values and RPKM values might not be best.
+
+### beta beta scatter for human devAS
+
+```{r}
+human.full.AS_segmentClassifications <- read_tsv("../code/kaessmanAnalysis/leaf2_to_AS_segments/Human_ensemblv75.full.tsv.gz")
+
+SegmentsWithNoNotes <- human.full.AS_segmentClassifications %>%
+  group_by(AS_segment) %>%
+  filter(all(is.na(Notes))) %>%
+  ungroup() %>%
+  distinct(AS_segment) %>% pull(AS_segment)
+
+Joined.PSI.RPKM.human %>%
+  group_by(segment.name, tissue) %>%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = "sp"),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method='sp')) %>%
+  ungroup() %>%
+  inner_join(
+    Joined.PSI.RPKM.human %>%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %>%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %>%
+  filter(seg.id %in% SegmentsWithNoNotes) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`="NMD-S", `0`="NoChange", `-1`="NMD-R")) %>%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method='lm', se=F) +
+  facet_grid(~ChangeInCoding_ExclusionToInclusion.Rounded)
+```
+Ok I think filtering out those edge cases already helps a bit... Let's see how it changes chicken too...
+
+```{r}
+chicken.full.AS_segmentClassifications <- read_tsv("../code/kaessmanAnalysis/leaf2_to_AS_segments/Chicken_ensemblv84.full.tsv.gz")
+
+SegmentsWithNoNotes.chicken <- chicken.full.AS_segmentClassifications %>%
+  group_by(AS_segment) %>%
+  filter(all(is.na(Notes))) %>%
+  ungroup() %>%
+  distinct(AS_segment) %>% pull(AS_segment)
+
+Joined.PSI.RPKM.chicken %>%
+  group_by(segment.name, tissue) %>%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = "sp"),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method='sp')) %>%
+  ungroup() %>%
+  inner_join(
+    Joined.PSI.RPKM.chicken %>%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %>%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %>%
+  filter(seg.id %in% SegmentsWithNoNotes.chicken) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`="NMD-S", `0`="NoChange", `-1`="NMD-R")) %>%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  facet_grid(~ChangeInCoding_ExclusionToInclusion.Rounded) +
+  geom_smooth(method='lm', se=F)
+
+```
+
+I may need some more data massaging to see the correlation correctly... Like isntead of plotting cor(PSI), maybe the metric is deltaPSI or logFC(PSI), maybe with or maybe without rescaling or qqnorming the PSI. Or maybe what I should be doing is directly correlating PSI vs RPKM across the timecourse...
+
+```{r}
+Joined.PSI.RPKM.chicken %>%
+  group_by(segment.name, tissue) %>%
+  summarise(cor.PSI.RPKM = cor(PSI, RPKM, method = "sp")) %>%
+  ungroup() %>%
+  inner_join(
+    Joined.PSI.RPKM.chicken %>%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %>%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %>%
+  filter(seg.id %in% SegmentsWithNoNotes.chicken) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`="NMD-S", `0`="NoChange", `-1`="NMD-R")) %>%
+  ggplot(aes(x=cor.PSI.RPKM, color=ChangeInCoding_ExclusionToInclusion.Rounded)) +
+  stat_ecdf() +
+  geom_vline(xintercept = 0, linetype='dashed')
+```
+
+Ok, so again, NMD-S category has slightly more negative correlation but this doesn't look any more convincing than the previous analyses... Let's try renormalizing PSI... And also, let's do all species at once for all devAS events, instead of manually looking at just chicken and human...
+
+### beta/beta scatter summary of all species
+
+```{r}
+devAS.events.all <- read_csv("../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_9.csv") %>%
+  rename("segment.name"="...1") %>%
+  pivot_longer(cols=-c(1:8), names_to = c(".value", "tissue"), values_to = c("value"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+  filter(pattern %in% c("d", "u")) %>%
+  inner_join(AS_segment_classifications, by=c("seg.id"="AS_segment")) %>%
+  mutate(tissue = str_to_title(tissue)) %>%
+  dplyr::select(-ens_id)
+
+PSI.all <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/*/PSI.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/PSI.gz", "\\1")) %>%
+  lapply(fread, sep=',') %>%
+  lapply(function(x) filter(x, V1 %in% devAS.events.all$segment.name)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "sample",values_to = "PSI",-V1)) %>%
+  bind_rows() %>%
+  dplyr::rename("seg.id"="V1")
+
+RPKM.all <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/*/RPKM.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/RPKM.gz", "\\1")) %>%
+  lapply(fread, sep=' ') %>%
+  lapply(function(x) filter(x, Names %in% devAS.events.all$Gene_name)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "sample",values_to = "RPKM",-Names)) %>%
+  bind_rows(.id="Species") %>%
+  mutate(sample = paste(str_to_title(Species), sample, sep="."))
+
+Joined.PSI.RPKM.all <- devAS.events.all %>%
+  inner_join(PSI.all) %>%
+  inner_join(RPKM.all %>%
+               dplyr::select(Gene_name=Names, sample, RPKM)) %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "StageOrdinal"), convert=T, remove=F) %>%
+  filter(Tissue == tissue) %>%
+  inner_join(ManualOrdinalStages)
+
+
+
+dat.toPlot <- Joined.PSI.RPKM.all %>%
+  group_by(segment.name, tissue, Species) %>%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = "sp"),
+            cor.RPKM = cor(RPKM, OrdinalStage.Manual, method='sp')) %>%
+  ungroup() %>%
+  inner_join(
+    Joined.PSI.RPKM.all %>%
+      distinct(segment.name, tissue, .keep_all=T)
+  ) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %>%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`="NMD-S", `0`="NoChange", `-1`="NMD-R"))
+
+dat.toPlot %>%
+  ggplot(aes(x=cor.PSI, y=cor.RPKM, color=tissue)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method='lm', se=F) +
+  facet_grid(Species~ChangeInCoding_ExclusionToInclusion.Rounded)
+
+dat.toPlot %>%
+  group_by(Species, tissue, ChangeInCoding_ExclusionToInclusion.Rounded) %>%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ChangeInCoding_ExclusionToInclusion.Rounded, ncol=1) +
+  theme(legend.position = 'bottom')
+  
+```
+Ok, that actually looks decent visually. It's not like every cell in NMD-S is clearly red, but overall the picture is clearly showing the expected direction of effects.
+
+There's a few questions this brings up and ways I can improve this:
+
+- Why is there slight positive correlation in the NoChange category? One hypothesis is that it is because the extra exon adds to gene expression counts. Note that in all these PSI measures inclusion of the AS_segment, such that an increase in PSI means an increase in the longer isoform. This could just add extra gene counts for calculating RPKM, without actually increasing the true number transcripts.
+
+- To improve interpretability of this plot, it might be simpler to just think of this analysis as "productive" AS vs "unproductive", without distinguishing between NMD-S and NMD-R... This would be more in-line with how an analysis would go if it was just based on leafcutter "junction-centric" splicing quantifications. Therefore, I could basically just reverse the sign of the NMD-R AS_segments and then merge the NMD-R and NMD-S categories. But then I'd also want to think about how to most fairly "polarize" the PSI for productive AS_segments. One idea is that I could match the number of exon-lengthening to exon-shortening events to the unproductive group, to sort of account for the hypothesis about the slight positive trend in the NoChange category being because of the added exon.
+- I'd also like visually plot how many of the devAS events (in each species/tissue) are unrpoductive?
+- ...and what of the conserved devAS events?
+
+#### What is the positive correlation in NoChange?
+
+I think it is just because devAS segments add to the gene counts, so more inclusion means higher RPKM... To test this, I would have to seperate AS_segments that are annotated (and thus count towards gene expression count) versus those that aren't... Only ones that are annotated should have this effect. Also, the degree of this effect should correlate with the fraction of exonic gene length that the devAS segment takes up...
+
+I have previously intersected each AS_segment with each protein_coding transcript, from which I can check if the AS_segment is annotated and thus would count towards RPKM. However, since RPKM ([from Cardoso-Moreira et al](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6658352/)) was probably calculated using all transcripts for genes, I think my analysis will make most sense if I only consider species for which there are only protein_coding transcripts annotated for genes (ie, not human or mouse)
+
+```{r}
+SegmentsWithNoNotes.all <- Sys.glob("../code/kaessmanAnalysis/NMDFinderB_ASSegments/*.tsv.gz") %>%
+  setNames(str_replace(., "../code/kaessmanAnalysis/NMDFinderB_ASSegments/(.+?).tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows() %>%
+  inner_join(
+    devAS.events.all %>%
+      dplyr::select(AS_segment = seg.id, as.type, Gene_name, Species)
+  )
+  
+
+Are.devAS.AnnotatedEvents <- SegmentsWithNoNotes.all %>%
+  mutate(IsNA_Notes = is.na(Notes)) %>%
+  group_by(AS_segment, Species) %>%
+  summarise(Is_AS_segment_inclusion_annotated = any(WhichIsoformIsAnnotated=="LongIsoform"),
+            AreNotes_all_NA = all(IsNA_Notes==T)) %>%
+  ungroup()
+
+GeneLengths <- Sys.glob("../code/GenomeFiles/*/Reannotated.B.bed.gz") %>%
+  setNames(str_replace(., "../code/GenomeFiles/(.+?)/Reannotated.B.bed.gz", "\\1")) %>%
+  lapply(fread, select=c(4,11,13,15,17)) %>%
+  bind_rows(.id="Genome") %>%
+  filter(V15 == "protein_coding" & V17 == "protein_coding") %>%
+  separate_rows(V11, sep = ",", convert=T) %>%
+  group_by(Genome, V4, V13) %>%
+  summarise(TranscriptLength = sum(V11)) %>%
+  ungroup() %>%
+  group_by(Genome, V13) %>%
+  filter(TranscriptLength == max(TranscriptLength)) %>%
+  ungroup() %>%
+  distinct(Genome, V13, .keep_all=T) %>%
+  dplyr::rename("Gene_name"="V13", "LongestTranscriptName"="V4")
+
+GeneLengths %>%
+  count(Genome)
+
+Are.devAS.AnnotatedEvents %>%
+  count(Species, Is_AS_segment_inclusion_annotated, AreNotes_all_NA) %>%
+  filter(!is.na(Is_AS_segment_inclusion_annotated)) %>%
+  mutate(AreNotes_all_NA = if_else(AreNotes_all_NA, "Possibly complex AS\nwith notes", "No notes")) %>%
+  mutate(Is_AS_segment_inclusion_annotated = if_else(Is_AS_segment_inclusion_annotated, "Inclusion is annotated", "Inclusion is unannotated")) %>%
+  ggplot(aes(x=Species, y=n, fill=Is_AS_segment_inclusion_annotated)) +
+    geom_col(position='fill') +
+    facet_wrap(~AreNotes_all_NA) +
+    Rotate_x_labels +
+  labs(y="fraction", fill=NULL)
+
+
+
+dat.toCheckForLengthCorrelationInNoChange <- dat.toPlot %>%
+  inner_join(
+    Are.devAS.AnnotatedEvents %>%
+      dplyr::select(-Species) %>%
+      filter(!is.na(Is_AS_segment_inclusion_annotated)),
+    by=c("segment.name"="AS_segment")
+  ) %>%
+  inner_join(
+    GeneLengths %>%
+      dplyr::select(-Genome)
+  ) %>%
+  mutate(segmentLength = stop - start) %>%
+  mutate(SegmentOverGeneLen = segmentLength/TranscriptLength)
+
+dat.toCheckForLengthCorrelationInNoChange %>%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == "NoChange") %>%
+  group_by(Species, tissue, Is_AS_segment_inclusion_annotated, AreNotes_all_NA) %>%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  mutate(AreNotes_all_NA = if_else(AreNotes_all_NA, "Possibly complex AS\nwith notes", "No notes")) %>%
+  mutate(Is_AS_segment_inclusion_annotated = if_else(Is_AS_segment_inclusion_annotated, "Inclusion is annotated", "Inclusion is unannotated")) %>%
+  filter(!Species %in% c("Human", "Mouse")) %>%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_grid(AreNotes_all_NA~Is_AS_segment_inclusion_annotated) +
+  theme(legend.position = 'bottom') +
+  Rotate_x_labels
+```
+Ok, the once where inclusion is annotated on average look a bit more positive correlated as I expected, but the low numbers (noise) in the ones where inclusion is unannotated actually makes it a bit unclear... Let's check for a correlation with length of AS_segment relative to gene length
+
+```{r}
+dat.toCheckForLengthCorrelationInNoChange %>%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == "NoChange") %>%
+  mutate(LengthRatioQuintile = cut_number(SegmentOverGeneLen, n=5)) %>%
+  group_by(Is_AS_segment_inclusion_annotated, Species, tissue, LengthRatioQuintile) %>%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  filter(!Species %in% c("Human", "Mouse")) %>%
+  mutate(Is_AS_segment_inclusion_annotated = if_else(Is_AS_segment_inclusion_annotated, "Inclusion is annotated", "Inclusion is unannotated")) %>%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_grid(Is_AS_segment_inclusion_annotated~LengthRatioQuintile) +
+  theme(legend.position = 'bottom') +
+  Rotate_x_labels
+  
+dat.toCheckForLengthCorrelationInNoChange %>%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == "NoChange") %>%
+  filter(!Species %in% c("Human", "Mouse")) %>%
+  group_by(Is_AS_segment_inclusion_annotated) %>%
+  mutate(LengthRatioQuintile = cut_number(SegmentOverGeneLen, n=5)) %>%
+  ungroup() %>%
+  group_by(LengthRatioQuintile, Is_AS_segment_inclusion_annotated) %>%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  mutate(Is_AS_segment_inclusion_annotated = if_else(Is_AS_segment_inclusion_annotated, "Inclusion is annotated", "Inclusion is unannotated")) %>%
+  ggplot(aes(x=LengthRatioQuintile, y=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_col() +
+  labs(y="spearman.of_CorPSI_vs_CorRPKM\nAcross all tissues/species", x="Quintile for AS_segmentLength/GeneLength") +
+  facet_wrap(~Is_AS_segment_inclusion_annotated, scales="free") +
+  Rotate_x_labels
+
+```
+Not sure why the first quintile is higher... But still, I think is generally consistent with an effect of adding gene counts to RPKM from annotated NoChange cassette exons. I could consider correcting for this some in later plots if the results are otherwise decieving. For example, since the principal comparison that I want to highlight is between productive and unproductive AS, try to adjust for this. For example, in previous plots, I plotted NMD-S (unproductive when included), NMD-R (Productive only when included), and NoChange (where correlations where both inclusion and exclusion are productive) and I was using PSI quantifications (percent spliced *in*)... To make this more similar to a junction-centric approach, where each junction is either productive or unproductive, I could combine NMD-S and NMD-R into "unproductive" and re-polarize the correlation sign based on whether it is NMD-S or NMD-R... Then, to attempt to correct for the length bias thing, I could repolarize the NoChange (which I will rename as "productive"), based on the ratio of NMD-S to NMD-R so that I am measuring roughly the same number of exon-inclusion events (which have negative bias due to length effect) and exon-exclusion events (which will have positive bias) as in the "unproductive" category... With that in mind, let's replot the beta beta scatter...
+
+### beta beta scatter for all... revisted as "productive" vs "unproductive"
+
+```{r}
+dat.toPlot.Unproductive <- dat.toPlot %>%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded %in% c("NMD-S", "NMD-R")) %>%
+  mutate(cor.PSI = if_else(ChangeInCoding_ExclusionToInclusion.Rounded=="NMD-R", cor.PSI * -1, cor.PSI)) %>%
+  mutate(NewClassification = "Unproductive")
+
+dat.toPlot.Unproductive %>%
+  count(ChangeInCoding_ExclusionToInclusion.Rounded) %>%
+  mutate(Percent = n/sum(n))
+
+Fraction_NMDR <- dat.toPlot.Unproductive %>%
+  count(ChangeInCoding_ExclusionToInclusion.Rounded) %>%
+  mutate(Percent = n/sum(n)) %>%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == "NMD-R") %>% 
+  pull(Percent)
+
+dat.toPlot.Productive <- dat.toPlot %>%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == "NoChange") %>%
+  sample_frac(1) %>%
+  mutate(RowFraction = row_number()/n()) %>%
+  mutate(cor.PSI = if_else(RowFraction <= Fraction_NMDR, -1 * cor.PSI, cor.PSI)) %>%
+  # mutate(cor.PSI = if_else(RowFraction <= 0.5, -1 * cor.PSI, cor.PSI)) %>%
+  mutate(NewClassification = "Productive") %>%
+  sample_frac(1)
+
+  
+bind_rows(dat.toPlot.Productive, dat.toPlot.Unproductive) %>%
+  group_by(Species, tissue, ChangeInCoding_ExclusionToInclusion.Rounded) %>%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2(limits=c(-.75, .75)) +
+  facet_wrap(~ChangeInCoding_ExclusionToInclusion.Rounded, ncol=1) +
+  labs(fill="Spearman\nrho") +
+  Rotate_x_labels
+
+bind_rows(dat.toPlot.Productive, dat.toPlot.Unproductive) %>%
+  group_by(Species, tissue, NewClassification) %>%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2(limits=c(-.6, .6)) +
+  facet_wrap(~NewClassification, ncol=1) +
+  labs(fill="splicing beta\nvs\nexpression beta\nSpearman\nrho", caption=str_wrap("Productive beta signs polarized to similar exon/inclusion ratio as unproductive", 30)) +
+  Rotate_x_labels
+
+
+```
+
+One more time, but this time let's randomly assign the sign for the productive beta (analogous to picking a random representative sQTL intron beta for each productive cluster)
+
+```{r}
+set.seed(0)
+dat.toPlot.Productive.RandomSign <- dat.toPlot %>%
+  filter(ChangeInCoding_ExclusionToInclusion.Rounded == "NoChange") %>%
+  sample_frac(1) %>%
+  mutate(RowFraction = row_number()/n()) %>%
+  mutate(cor.PSI = if_else(RowFraction <= 0.5, -1 * cor.PSI, cor.PSI)) %>%
+  mutate(NewClassification = "Productive") %>%
+  sample_frac(1)
+
+
+bind_rows(dat.toPlot.Productive.RandomSign, dat.toPlot.Unproductive) %>%
+  group_by(Species, tissue, NewClassification) %>%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  ggplot(aes(x=Species, y=tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2(limits=c(-.6, .6)) +
+  facet_wrap(~NewClassification, ncol=1) +
+  labs(fill="splicing beta\nvs\nexpression beta\nSpearman\nrho", caption=str_wrap("Productive beta signs polarized randomly", 30)) +
+  Rotate_x_labels
+
+```
+### How many devAS events are there, and how many are productive/unproductive...
+
+```{r}
+dat.toPlot %>%
+  count(ChangeInCoding_ExclusionToInclusion.Rounded, Species, tissue) %>%
+  ggplot(aes(x=Species, y=n, fill=ChangeInCoding_ExclusionToInclusion.Rounded)) +
+  geom_col() +
+  facet_wrap(~tissue) +
+  labs(fill=NULL, y="Number devAS events") +
+  Rotate_x_labels
+
+dat.toPlot %>%
+  count(ChangeInCoding_ExclusionToInclusion.Rounded, Species, tissue) %>%
+  ggplot(aes(x=Species, y=n, fill=ChangeInCoding_ExclusionToInclusion.Rounded)) +
+  geom_col(position='fill') +
+  facet_wrap(~tissue) +
+  labs(fill=NULL, y="Fraction devAS events") +
+  Rotate_x_labels
+```
+Ok, so in general, about half of devAS events (not filtering for conserved devAS events here) are unproductive...
+
+Now let's consider events that are conserved with human... Filter for both devAS in same tissue, and same direction of splicing effect
+
+```{r}
+devAS.events.all %>%
+  count(Species)
+
+devAS.ConservedWithHuman <- devAS.events.all %>%
+  mutate(Species = str_replace(Species, "^(.+?)_.+$", "\\1")) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit","Opossum", "Chicken"))) %>%
+  filter(Species == "Human") %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %>%
+  filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %>%
+  mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`="NMD-S", `0`="NoChange", `-1`="NMD-R")) %>%
+  inner_join(
+      OrthologousSegmentList.long %>%
+      dplyr::select(human.seg.id, seg.id = AS_segment)
+      ) %>%
+  inner_join(
+    devAS.events.all %>%
+      mutate(Species = str_replace(Species, "^(.+?)_.+$", "\\1")) %>%
+      mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit","Opossum", "Chicken"))) %>%
+      filter(!Species == "Human") %>%
+      mutate(ChangeInCoding_ExclusionToInclusion.Rounded = round(ChangeInCoding_InclusionToExclusion*-1)) %>%
+      filter(!is.na(ChangeInCoding_ExclusionToInclusion.Rounded)) %>%
+      mutate(ChangeInCoding_ExclusionToInclusion.Rounded = recode(ChangeInCoding_ExclusionToInclusion.Rounded, `1`="NMD-S", `0`="NoChange", `-1`="NMD-R")) %>% 
+      inner_join(
+        OrthologousSegmentList.long %>%
+        dplyr::select(human.seg.id, seg.id = AS_segment)
+        ),
+    by=c("tissue", "human.seg.id"), suffix=c(".human", ".other")) %>%
+  filter(pattern.human == pattern.other)
+
+devAS.ConservedWithHuman %>%
+  mutate(Conserved_NMD_Result = if_else(ChangeInCoding_ExclusionToInclusion.Rounded.human == ChangeInCoding_ExclusionToInclusion.Rounded.other, "Conserved result", "Unconserved result")) %>%
+  count(tissue, Conserved_NMD_Result, Species.other, ChangeInCoding_ExclusionToInclusion.Rounded.other) %>%
+  ggplot(aes(x=Species.other, y=n, fill=ChangeInCoding_ExclusionToInclusion.Rounded.other)) +
+  geom_col() +
+  facet_grid(Conserved_NMD_Result~tissue) +
+  labs(fill="Result of inclusion", y="Number devAS events\nconserved w/ human") +
+  Rotate_x_labels
+
+```
+Wow. So I guess the truly conserved ones are really more likely to be the protein coding switches... Let's replot this same thing after aggregating all events across tissues, since I remember in a previous notebook, I didn't really see the expected diminsihing conserved number of events with evolutionary distance unless I did that.
+
+```{r}
+devAS.ConservedWithHuman %>%
+  distinct(segment.name.human, Species.other, .keep_all=T) %>%
+  mutate(Conserved_NMD_Result = if_else(ChangeInCoding_ExclusionToInclusion.Rounded.human == ChangeInCoding_ExclusionToInclusion.Rounded.other, "Conserved result", "Unconserved result")) %>%
+  count(tissue, Conserved_NMD_Result, Species.other, ChangeInCoding_ExclusionToInclusion.Rounded.other) %>%
+  ggplot(aes(x=Species.other, y=n, fill=ChangeInCoding_ExclusionToInclusion.Rounded.other)) +
+  geom_col() +
+  facet_grid(~Conserved_NMD_Result) +
+  labs(fill="Result of inclusion", y="Number devAS events\nconserved w/ human",
+       caption="must be conserved devAS in at least one tissue") +
+  Rotate_x_labels
+```
+
+Not sure why macacque is so low here... In this analysis (as opposed to my previous notebook), there is additional filters for the interpretable AS events that don't only partially overlap with protein_coding transcript exons. Ok, let's look at the few conserved NMD-S and NMD-R events... I wonder if they are in genes that I would recognize from the literature, like SR proteins
+
+### Closer look at conserved unproductive devAS splice events
+
+
+```{r}
+Conserved.UnproductiveEvents <- devAS.ConservedWithHuman %>%
+  mutate(Conserved_NMD_Result = if_else(ChangeInCoding_ExclusionToInclusion.Rounded.human == ChangeInCoding_ExclusionToInclusion.Rounded.other, "Conserved result", "Unconserved result"))  %>%
+  filter(Conserved_NMD_Result == "Conserved result" & ChangeInCoding_ExclusionToInclusion.Rounded.other %in% c("NMD-R", "NMD-S"))
+
+
+
+mart <- useEnsembl("ensembl","hsapiens_gene_ensembl")
+genes <- getBM(attributes = c('ensembl_gene_id', 'hgnc_symbol'),
+               mart = mart)
+
+Conserved.UnproductiveEvents %>%
+  filter(Species.other == "Mouse") %>%
+  # distinct(Gene_name.human, .keep_all=T) %>%
+  inner_join(genes, by=c("Gene_name.human"="ensembl_gene_id")) %>%
+  dplyr::select(segment.name.human, Gene_name.human, hgnc_symbol, tissue,Result=ChangeInCoding_ExclusionToInclusion.Rounded.other, Species=Species.other, AS_type=as.type.human,pattern=pattern.other ) %>%
+  group_by(segment.name.human, Gene_name.human,  hgnc_symbol,Result, Species, AS_type, pattern ) %>% 
+  summarise(tissues = paste0(tissue,collapse = ',')) %>%
+  ungroup() %>%
+  knitr::kable()
+```
+
+DLG1, and IQGAP1, TIA1 look famaliar... Quick google search also seems to validate those. Let's make a slightly more extensive table, to find all events conserved with human from this dataset...
+
+```{r}
+Conserved.UnproductiveEvents %>%
+  inner_join(genes, by=c("Gene_name.human"="ensembl_gene_id")) %>%
+  dplyr::select(segment.name.human, Gene_name.human, hgnc_symbol, tissue,Result=ChangeInCoding_ExclusionToInclusion.Rounded.other, Species=Species.other, AS_type=as.type.human,pattern=pattern.other ) %>%
+  mutate(Species.Tissue = paste(Species, tissue)) %>%
+  arrange(Species, tissue) %>%
+  group_by(segment.name.human, Gene_name.human,  hgnc_symbol,Result, AS_type, pattern ) %>%
+  summarise(Species.Tissues = paste0(Species.Tissue,collapse = ', '), NumberConservedSpeciesTissuePairs=n()) %>%
+  ungroup() %>%
+  arrange(desc(NumberConservedSpeciesTissuePairs), hgnc_symbol) %>%
+  knitr::kable() %>%
+  kableExtra::kable_styling("striped", full_width = F) %>% 
+  kableExtra::scroll_box(width = "1200px", height = "4000px")
+
+
+```
+
+Ok, now for each of these, let's plot the developmental time course with PSI and expression across species..
+
+```{r}
+Conserved.UnproductiveEvents
+```
+
+
+I suppose one good question for these events, in light of the observation that AS-NMD events controlling SR protein expression are 'ultraconserved' between human and mouse, is whether they have higher phyloP scores than some other set of orthologous AS exons.
+
+I downloaded hg19 PhyloP scores, and got mean PhyloP scores for all human AS events defined in Mazin...
+
+```{r}
+Human.PhyloP <- read_tsv("../code/scratch/test.bed", col_names=c("chrom", "start", "stop", "seg.id.human", "meanPhyloP"))
+
+devAS.ConservedWithHuman %>%
+  mutate(Conserved_NMD_Result = if_else(ChangeInCoding_ExclusionToInclusion.Rounded.human == ChangeInCoding_ExclusionToInclusion.Rounded.other, "Conserved result", "Unconserved result"))  %>%
+  filter(Conserved_NMD_Result == "Conserved result") %>%
+  distinct(seg.id.human, .keep_all=T) %>%
+  inner_join(Human.PhyloP) %>%
+  ggplot(aes(x=meanPhyloP, color=ChangeInCoding_ExclusionToInclusion.Rounded.other)) +
+  stat_ecdf() +
+  facet_wrap(~as.type.human) +
+  labs(color=NULL, y='ecdf')
+```
+
+Ok, so these conserved unproductive AS segments don't seem more conserved that productive ones... Maybe I should filter for those that are deeply conserved and in at least a few species
+
+```{r}
+devAS.ConservedWithHuman %>%
+    mutate(Conserved_NMD_Result = if_else(ChangeInCoding_ExclusionToInclusion.Rounded.human == ChangeInCoding_ExclusionToInclusion.Rounded.other, "Conserved result", "Unconserved result"))  %>%
+  filter(Conserved_NMD_Result == "Conserved result") %>%
+  add_count(tissue, seg.id.human) %>%
+  filter(n>=3) %>%
+  ungroup() %>%
+  distinct(seg.id.human, .keep_all=T) %>%
+    inner_join(Human.PhyloP) %>%
+  ggplot(aes(x=meanPhyloP, color=ChangeInCoding_ExclusionToInclusion.Rounded.other)) +
+  stat_ecdf() +
+  facet_wrap(~as.type.human) +
+  labs(color=NULL, y='ecdf', caption="Must be devAS in at least\n3 other species in same tissue")
+```
+
+Hmm, maybe it would be better to look at conservation just at the wobble position, since the hypothesis is that splicing elements will be ultraconserved and it would be better to try to separate the conservation due to coding constraints. That's something I may try later...

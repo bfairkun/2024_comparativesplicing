@@ -291,7 +291,7 @@ $(document).ready(function () {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -302,8 +302,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -312,13 +312,13 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-07-03
+<strong>Last updated:</strong> 2024-07-09
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -342,21 +342,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R
-Markdown file created these results, you’ll want to first commit it to
-the Git repo. If you’re still working on the analysis, you can ignore
-this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -447,13 +444,13 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrong709c019">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrong5495e15">
 <span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>Repository version:</strong> 709c019
+aria-hidden="true"></span> <strong>Repository version:</strong> 5495e15
 </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrong709c019"
+<div id="strongRepositoryversionstrong5495e15"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -462,7 +459,7 @@ and connecting the code version to the results is critical for
 reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version 709c019.
+The results in this page were generated with repository version 5495e15.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -481,25 +478,24 @@ Ignored files:
     Ignored:    .Rproj.user/
     Ignored:    code/.snakemake/
     Ignored:    code/GenomeFiles/
-    Ignored:    code/Human_ensemblv75.Reannotated.A_SJC_annotations.pckle
-    Ignored:    code/Human_ensemblv75.Reannotated_SJC_annotations.pckle
-    Ignored:    code/Reannotated.A_SJC_annotations.pckle
+    Ignored:    code/SJC_annotations_d5d1043c36aa60f014dee37e6f54418aeac524c63858131c0c68769dba597410.pckle
     Ignored:    code/Session.vim
+    Ignored:    code/kaessmanAnalysis/
     Ignored:    code/kaessman_AS_dat/
     Ignored:    code/logs/
+    Ignored:    code/rules/.GenomeAnnotations.smk.swp
     Ignored:    code/scratch/
 
 Untracked files:
-    Untracked:  analysis/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd
-    Untracked:  code/scripts/Mazin_AS_Segments_ToBed9.R
-    Untracked:  code/scripts/bedparse_translate_transcripts_copy.py
+    Untracked:  analysis/2024-07-08_CheckLeafcutter2_Classifications.Rmd
+    Untracked:  code/scripts/LeafcutterJuncClassificationsToAS_segments.R
 
 Unstaged changes:
-    Modified:   analysis/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd
     Modified:   code/Snakefile
+    Modified:   code/envs/bedparse.yml
     Modified:   code/rules/GenomeAnnotations.smk
     Modified:   code/scripts/AS_ExonSegments_to_AS_Junctions.py
-    Modified:   code/scripts/bedparse_translate_transcripts.py
+    Modified:   code/scripts/leafcutter2
 
 </code></pre>
 <p>
@@ -514,14 +510,89 @@ have uncommitted changes.
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with
-<code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd</code>)
+and HTML
+(<code>docs/2024-07-04_SimulateIndirectlyComparingTreatments.html</code>)
+files. If you’ve configured a remote Git repository (see
+<code>?wflow_git_remote</code>), click on the hyperlinks in the table
+below to view the files as they were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+5495e15
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2024-07-08
+</td>
+<td>
+updates
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+5495e15
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2024-07-08
+</td>
+<td>
+updates
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
 </div>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
+<pre><code>✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+✔ tibble  3.1.7     ✔ dplyr   1.0.9
+✔ tidyr   1.2.0     ✔ stringr 1.4.0
+✔ readr   2.1.2     ✔ forcats 0.5.1</code></pre>
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
 <div id="intro" class="section level2">
 <h2>Intro</h2>
 <p>Simple model for expression change after treatment for a single
@@ -540,31 +611,180 @@ why bother for this toy example.</p>
 <p>And of course, real DE analysis is more complicated than these simple
 models because of how it borrows information across genes to estimate
 dispersion per gene… But let’s keep this simple.</p>
-<p>Now, consider 1000 genes. I’m going to simulate some stuff, saving
+<p>Now, consider 10000 genes. I’m going to simulate some stuff, saving
 the variable names similar to notation above but keeping in mind each is
 a vector now representing <span class="math inline">\(Y_0\)</span>,
-<span class="math inline">\(Y\)</span>, etc, across 1000 genes…</p>
+<span class="math inline">\(Y\)</span>, etc, across 10000 genes…</p>
 <pre class="r"><code># &quot;baseline&quot; (control) expression level.
 # Let&#39;s say true control expression across genes is lognormal, or rather normal on a log scale
 # let&#39;s use some parameters that somewhat resemble real RNA-seq data for log2RPKM across 1000 genes.
-Y_0 &lt;- rnorm(mean = 3, sd = 3, n = 1000)
+Y_0 &lt;- rnorm(mean = 4, sd = 3, n = 10000)
 hist(Y_0)</code></pre>
-<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+5495e15
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2024-07-08
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Now simulate some betas. Let’s say the betas (representing log2FC)
 are also normally distributed. And let’s make two different vectors of
 betas, for two different (and completely independent treatments with
-uncorrellated) true effects</p>
-<pre class="r"><code>beta_treatment1 &lt;- rnorm(mean=0, sd=1, n=1000)
+uncorrellated) true effects. I’m trying to pick parameters for these
+normal distributions that sort of match my intuitinos on what would be
+really measured in an RNA-seq experiment, where like ~90% of genes have
+less than two-fold change. But different treatments have different beta
+vectors (across genes), and my intuitions might be off on what the
+distribution of “true” effects is. We can play with these parameters
+later.</p>
+<pre class="r"><code>beta_treatment1 &lt;- rnorm(mean=0, sd=0.5, n=10000)
 hist(beta_treatment1)</code></pre>
-<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>beta_treatment2 &lt;- rnorm(mean=0, sd=1, n=1000)
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>beta_treatment2 &lt;- rnorm(mean=0, sd=0.5, n=10000)
 hist(beta_treatment2)</code></pre>
-<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>plot(beta_treatment1, beta_treatment2)</code></pre>
-<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-2-3.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>correlation &lt;- cor(beta_treatment1, beta_treatment2)</code></pre>
-<p>-0.0373505</p>
-<p>betas for two treatments are uncorrelated (R=)</p>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-3-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># betas are uncorrelated
+correlation &lt;- cor.test(beta_treatment1, beta_treatment2)
+print(correlation$estimate)</code></pre>
+<pre><code>        cor 
+0.002531988 </code></pre>
+<p>betas for two treatments are uncorrelated (R=0.002532).</p>
+<p>Ok, now let’s simulate some real observed values by adding the random
+error term. Let’s simulate two control samples, and one of each
+treatment. How does the random measurement error compare to the true
+effect sizes. Well I suppose that depends on the nature of the treatment
+(eg, the amount of drug, the amount of hypoxia, etc) among other
+things.</p>
+<pre class="r"><code># Let&#39;s use a slightly smaller sigma for the error term for now
+error_sigma &lt;- 0.5
+
+observed.control.1 &lt;- Y_0 + rnorm(mean=0, sd=error_sigma, n=10000)
+observed.control.2 &lt;- Y_0 + rnorm(mean=0, sd=error_sigma, n=10000)
+
+observed.treatment.1 &lt;- Y_0 + beta_treatment1 +  rnorm(mean=0, sd=error_sigma, n=10000)
+
+observed.treatment.2 &lt;- Y_0 + beta_treatment2 +  rnorm(mean=0, sd=error_sigma, n=10000)</code></pre>
+<p>Now let’s compare the differences in observed expression between
+different samples.</p>
+<pre class="r"><code>plot(observed.control.1, observed.control.2)</code></pre>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>print(cor(observed.control.1, observed.control.2))</code></pre>
+<pre><code>[1] 0.9724647</code></pre>
+<p>Just like real RNA-seq, control replicates correlate very well
+(R&gt;0.95)</p>
+<p>Now let’s plot <span class="math inline">\(Y-Y_0\)</span>, an
+estimate of treatment effects. Let’s estimate effects both treatments,
+using independent control samples for each… start with treatment 1…</p>
+<pre class="r"><code># estimate of betas (across genes)
+beta_treatment1_estimate &lt;- observed.treatment.1 - observed.control.1
+hist(beta_treatment1_estimate)</code></pre>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># true betas
+hist(beta_treatment1)</code></pre>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># scatter plot
+plot(beta_treatment1, beta_treatment1_estimate)</code></pre>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>…And same for treatment2</p>
+<pre class="r"><code># estimate of betas (across genes)
+beta_treatment2_estimate &lt;- observed.treatment.2 - observed.control.2
+hist(beta_treatment2_estimate)</code></pre>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># true betas
+hist(beta_treatment2)</code></pre>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># scatter plot
+qplot(beta_treatment2, beta_treatment2_estimate)</code></pre>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And confirm that beta estimates for two treatments are uncorrelated
+across genes…</p>
+<pre class="r"><code>qplot(beta_treatment1_estimate, beta_treatment2_estimate) +
+  geom_smooth(method=&#39;lm&#39;) +
+  geom_hline(yintercept = 0)</code></pre>
+<pre><code>`geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>print(cor.test(beta_treatment1_estimate, beta_treatment2_estimate))</code></pre>
+<pre><code>
+    Pearson&#39;s product-moment correlation
+
+data:  beta_treatment1_estimate and beta_treatment2_estimate
+t = 2.972, df = 9998, p-value = 0.002966
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.01011564 0.04928120
+sample estimates:
+       cor 
+0.02970982 </code></pre>
+<p>Ok, now let’s repeat this the less kosher way, that reuses controls…
+In this case I will just average the controls. Not really what is done,
+but I think this simpler example still highlights the issue. While it
+makes sense to combine controls for maximum power if you are just
+concerned with estimating betas for one treatment, when comparing the
+beta estimates between treatments, this can lead to some misleading
+results.</p>
+<pre class="r"><code>beta_treatment1_estimate2 &lt;- observed.treatment.1 - (observed.control.1 + observed.control.2)/2
+
+beta_treatment2_estimate2 &lt;- observed.treatment.2 - (observed.control.1 + observed.control.2)/2
+
+qplot(beta_treatment1_estimate2, beta_treatment2_estimate2) +
+  geom_smooth(method=&#39;lm&#39;) +
+  geom_hline(yintercept = 0)</code></pre>
+<pre><code>`geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="figure/2024-07-04_SimulateIndirectlyComparingTreatments.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cor.test(beta_treatment1_estimate2, beta_treatment2_estimate2)</code></pre>
+<pre><code>
+    Pearson&#39;s product-moment correlation
+
+data:  beta_treatment1_estimate2 and beta_treatment2_estimate2
+t = 22.524, df = 9998, p-value &lt; 2.2e-16
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.2010238 0.2383315
+sample estimates:
+     cor 
+0.219758 </code></pre>
+<p>Ok, that introduced some artificial correlation. Not sure how
+realistic these simulations are though. Maybe the signal to noise of the
+treatments in real life is such that it doesn’t matter. Especially with
+more than just the couple replicates I simulated here. Or maybe not. And
+maybe downstream anaysis like GSEA aren’t sensitive enough to pick up on
+this small artificial correlation. Or maybe it is. Using independent
+controls before comparing betas between treatments leaves less room for
+question. Depending on the question, directly comparing treatments might
+also be applicable.</p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -590,17 +810,30 @@ locale:
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
+other attached packages:
+[1] forcats_0.5.1   stringr_1.4.0   dplyr_1.0.9     purrr_0.3.4    
+[5] readr_2.1.2     tidyr_1.2.0     tibble_3.1.7    ggplot2_3.3.6  
+[9] tidyverse_1.3.1
+
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.12      rstudioapi_0.13  knitr_1.39       magrittr_2.0.3  
- [5] workflowr_1.7.0  R6_2.5.1         rlang_1.0.2      fastmap_1.1.0   
- [9] fansi_1.0.3      highr_0.9        stringr_1.4.0    tools_4.2.0     
-[13] xfun_0.30        utf8_1.2.2       cli_3.6.2        git2r_0.30.1    
-[17] jquerylib_0.1.4  htmltools_0.5.2  ellipsis_0.3.2   rprojroot_2.0.3 
-[21] yaml_2.3.5       digest_0.6.29    tibble_3.1.7     lifecycle_1.0.1 
-[25] crayon_1.5.1     later_1.3.0      sass_0.4.1       vctrs_0.4.1     
-[29] promises_1.2.0.1 fs_1.5.2         glue_1.6.2       evaluate_0.15   
-[33] rmarkdown_2.14   stringi_1.7.6    bslib_0.3.1      compiler_4.2.0  
-[37] pillar_1.7.0     jsonlite_1.8.0   httpuv_1.6.5     pkgconfig_2.0.3 </code></pre>
+ [1] Rcpp_1.0.12      lattice_0.20-45  lubridate_1.8.0  assertthat_0.2.1
+ [5] rprojroot_2.0.3  digest_0.6.29    utf8_1.2.2       R6_2.5.1        
+ [9] cellranger_1.1.0 backports_1.4.1  reprex_2.0.1     evaluate_0.15   
+[13] highr_0.9        httr_1.4.3       pillar_1.7.0     rlang_1.0.2     
+[17] readxl_1.4.0     rstudioapi_0.13  whisker_0.4      jquerylib_0.1.4 
+[21] Matrix_1.5-3     rmarkdown_2.14   splines_4.2.0    labeling_0.4.2  
+[25] munsell_0.5.0    broom_0.8.0      compiler_4.2.0   httpuv_1.6.5    
+[29] modelr_0.1.8     xfun_0.30        pkgconfig_2.0.3  mgcv_1.8-40     
+[33] htmltools_0.5.2  tidyselect_1.1.2 workflowr_1.7.0  fansi_1.0.3     
+[37] crayon_1.5.1     tzdb_0.3.0       dbplyr_2.1.1     withr_2.5.0     
+[41] later_1.3.0      grid_4.2.0       nlme_3.1-157     jsonlite_1.8.0  
+[45] gtable_0.3.0     lifecycle_1.0.1  DBI_1.1.2        git2r_0.30.1    
+[49] magrittr_2.0.3   scales_1.3.0     cli_3.6.2        stringi_1.7.6   
+[53] farver_2.1.0     fs_1.5.2         promises_1.2.0.1 xml2_1.3.3      
+[57] bslib_0.3.1      ellipsis_0.3.2   generics_0.1.2   vctrs_0.4.1     
+[61] tools_4.2.0      glue_1.6.2       hms_1.1.1        fastmap_1.1.0   
+[65] yaml_2.3.5       colorspace_2.0-3 rvest_1.0.2      knitr_1.39      
+[69] haven_2.5.0      sass_0.4.1      </code></pre>
 </div>
 </div>
 

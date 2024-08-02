@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2024-06-24" />
+
+<title>2024-06-24_CheckAnnotationsOfOtherSpecies</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">2024_ComparativeSplicing</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">2024-06-24_CheckAnnotationsOfOtherSpecies</h1>
+<h4 class="date">2024-06-24</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#intro" id="toc-intro">Intro</a></li>
+<li><a
+href="#approach-for-going-from-alternative-coding-regions-mazin-appraoch-for-communicating-as-events-to-alternative-splice-junctions"
+id="toc-approach-for-going-from-alternative-coding-regions-mazin-appraoch-for-communicating-as-events-to-alternative-splice-junctions">Approach
+for going from alternative coding regions (Mazin appraoch for
+communicating AS events), to alternative splice junctions</a></li>
+</ul>
+</div>
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-07-09
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>2024_comparativesplicing/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed19900924code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(19900924)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed19900924code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(19900924)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrong5495e15">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong> 5495e15
+</a>
+</p>
+</div>
+<div id="strongRepositoryversionstrong5495e15"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version 5495e15.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
+    Ignored:    code/.snakemake/
+    Ignored:    code/GenomeFiles/
+    Ignored:    code/SJC_annotations_d5d1043c36aa60f014dee37e6f54418aeac524c63858131c0c68769dba597410.pckle
+    Ignored:    code/Session.vim
+    Ignored:    code/kaessmanAnalysis/
+    Ignored:    code/kaessman_AS_dat/
+    Ignored:    code/logs/
+    Ignored:    code/rules/.GenomeAnnotations.smk.swp
+    Ignored:    code/scratch/
+
+Untracked files:
+    Untracked:  analysis/2024-07-08_CheckLeafcutter2_Classifications.Rmd
+    Untracked:  code/scripts/LeafcutterJuncClassificationsToAS_segments.R
+
+Unstaged changes:
+    Modified:   analysis/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/envs/bedparse.yml
+    Modified:   code/rules/GenomeAnnotations.smk
+    Modified:   code/scripts/AS_ExonSegments_to_AS_Junctions.py
+    Modified:   code/scripts/leafcutter2
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd</code>)
+and HTML
+(<code>docs/2024-06-24_CheckAnnotationsOfOtherSpecies.html</code>)
+files. If you’ve configured a remote Git repository (see
+<code>?wflow_git_remote</code>), click on the hyperlinks in the table
+below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+5495e15
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2024-07-08
+</td>
+<td>
+updates
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+709c019
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2024-07-02
+</td>
+<td>
+initial commit
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>To have some better sense of how to proceed with poorly annotated
+genomes, for the purposes of identifying unproductive juncs, first I
+want to explore a bit the annotations of these other species (human,
+mouse, rat, macaque, chicken, lamprey, opossum)</p>
+<pre class="r"><code>library(tidyverse)
+library(data.table)
+library(knitr)
+library(ggseqlogo)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))</code></pre>
+<pre class="r"><code>bed12 &lt;- Sys.glob(&quot;../code/GenomeFiles/*[0-9]/Reference.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/GenomeFiles/(.+?)/Reference.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickStop&quot;, &quot;color&quot;, &quot;NumBlocks&quot;, &quot;BlockLengths&quot;, &quot;BlockStarts&quot;, &quot;gene_id&quot;,&quot;transcript_id&quot;,&quot;gene_biotype&quot;,&quot;gene_name&quot;,&quot;transcript_biotype&quot;,&quot;transcript_support_level&quot;,&quot;tag&quot;,&quot;transcript_name&quot; )) %&gt;%
+  bind_rows(.id=&quot;Genome&quot;)</code></pre>
+<p>Let’s check Number of annotated protein coding genes in each
+genome</p>
+<pre class="r"><code>bed12 %&gt;%
+  filter(gene_biotype==&quot;protein_coding&quot;) %&gt;%
+  distinct(gene_id, .keep_all=T) %&gt;%
+  count(Genome) %&gt;%
+  ggplot(aes(x=Genome, y=n)) +
+  geom_col() +
+  Rotate_x_labels +
+  labs(y=&#39;Number&#39;, title=&#39;Number of protein_coding genes annotated&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>…So similar numbers (roughly 20,000), between human and opossum. that
+is believable. Only ~15,000 for chicken… And even less in lamprey. Not
+sure if that is real biology or annotation quality, both seem plausible
+explanations. Let’s check the number/fraction of other types of
+genes.</p>
+<p>Fraction of gene_biotypes</p>
+<pre class="r"><code>bed12 %&gt;%
+  add_count(gene_biotype) %&gt;%
+  filter(n&gt;4000) %&gt;%
+  distinct(gene_id, .keep_all=T) %&gt;%
+  count(gene_biotype, Genome) %&gt;%
+  ggplot(aes(x=Genome, y=n, fill=gene_biotype)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&#39;fraction&#39;, title=&#39;fraction of gene_biotypes&#39;,
+       caption=&#39;gene_biotypes &lt; 4000 intsances filtered out&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Some mammals don’t have as many lincRNAs annotated… I think this is
+more likely just a refelection of annotation quality than biology. Let’s
+now check transcript annotations..</p>
+<pre class="r"><code>bed12 %&gt;%
+  # count(transcript_biotype) %&gt;%
+  # filter(n&gt;4000)
+  add_count(transcript_biotype) %&gt;%
+  filter(n&gt;4000) %&gt;%
+  count(transcript_biotype, Genome) %&gt;%
+  ggplot(aes(x=Genome, y=n, fill=transcript_biotype)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&#39;fraction&#39;, title=&#39;fraction of transcript_biotypes&#39;,
+       caption=&#39;transcript_biotypes &lt; 4000 intsances filtered out&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok so only human and mouse have lots of the unproductive
+‘processed_transcript’ and ‘nonsense_mediated_decay’ transcripts
+annotated. Defintely just refelction of annotation quality. Our
+unproductive splicing script might be really useful for these other
+species.</p>
+<p>Let’s also check number of transcripts per protein coding gene…</p>
+<pre class="r"><code>bed12 %&gt;%
+  filter(gene_biotype == &quot;protein_coding&quot;) %&gt;%
+  mutate(IsProteinCodingTranscript = transcript_biotype==&quot;protein_coding&quot;) %&gt;%
+  group_by(Genome, gene_id) %&gt;%
+  mutate(numIsoforms = n()) %&gt;%
+  mutate(numProteinCodingIsoforms = sum(IsProteinCodingTranscript)) %&gt;%
+  ungroup() %&gt;%
+  distinct(Genome, gene_id, .keep_all=T) %&gt;%
+  dplyr::select(Genome, gene_id, numIsoforms, numProteinCodingIsoforms) %&gt;%
+  mutate(FractionCodingIsoforms = numProteinCodingIsoforms/numIsoforms) %&gt;%
+  group_by(Genome, numIsoforms) %&gt;%
+  summarise(
+    n = n(),
+    FractionCodingIsoforms.mean = mean(FractionCodingIsoforms)
+  ) %&gt;%
+  ungroup() %&gt;%
+  mutate(NumProductiveIsoforms = FractionCodingIsoforms.mean*n) %&gt;%
+  mutate(numIsoforms.simplified = case_when(
+    numIsoforms &lt; 20 ~ as.numeric(numIsoforms),
+    TRUE ~ as.numeric(20))) %&gt;%
+  group_by(Genome, numIsoforms.simplified) %&gt;%
+  summarise(
+    n.simplified = sum(n),
+    NumProductiveIsoforms.simplified = sum(NumProductiveIsoforms)) %&gt;%
+  ungroup() %&gt;%
+  mutate(NumUnproductive = n.simplified - NumProductiveIsoforms.simplified) %&gt;%
+  dplyr::select(Genome, numIsoforms.simplified, n.simplified, NumProductive = NumProductiveIsoforms.simplified, NumUnproductive) %&gt;%
+  pivot_longer(names_to = &quot;transcript_type&quot;, values_to = &quot;n&quot;, cols=c(&quot;NumProductive&quot;, &quot;NumUnproductive&quot;)) %&gt;%
+  ggplot(aes(x=factor(numIsoforms.simplified), y=n, fill=transcript_type)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_x_discrete(labels = c(1:19, &quot;&gt;20&quot;)) +
+  facet_wrap(~Genome, scales=&quot;free_y&quot;) +
+  scale_fill_manual(values=c(&quot;red&quot;, &quot;gray&quot;), labels=c(&quot;NumProductive&quot;=&quot;Productive&quot;, &quot;NumUnproductive&quot;=&quot;Unproductive&quot;)) +
+  Rotate_x_labels +
+  labs(fill=&quot;transcript type&quot;, y=&quot;Num genes&quot;, x=&quot;Number transcripts per gene&quot;,
+       caption=&quot;only protein coding genes considered\ntranscripts with &#39;protein_coding&#39; are &#39;Productive&#39;&quot;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-6-1.png" width="960" style="display: block; margin: auto;" />
+So only human and mouse have ‘unproductive’ transcripts annotated. And
+many species only have one isoform annotated for most genes in any case.
+I suppose one reasonable approach is to just use all ORFs in
+‘protein_coding’ transcripts as productive.</p>
+<p>Let’s check the additoinal tags (unfortanely, bedparse only considers
+the first tag instance, so there are undoubtedly some mistakes here, but
+I think that is still ok…). I’m most interested in the tags related to
+‘mRNA_end’, and ‘mRNA_start’ which indicate poor quality transciript
+boundary definitions.</p>
+<pre class="r"><code>bed12 %&gt;%
+  filter(transcript_biotype == &quot;protein_coding&quot;) %&gt;%
+  count(tag, Genome) %&gt;%
+  ggplot(aes(x=Genome, y=n, fill=tag)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&#39;fraction&#39;, title=&#39;fraction of transcript tags&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, but from IGV, looking at say chicken or lamprey, the CDS
+annotations are clearly not accurate (often starting at the first base
+of the transcript)… So I will definitely need to try to manually
+identify the ORF for Yang’s script to reasonably work. So based on a
+little intuition, I think the approach for getting Yang’s script to work
+with all of these species, will be to manually reannotated ORFs (based
+on longest ORF), and not requiring an ATG start (since I think often the
+true start is cut off from the transcript).</p>
+<p>Next let’s look at intron sizes and motifs…</p>
+<p>note that I see there is a bug about the lamprey splice sites file
+(actually all of them, because gtftools by default only processes
+chromosomes named 1-22,X,Y)… will fix later.</p>
+<pre class="r"><code>Introns &lt;-  Sys.glob(&quot;../code/GenomeFiles/*[0-9]/SpliceSites.seq.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/GenomeFiles/(.+?)/SpliceSites.seq.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;DonorSeq&quot;,&quot;AcceptorSeq&quot; )) %&gt;%
+  bind_rows(.id=&quot;Genome&quot;)
+
+Introns &lt;- Introns %&gt;%
+  separate(name, into=c(&quot;transcript&quot;, &quot;intron&quot;), sep=&quot;_&quot;)
+
+Introns %&gt;%
+  mutate(len = stop - start) %&gt;%
+  ggplot(aes(x=len, color=Genome)) +
+  stat_ecdf() +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  coord_cartesian(xlim=c(100, 1E5)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;IntLength (bp)&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" />
+Ok, chicken and lamprey have slightly shorter introns than the mammals…
+Still much longer than yeast/plant introns which are usually than 50-200
+bp.</p>
+<p>Let’s check number of introns per protein coding gene transcript.</p>
+<pre class="r"><code>bed12 %&gt;%
+  filter(gene_biotype==&quot;protein_coding&quot;) %&gt;%
+  distinct(gene_id, .keep_all=T) %&gt;%
+  dplyr::select(Genome, transcript_id) %&gt;%
+  inner_join(Introns, by=c(&quot;Genome&quot;, &quot;transcript_id&quot;=&quot;transcript&quot;)) %&gt;%
+  count(transcript_id, Genome) %&gt;%
+  ggplot(aes(x=n, color=Genome)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0, 20)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;Num introns&#39;, title=&#39;num introns per gene&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" />
+All these species have median ~8 introns per gene.</p>
+<p>Let’s look at splice site motifs:</p>
+<pre class="r"><code>SpliceSites &lt;- Introns %&gt;%
+  # head(1000) %&gt;%
+  dplyr::rename(Donor.Seq=DonorSeq, Acceptor.Seq=AcceptorSeq) %&gt;%
+  mutate(Donor.Pos = case_when(
+    strand == &quot;+&quot; ~ paste(chrom, start),
+    strand == &quot;-&quot; ~ paste(chrom, stop)
+  )) %&gt;%
+  mutate(Acceptor.Pos = case_when(
+    strand == &quot;+&quot; ~ paste(chrom, stop),
+    strand == &quot;-&quot; ~ paste(chrom, start)  
+  )) %&gt;%
+  dplyr::select(Genome, transcript, intron, Donor.Pos, Acceptor.Pos, Donor.Seq, Acceptor.Seq) %&gt;%
+  pivot_longer(cols=c(&quot;Donor.Seq&quot;, &quot;Acceptor.Seq&quot;, &quot;Donor.Pos&quot;, &quot;Acceptor.Pos&quot;),names_to=c(&quot;AcceptorOrDonor&quot;, &quot;.value&quot;), names_pattern=&quot;(^.+?)\\.(.+$)&quot;)
+
+SpliceSites %&gt;%
+  # filter for introns in protein coding genes
+  inner_join(
+    bed12 %&gt;%
+      filter(gene_biotype==&quot;protein_coding&quot;) %&gt;%
+      distinct(transcript_id, .keep_all=T) %&gt;%
+      dplyr::select(Genome, transcript=transcript_id)
+  ) %&gt;%
+  distinct(Genome, Pos, AcceptorOrDonor, .keep_all=T) %&gt;%
+  count(AcceptorOrDonor, Genome) %&gt;%
+  ggplot(aes(x=Genome, y=n, fill=AcceptorOrDonor)) +
+  geom_col(position=&#39;dodge&#39;) +
+  Rotate_x_labels +
+  labs(y=&#39;Number of unique splice sites annotated&#39;, caption=&#39;only protein cooding genes&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" />
+I think this roughly matches the number of protein coding genes
+annotated, and is somewhat reasonable… Perhaps both some biology and
+difference in annotation effects here. Now let’s look at splice site
+motifs</p>
+<pre class="r"><code>PullSeq &lt;- function(df){
+  df %&gt;%
+    pull(Seq) %&gt;%
+    return()
+}
+
+set.seed(0)
+SpliceSites %&gt;%
+  # filter for introns in protein coding genes
+  inner_join(
+    bed12 %&gt;%
+      filter(gene_biotype==&quot;protein_coding&quot;) %&gt;%
+      distinct(transcript_id, .keep_all=T) %&gt;%
+      dplyr::select(Genome, transcript=transcript_id)
+  ) %&gt;%
+  distinct(Genome, Pos, AcceptorOrDonor, .keep_all=T) %&gt;%
+  group_by(Genome, AcceptorOrDonor) %&gt;%
+  sample_n(5000) %&gt;%
+  mutate(Motif = paste(Genome, AcceptorOrDonor)) %&gt;%
+  split(as.factor(.$Motif)) %&gt;%
+  lapply(PullSeq) %&gt;%
+  ggseqlogo()</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I think ggseqlogo is thinking these are amino acid sequences because
+there are lots of sequences with ’N’s.</p>
+<p>Let’s count how many of them have N’s, and then consider filtering
+them out…</p>
+<pre class="r"><code>SpliceSites %&gt;%
+  # filter for introns in protein coding genes
+  inner_join(
+    bed12 %&gt;%
+      filter(gene_biotype==&quot;protein_coding&quot;) %&gt;%
+      distinct(transcript_id, .keep_all=T) %&gt;%
+      dplyr::select(Genome, transcript=transcript_id)
+  ) %&gt;%
+  distinct(Genome, Pos, AcceptorOrDonor, .keep_all=T) %&gt;%
+  mutate(ContainsN = str_detect(Seq, &#39;N&#39;)) %&gt;%
+  count(AcceptorOrDonor, Genome, ContainsN) %&gt;%
+  ggplot(aes(x=Genome, y=n, fill=ContainsN)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  coord_cartesian(ylim=c(0, 0.01)) +
+  facet_wrap(~AcceptorOrDonor) +
+  labs(y=&#39;fraction splice sites containing &quot;N&quot;&#39;, caption=&#39;only protein cooding genes&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" />
+So, something like 0-0.05% of splice sites contain “N” in the sequence.
+pretty negligble. Surprisingly, lamprey doesn’t have many of these.
+Let’s just filter them out and remake the plot, so that ggseqlogo colors
+the letters better.</p>
+<pre class="r"><code>set.seed(0)
+SpliceSites %&gt;%
+  # filter for introns in protein coding genes
+  inner_join(
+    bed12 %&gt;%
+      filter(gene_biotype==&quot;protein_coding&quot;) %&gt;%
+      distinct(transcript_id, .keep_all=T) %&gt;%
+      dplyr::select(Genome, transcript=transcript_id)
+  ) %&gt;%
+  distinct(Genome, Pos, AcceptorOrDonor, .keep_all=T) %&gt;%
+  filter(!str_detect(Seq, &quot;N&quot;)) %&gt;%
+  group_by(Genome, AcceptorOrDonor) %&gt;%
+  sample_n(5000) %&gt;%
+  mutate(Motif = paste(Genome, AcceptorOrDonor)) %&gt;%
+  split(as.factor(.$Motif)) %&gt;%
+  lapply(PullSeq) %&gt;%
+  ggseqlogo()</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Maybe lamprey has a weaker necessity for polypyrimidine tract, but
+other than that, all these seqlogos look more or less same to me.</p>
+<p>Now let’s better understand why, when browsing IGV, some of these
+transcripts have coding segments that start at the annotated transcript
+start. Obviously I think this is just poor annotation, but I want to
+know exactly how prevalent it is, and if these transcripts are tagged or
+have other definiing features I should know about. Note that in these
+bed12, the coding region is marked by the thick regions in the bed
+file.</p>
+<p>First let’s look at the coding span (thickStop - thickStart)</p>
+<pre class="r"><code>bed12 %&gt;%
+  filter(transcript_biotype==&quot;protein_coding&quot;) %&gt;%
+  mutate(codingSpanLen = thickStop - thickStart) %&gt;%
+  # mutate(codingStart)
+  ggplot(aes(x=codingSpanLen, color=Genome)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0, 10000)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;CodingSpanLen (bp)&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>UTR.Lens.P &lt;- bed12 %&gt;%
+  filter(transcript_biotype==&quot;protein_coding&quot;) %&gt;%
+  mutate(ThreePrimeUTR = case_when(
+    strand == &quot;+&quot; ~ stop - thickStop,
+    strand == &quot;-&quot; ~ thickStart - start
+  )) %&gt;%
+  mutate(FivePrimeUTR = case_when(
+    strand == &quot;+&quot; ~ thickStart - start,
+    strand == &quot;-&quot; ~stop - thickStop  
+  )) %&gt;%
+  dplyr::select(Genome, ThreePrimeUTR, FivePrimeUTR, transcript_id) %&gt;%
+  pivot_longer(names_to = &quot;UTRType&quot;, values_to=&quot;Length&quot;, cols = c(&quot;ThreePrimeUTR&quot;, &quot;FivePrimeUTR&quot;)) %&gt;%
+  ggplot(aes(x=Length, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~UTRType) +
+  coord_cartesian(xlim=c(0, 5000)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;UTR length (bp)&#39;, caption=&quot;length includes introns&quot;)
+
+UTR.Lens.P</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>UTR.Lens.P +
+  scale_x_continuous(trans=&#39;log1p&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok so human and mouse have the best annotated UTRs, while lamprey is
+clearly the worst… Especially the 5’ UTRs… I think often the start codon
+will be missing from the transcript. I think the best thing to do will
+actually just be to use start and stop codons when the UTRs are present,
+and other wise look for the longest ORF within the transcript, not
+requiring a STOP to be present if the 3’UTR is len==0, and not requiring
+a START to be present if the 5’UTR len==0. That way, we can identify the
+correct frame, whilst not cutting the ORF short of the transcript
+boundaries.</p>
+<p>Let’s look at the tags in the gtf, to get a sense of if these might
+be tagged in some special way…</p>
+<pre class="r"><code>bed12 %&gt;%
+  count(Genome, tag)</code></pre>
+<pre><code>                  Genome               tag      n
+ 1:   Chicken_ensemblv84                 .  17954
+ 2:     Human_ensemblv75                 . 142812
+ 3:     Human_ensemblv75              CCDS  37104
+ 4:     Human_ensemblv75       mRNA_end_NF  20783
+ 5:     Human_ensemblv75     mRNA_start_NF  14413
+ 6:     Human_ensemblv75            seleno     58
+ 7: Lamprey_ensemblv_112                 .   1027
+ 8: Lamprey_ensemblv_112 Ensembl_canonical  13114
+ 9:   Macaque_ensemblv84                 .  44725
+10:     Mouse_ensemblv84                 .  33759
+11:     Mouse_ensemblv84              CCDS    174
+12:     Mouse_ensemblv84             basic  67132
+13:     Mouse_ensemblv84        cds_end_NF      6
+14:     Mouse_ensemblv84      cds_start_NF      8
+15:     Mouse_ensemblv84       mRNA_end_NF   8429
+16:     Mouse_ensemblv84     mRNA_start_NF   5712
+17:   Opossum_ensemblv84                 .  24882
+18:   Rabbit_ensemblv_84                 .  24964
+19:      Rat_ensemblv_79                 .  30113
+20:      Rat_ensemblv_79       mRNA_end_NF    137
+21:      Rat_ensemblv_79     mRNA_start_NF    153
+22:      Rat_ensemblv_79            seleno      1
+                  Genome               tag      n</code></pre>
+<p>Well the only tag I see in Lamprey is “Ensembl_canonical”, so these
+are largely not tagged with any special identifier.</p>
+<p>…I have reannotated the gtf to comply with Yang’s script (meaning
+start_codon and stop_codon features must be present, and also used the
+longest ORF when no CDS for a transcript is found or when only one UTR
+is present) and also to determine NMDFinderB classifications for each
+transcript. Let’s explore these transcripts.</p>
+<pre class="r"><code>bed12.reannotated &lt;- Sys.glob(&quot;../code/GenomeFiles/*[0-9]/Reannotated.A.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/GenomeFiles/(.+?)/Reannotated.A.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickStop&quot;, &quot;color&quot;, &quot;NumBlocks&quot;, &quot;BlockLengths&quot;, &quot;BlockStarts&quot;, &quot;gene_id&quot;, &quot;transcript_id&quot;, &quot;gene_biotype&quot;, &quot;gene_type&quot;, &quot;transcript_biotype&quot;, &quot;transcript_type&quot;, &quot;transcript_support_level&quot;,&quot;tag&quot;,&quot;ccds_id&quot;, &quot;NMDFinderB&quot;, &quot;CDSLen&quot; )) %&gt;%
+  bind_rows(.id=&quot;Genome&quot;)</code></pre>
+<p>First let’s check how NMDFinder classification coressponds with
+transcript_type</p>
+<pre class="r"><code>bed12.reannotated %&gt;%
+  count(Genome, tag)</code></pre>
+<pre><code>                  Genome               tag      n
+ 1:   Chicken_ensemblv84                 .  17954
+ 2:     Human_ensemblv75                 . 142812
+ 3:     Human_ensemblv75              CCDS  37104
+ 4:     Human_ensemblv75       mRNA_end_NF  20783
+ 5:     Human_ensemblv75     mRNA_start_NF  14413
+ 6:     Human_ensemblv75            seleno     58
+ 7: Lamprey_ensemblv_112                 .   1027
+ 8: Lamprey_ensemblv_112 Ensembl_canonical  13114
+ 9:   Macaque_ensemblv84                 .  44725
+10:     Mouse_ensemblv84                 .  33759
+11:     Mouse_ensemblv84              CCDS    174
+12:     Mouse_ensemblv84             basic  67132
+13:     Mouse_ensemblv84        cds_end_NF      6
+14:     Mouse_ensemblv84      cds_start_NF      8
+15:     Mouse_ensemblv84       mRNA_end_NF   8429
+16:     Mouse_ensemblv84     mRNA_start_NF   5712
+17:   Opossum_ensemblv84                 .  24882
+18:   Rabbit_ensemblv_84                 .  24964
+19:      Rat_ensemblv_79                 .  30113
+20:      Rat_ensemblv_79       mRNA_end_NF    137
+21:      Rat_ensemblv_79     mRNA_start_NF    153
+22:      Rat_ensemblv_79            seleno      1
+                  Genome               tag      n</code></pre>
+<pre class="r"><code>bed12.reannotated %&gt;%
+  filter(str_detect(Genome, &quot;Human&quot;)) %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  add_count(transcript_type) %&gt;%
+  mutate(transcript_type = str_glue(&quot;{transcript_type} (n={n})&quot;)) %&gt;%
+  dplyr::select(-n) %&gt;%
+  count(transcript_type, NMDFinderB) %&gt;%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;annotated transcript_type&quot;, caption=&quot;&#39;processed_transcript&#39; contains no annotated ORF\nin which case NMD status based on longest ORF&quot;, title=&#39;human&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>bed12.reannotated %&gt;%
+  filter(str_detect(Genome, &quot;Mouse&quot;)) %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  add_count(transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  mutate(transcript_type = str_glue(&quot;{transcript_type} (n={n})&quot;)) %&gt;%
+  dplyr::select(-n) %&gt;%
+  count(transcript_type, NMDFinderB) %&gt;%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;annotated transcript_type&quot;, caption=&quot;&#39;processed_transcript&#39; contains no annotated ORF\nin which case NMD status based on longest ORF&quot;, title=&#39;mouse&#39;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>bed12.reannotated %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  mutate(Genome = str_replace(Genome, &quot;^(.+?)_ensembl.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  add_count(Genome, transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  mutate(transcript_type = str_glue(&quot;{transcript_type} (n={n})&quot;)) %&gt;%
+  dplyr::select(-n) %&gt;%
+  count(Genome, transcript_type, NMDFinderB) %&gt;%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;annotated transcript_type&quot;) +
+  facet_grid(~Genome, scales=&quot;free_x&quot;, space=&#39;free&#39;, labeller = label_wrap_gen(10))</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-17-3.png" width="672" style="display: block; margin: auto;" />
+Ok one thing that surprises me is that the ‘processed_transript’
+actually is not overwhelmingly ‘Trigger NMD’ the way that
+‘nonsense_mediated_decay’ is… But from eQTL effect correlations, and
+from naRNA/steadyStateRNA, I think these transcripts (or rather,
+transcripts containing the splice junctions unique to these transcripts)
+are in fact generally unstable. Maybe this is actually an artifact of
+how I determined NMDFinder: when a transcript does not have an ORF, I
+identified the longest ORF without requiring an ATG or STOP codon, then
+use that “ORF” for the NMDFinderB decision tree. My reasoning for this
+was to reasonably identify the correct reading frame for transcripts in
+species in which the transcripts are poorly annotated such that the ATG
+(and 5’UTR) might be missing just because of incompleteness. I think
+this might often identify correct frame of the protein_coding ORF, even
+if the transcript doesn’t actually contain an ATG to use that frame.</p>
+<p>From manual inspection, I think it might be the case that these
+‘incomplete’ transcripts are often annotated from ATG to TAA, even if
+there is no UTR on either side… In any case, this should not affect how
+things are processed through Yang’s script, since I am still correctly
+identifying the ORF in those species.</p>
+<p>Just to make sure of my understanding of the ‘processed_transcript’
+transcript_type, let’s make the same plots but just using the annotated
+CDS instead of manually searching for the ORFs…</p>
+<pre class="r"><code>bed12.reannotated.usingOriginalAnnotations &lt;- Sys.glob(&quot;../code/GenomeFiles/*[0-9]/Reannotated.B.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/GenomeFiles/(.+?)/Reannotated.B.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickStop&quot;, &quot;color&quot;, &quot;NumBlocks&quot;, &quot;BlockLengths&quot;, &quot;BlockStarts&quot;, &quot;gene_id&quot;, &quot;transcript_id&quot;, &quot;gene_biotype&quot;, &quot;gene_type&quot;, &quot;transcript_biotype&quot;, &quot;transcript_type&quot;, &quot;transcript_support_level&quot;,&quot;tag&quot;,&quot;ccds_id&quot;, &quot;NMDFinderB&quot;, &quot;CDSLen&quot; )) %&gt;%
+  bind_rows(.id=&quot;Genome&quot;)
+
+bed12.reannotated.usingOriginalAnnotations %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  mutate(Genome = str_replace(Genome, &quot;^(.+?)_ensembl.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  add_count(Genome, transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  mutate(transcript_type = str_glue(&quot;{transcript_type} (n={n})&quot;)) %&gt;%
+  dplyr::select(-n) %&gt;%
+  count(Genome, transcript_type, NMDFinderB) %&gt;%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;annotated transcript_type&quot;) +
+  facet_grid(~Genome, scales=&quot;free_x&quot;, space=&#39;free&#39;, labeller = label_wrap_gen(10))</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok so one thing this obviously confirms is that processed_transcript
+never contains an annotated CDS, yet I’m sure many of these (even by
+chance) would contain an ATG and by extension some kind of ORF, albeit
+probably a short one often. I wonder if there is a hard cutoff for what
+length ORF the annotators consider a valid CDS worth annotating. Let’s
+check the length distribution of annotated CDSs.</p>
+<pre class="r"><code>P &lt;- bed12.reannotated.usingOriginalAnnotations %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  add_count(Genome, transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  ggplot(aes(x=CDSLen, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~transcript_type) +
+  coord_cartesian(xlim=c(0, 1000)) +
+  labs(x=&quot;CDS length (bp)&quot;, y=&quot;ecdf&quot;)
+P</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># zoomed in more
+P +
+  coord_cartesian(xlim=c(0,150), ylim=c(0,.25))</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-19-2.png" width="672" style="display: block; margin: auto;" />
+As far as I can tell, there’s not an obvious hard cutoff. perhaps they
+also consider conservation or something, cause some legitmate functional
+ORFs might be short. But I do notice that there seems to be a sholder at
+about ~120bp (40 codons) for nonsense_mediated_decay transcripts. So
+maybe a reasonable thing to do is to attempt translating the
+processed_transcripts and see that there are ORFs, but they tend to be
+shorter than that, otherwise the annotators would more likely call them
+nonsense_mediated_decay</p>
+<p>So let’s replot using that strategy (translate from first ATG, but
+require ORF to be &gt; 30 codons), and then see how NMDFinderB
+classifies these ’processed_transcript’s.</p>
+<pre class="r"><code>bed12.reannotated.ApproachC &lt;- Sys.glob(&quot;../code/GenomeFiles/*[0-9]/Reannotated.C.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/GenomeFiles/(.+?)/Reannotated.C.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickStop&quot;, &quot;color&quot;, &quot;NumBlocks&quot;, &quot;BlockLengths&quot;, &quot;BlockStarts&quot;, &quot;gene_id&quot;, &quot;transcript_id&quot;, &quot;gene_biotype&quot;, &quot;gene_type&quot;, &quot;transcript_biotype&quot;, &quot;transcript_type&quot;, &quot;transcript_support_level&quot;,&quot;tag&quot;,&quot;ccds_id&quot;, &quot;NMDFinderB&quot;, &quot;CDSLen&quot; )) %&gt;%
+  bind_rows(.id=&quot;Genome&quot;)
+
+
+bed12.reannotated.ApproachC %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  mutate(Genome = str_replace(Genome, &quot;^(.+?)_ensembl.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  add_count(Genome, transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  mutate(transcript_type = str_glue(&quot;{transcript_type} (n={n})&quot;)) %&gt;%
+  dplyr::select(-n) %&gt;%
+  count(Genome, transcript_type, NMDFinderB) %&gt;%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;annotated transcript_type&quot;) +
+  facet_grid(~Genome, scales=&quot;free_x&quot;, space=&#39;free&#39;, labeller = label_wrap_gen(10))</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>bed12.reannotated.ApproachC %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  add_count(Genome, transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  ggplot(aes(x=CDSLen, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~transcript_type) +
+  coord_cartesian(xlim=c(0, 300)) +
+  labs(x=&quot;CDS length (bp)&quot;, y=&quot;ecdf&quot;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-20-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Same plots but using approach of translating from first start_codon
+if no annotated CDS, with no minimum length requirement.</p>
+<pre class="r"><code>bed12.reannotated.ApproachD &lt;- Sys.glob(&quot;../code/GenomeFiles/*[0-9]/Reannotated.D.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/GenomeFiles/(.+?)/Reannotated.D.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickStop&quot;, &quot;color&quot;, &quot;NumBlocks&quot;, &quot;BlockLengths&quot;, &quot;BlockStarts&quot;, &quot;gene_id&quot;, &quot;transcript_id&quot;, &quot;gene_biotype&quot;, &quot;gene_type&quot;, &quot;transcript_biotype&quot;, &quot;transcript_type&quot;, &quot;transcript_support_level&quot;,&quot;tag&quot;,&quot;ccds_id&quot;, &quot;NMDFinderB&quot;, &quot;CDSLen&quot; )) %&gt;%
+  bind_rows(.id=&quot;Genome&quot;)
+
+
+bed12.reannotated.ApproachD %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  mutate(Genome = str_replace(Genome, &quot;^(.+?)_ensembl.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  add_count(Genome, transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  mutate(transcript_type = str_glue(&quot;{transcript_type} (n={n})&quot;)) %&gt;%
+  dplyr::select(-n) %&gt;%
+  count(Genome, transcript_type, NMDFinderB) %&gt;%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;annotated transcript_type&quot;) +
+  facet_grid(~Genome, scales=&quot;free_x&quot;, space=&#39;free&#39;, labeller = label_wrap_gen(10))</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>bed12.reannotated.ApproachD %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  add_count(Genome, transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  ggplot(aes(x=CDSLen, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~transcript_type) +
+  coord_cartesian(xlim=c(0, 300)) +
+  labs(x=&quot;CDS length (bp)&quot;, y=&quot;ecdf&quot;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-21-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, right. so i think i get the point. processed_transcript just
+means short ORF.</p>
+<p>I also have another approach to identifying ORF, which is to ignore
+annotations completely, and just translate from first ATG with an ORF
+&gt; 42… Let’s check what that does…</p>
+<pre class="r"><code>bed12.reannotated.ApproachE &lt;- Sys.glob(&quot;../code/GenomeFiles/*[0-9]/Reannotated.E.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/GenomeFiles/(.+?)/Reannotated.E.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickStop&quot;, &quot;color&quot;, &quot;NumBlocks&quot;, &quot;BlockLengths&quot;, &quot;BlockStarts&quot;, &quot;gene_id&quot;, &quot;transcript_id&quot;, &quot;gene_biotype&quot;, &quot;gene_type&quot;, &quot;transcript_biotype&quot;, &quot;transcript_type&quot;, &quot;transcript_support_level&quot;,&quot;tag&quot;,&quot;ccds_id&quot;, &quot;NMDFinderB&quot;, &quot;CDSLen&quot; )) %&gt;%
+  bind_rows(.id=&quot;Genome&quot;)
+
+
+bed12.reannotated.ApproachE %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  mutate(Genome = str_replace(Genome, &quot;^(.+?)_ensembl.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  add_count(Genome, transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  mutate(transcript_type = str_glue(&quot;{transcript_type} (n={n})&quot;)) %&gt;%
+  dplyr::select(-n) %&gt;%
+  count(Genome, transcript_type, NMDFinderB) %&gt;%
+  ggplot(aes(x=transcript_type, y=n, fill=NMDFinderB)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction&quot;, x=&quot;annotated transcript_type&quot;) +
+  facet_grid(~Genome, scales=&quot;free_x&quot;, space=&#39;free&#39;, labeller = label_wrap_gen(10))</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>bed12.reannotated.ApproachE %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  add_count(Genome, transcript_type) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  ggplot(aes(x=CDSLen, color=Genome)) +
+  stat_ecdf() +
+  facet_wrap(~transcript_type) +
+  coord_cartesian(xlim=c(0, 300)) +
+  labs(x=&quot;CDS length (bp)&quot;, y=&quot;ecdf&quot;)</code></pre>
+<p><img src="figure/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd/unnamed-chunk-22-2.png" width="672" style="display: block; margin: auto;" />
+Ok, there’s enough times that this approach doesn’t find any CDS or
+finds the wrong CDS for annotated transcripts, that I think when there
+is any annotated start codon, I should use that.</p>
+<p>Anyway, let’s move on to thinking about how to take these gtf files
+(now properly formatted with start_codon and stop_codon lines for Yang’s
+script) and making sense of the alternative coding regions listed in
+Mazin, in terms of productive/unproductive splicing.</p>
+</div>
+<div
+id="approach-for-going-from-alternative-coding-regions-mazin-appraoch-for-communicating-as-events-to-alternative-splice-junctions"
+class="section level2">
+<h2>Approach for going from alternative coding regions (Mazin appraoch
+for communicating AS events), to alternative splice junctions</h2>
+<ul>
+<li><p>could start with all protein_coding tagged transcripts that span
+the cassette exon, then create juncs with and without. (Won’t handle
+mutually exclusive exons properly, but i think that is ok)</p></li>
+<li><p>similar for alt donors, but start with protein_coding transcripts
+that contain one of the splice donors</p></li>
+<li><p>same for alt acceptors</p></li>
+<li><p>probably will want some additional filters for the ‘weird’ hard
+to interpret cases… Like when the Mazin cassette exon only partially
+overlaps an annotated exon. Or when there are consecutive Mazin AS
+exons.</p></li>
+</ul>
+<p>Here is a pseudocode approach to accomplishing this:</p>
+<ol start="0" style="list-style-type: decimal">
+<li>bedtools intersect to remove Mazin AS segments only partially
+overlapping annotated exons.</li>
+<li>bedtools intersect protein coding transcripts with cassette exons,
+then read into python and with bedparse…</li>
+<li>get junctions uniquely made from including/excluding the exon.</li>
+</ol>
+<p>Note that Yang’s script requires gene_name and transcript_name in the
+gtf attributes. Not all ensembl transcripts have these, even when there
+is a gene_id… see below…</p>
+<pre class="r"><code>bed12.reannotated.ApproachE %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  mutate(IsGeneNameEmpty = gene_id == &quot;.&quot;) %&gt;%
+  distinct(gene_id, Genome, .keep_all=T) %&gt;%
+  count(Genome, IsGeneNameEmpty) %&gt;%
+  ggplot(aes(x=Genome, y=n, fill=IsGeneNameEmpty)) +
+  geom_col(position=&#39;fill&#39;) +
+  scale_fill_manual(values = c(&quot;red&quot;, &quot;black&quot;), labels=c(&quot;TRUE&quot;=&quot;No gene_name attribute&quot;, &quot;FALSE&quot;=&quot;Has gene_name&quot;), name=NULL) +
+  Rotate_x_labels +
+  labs(y=&quot;Fraction of genes&quot;)
+
+bed12.reannotated.ApproachE %&gt;%
+  filter(gene_type == &quot;protein_coding&quot;) %&gt;%
+  filter(!str_detect(tag, &quot;_NF&quot;)) %&gt;%
+  mutate(IsGeneNameEmpty = transcript_name == &quot;.&quot;) %&gt;%
+  distinct(transcript_id, Genome, .keep_all=T) %&gt;%
+  count(Genome, IsGeneNameEmpty) %&gt;%
+  ggplot(aes(x=Genome, y=n, fill=IsGeneNameEmpty)) +
+  geom_col(position=&#39;fill&#39;) +
+  scale_fill_manual(values = c(&quot;red&quot;, &quot;black&quot;), labels=c(&quot;TRUE&quot;=&quot;No transcript_name attribute&quot;, &quot;FALSE&quot;=&quot;Has transcript_name&quot;), name=NULL) +
+  Rotate_x_labels +
+  labs(y=&quot;Fraction of transcripts&quot;)</code></pre>
+<p>Therefore, when creating gtf for Yang’s script, just use gene_id and
+transcript_id as gene_name and transcript_name</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ggseqlogo_0.1     knitr_1.39        data.table_1.14.2 forcats_0.5.1    
+ [5] stringr_1.4.0     dplyr_1.0.9       purrr_0.3.4       readr_2.1.2      
+ [9] tidyr_1.2.0       tibble_3.1.7      ggplot2_3.3.6     tidyverse_1.3.1  
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.12       lubridate_1.8.0   assertthat_0.2.1  rprojroot_2.0.3  
+ [5] digest_0.6.29     utf8_1.2.2        R6_2.5.1          cellranger_1.1.0 
+ [9] backports_1.4.1   reprex_2.0.1      evaluate_0.15     highr_0.9        
+[13] httr_1.4.3        pillar_1.7.0      rlang_1.0.2       readxl_1.4.0     
+[17] rstudioapi_0.13   whisker_0.4       jquerylib_0.1.4   R.oo_1.24.0      
+[21] R.utils_2.11.0    rmarkdown_2.14    labeling_0.4.2    munsell_0.5.0    
+[25] broom_0.8.0       compiler_4.2.0    httpuv_1.6.5      modelr_0.1.8     
+[29] xfun_0.30         pkgconfig_2.0.3   htmltools_0.5.2   tidyselect_1.1.2 
+[33] workflowr_1.7.0   fansi_1.0.3       crayon_1.5.1      tzdb_0.3.0       
+[37] dbplyr_2.1.1      withr_2.5.0       later_1.3.0       R.methodsS3_1.8.1
+[41] grid_4.2.0        jsonlite_1.8.0    gtable_0.3.0      lifecycle_1.0.1  
+[45] DBI_1.1.2         git2r_0.30.1      magrittr_2.0.3    scales_1.3.0     
+[49] cli_3.6.2         stringi_1.7.6     farver_2.1.0      fs_1.5.2         
+[53] promises_1.2.0.1  xml2_1.3.3        bslib_0.3.1       ellipsis_0.3.2   
+[57] generics_0.1.2    vctrs_0.4.1       tools_4.2.0       glue_1.6.2       
+[61] hms_1.1.1         fastmap_1.1.0     yaml_2.3.5        colorspace_2.0-3 
+[65] rvest_1.0.2       haven_2.5.0       sass_0.4.1       </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

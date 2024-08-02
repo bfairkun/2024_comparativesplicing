@@ -220,11 +220,12 @@ def insert_marks_for_defined_ORF(sequence, start_codon_pos=None):
 # insert_marks_for_defined_ORF("GGGATGAAAGGGAAA|GGG|T|AA|GGGAAA", 3)
 # insert_marks_for_defined_ORF("GGGATGAAAGGGAAA|GGG|TT|AA|GGGAAA", 3)
 
+import re
 def get_NMD_detective_B_classification(sequence):
     """
     sequence should be marked with '^' for start, '*' for stop, and '|' for splice juncs
     """
-    CDS = re.search(r"\^(\w+)\*", sequence.replace("|", ""))
+    CDS = re.search(r"\^(\w+)\**", sequence.replace("|", ""))
     InternalStopExon = re.search(r"(^|\|)([\^ACGTNacgtn]*\*[ACGTNacgtn]*)\|", sequence)
     if "^" not in sequence or CDS == None:
         return "No CDS"
@@ -240,7 +241,14 @@ def get_NMD_detective_B_classification(sequence):
         return "50 nt rule"
     else:
         return "Trigger NMD"
-    
+# get_NMD_detective_B_classification("ACGTACG|CACGT")
+# get_NMD_detective_B_classification("A^ATGACG|CACGT")
+# get_NMD_detective_B_classification("A^CGTACG|CAC*GT")
+# get_NMD_detective_B_classification("A^CGTA*CG|CACGT")
+# get_NMD_detective_B_classification("ACG^TACG|" + "A" * 407 +"A*A|CACGT")
+# get_NMD_detective_B_classification("ACG^TA" + "A" * 100 + "CG|" + "A" * 40 +"A*A|CACGT")
+# get_NMD_detective_B_classification("ACG^TA" + "A" * 150 + "CG|A*" + "A"*60 + "|CACGT")
+
 def calculate_frames(bedline):
     """Calculate the frame for each CDS block."""
     CDS_bed12 = bedline.cds()

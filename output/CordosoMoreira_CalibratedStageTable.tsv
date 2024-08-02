@@ -1,0 +1,110 @@
+Species	StageName	OrdinalStage.Manual	RoughlyCalibratedStage
+Chicken	e10	1	NA
+Chicken	e12	2	NA
+Chicken	e14	3	Onset meiosis oogenesis
+Chicken	e17	4	NA
+Chicken	P0	5	Birth
+Chicken	P7	6	NA
+Chicken	P35	7	NA
+Chicken	P70	8	Onset meiosis spermatogenesis
+Chicken	P155	9	NA
+Human	4wpc	1	NA
+Human	5wpc	2	NA
+Human	6wpc	3	NA
+Human	7wpc	4	NA
+Human	8wpc	5	NA
+Human	9wpc	6	NA
+Human	10wpc	7	Onset meiosis oogenesis
+Human	11wpc	8	NA
+Human	12wpc	9	NA
+Human	13wpc	10	NA
+Human	16wpc	11	NA
+Human	18wpc	12	NA
+Human	19wpc	13	NA
+Human	20wpc	14	NA
+Human	newborn	15	Birth
+Human	infant	16	NA
+Human	toddler	17	NA
+Human	school	18	NA
+Human	youngTeenager	19	Onset meiosis spermatogenesis
+Human	teenager	20	NA
+Human	oldTeenager	21	NA
+Human	youngAdult	22	NA
+Human	youngMidAge	23	NA
+Human	olderMidAge	24	NA
+Human	senior	25	NA
+Human	Senior	26	NA
+Macaque	e93	1	NA
+Macaque	e108	2	NA
+Macaque	e112	3	NA
+Macaque	e123	4	NA
+Macaque	e130	5	NA
+Macaque	P0	6	Birth
+Macaque	P23	7	NA
+Macaque	P152	8	NA
+Macaque	P183	9	NA
+Macaque	P365	10	NA
+Macaque	P1095	11	Onset meiosis spermatogenesis
+Macaque	P3285	12	NA
+Macaque	P5475	13	NA
+Macaque	P8030	14	NA
+Mouse	e10	1	NA
+Mouse	e11	2	Onset meiosis oogenesis
+Mouse	e12	3	NA
+Mouse	e13	4	NA
+Mouse	e14	5	NA
+Mouse	e15	6	NA
+Mouse	e16	7	NA
+Mouse	e17	8	NA
+Mouse	e18	9	NA
+Mouse	P0	10	Birth
+Mouse	P3	11	NA
+Mouse	P14	12	Onset meiosis spermatogenesis
+Mouse	P28	13	NA
+Mouse	P63	14	NA
+Opossum	13	1	NA
+Opossum	14	2	Birth
+Opossum	16	3	NA
+Opossum	18	4	NA
+Opossum	20	5	NA
+Opossum	24	6	NA
+Opossum	28	7	Onset meiosis oogenesis
+Opossum	35	8	NA
+Opossum	42	9	NA
+Opossum	56	10	NA
+Opossum	74	11	Onset meiosis spermatogenesis
+Opossum	104	12	NA
+Opossum	134	13	NA
+Opossum	164	14	NA
+Opossum	194	15	NA
+Rabbit	e12	1	NA
+Rabbit	e13	2	NA
+Rabbit	e14	3	NA
+Rabbit	e15	4	NA
+Rabbit	e16	5	NA
+Rabbit	e18	6	NA
+Rabbit	e19	7	NA
+Rabbit	e21	8	NA
+Rabbit	e23	9	NA
+Rabbit	e24	10	NA
+Rabbit	e27	11	Onset meiosis oogenesis
+Rabbit	P0	12	Birth
+Rabbit	P14	13	NA
+Rabbit	P84	14	Onset meiosis spermatogenesis
+Rabbit	P186	15	NA
+Rat	e11	1	NA
+Rat	e12	2	NA
+Rat	e13	3	NA
+Rat	e14	4	NA
+Rat	e15	5	NA
+Rat	e16	6	Onset meiosis oogenesis
+Rat	e17	7	NA
+Rat	e18	8	NA
+Rat	e19	9	NA
+Rat	e20	10	NA
+Rat	P0	11	Birth
+Rat	P3	12	NA
+Rat	P7	13	NA
+Rat	P14	14	Onset meiosis spermatogenesis
+Rat	P42	15	NA
+Rat	P112	16	NA
