@@ -22,6 +22,8 @@ CordosoMoreira_df['formatted_column'] = CordosoMoreira_df.apply(
 )
 CordosoMoreira_df['formatted_column'].to_csv("config/batch.txt", index=False, header=False)
 
+ChainFiles = pd.read_csv("config/ChainFiles.tsv", sep='\t', index_col=0)
+
 def has_differences(dcmp):
     """
     https://stackoverflow.com/questions/4187564/recursively-compare-two-directories-to-ensure-they-have-the-same-files-and-subdi
@@ -48,7 +50,7 @@ def CreateSymlinksOfDir1ContentsIntoDir2(Dir1, Dir2):
     """
     Dir1_sanitized = Dir1.rstrip("/") + "/"
     Dir2_sanitized = Dir2.rstrip("/") + "/"
-    for filepath in pathlib.Path(Dir1_sanitized).glob('*'):
+    for filepath in pathlib.Path(Dir1_sanitized).glob('[!.]*'):
         module_script_file = os.path.abspath(filepath)
         new_script_link = Dir2_sanitized + os.path.basename(filepath)
         try:

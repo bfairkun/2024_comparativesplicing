@@ -407,6 +407,37 @@ SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
   scale_alpha_discrete(range=c(0.5, 1)) +
   Rotate_x_labels +
   labs(y="Number devAS conserved with human", x="species")
+
+OrthologousSegmentList.long <- OrthologousSegmentList %>%
+  mutate(human.seg.id = human) %>%
+  pivot_longer(names_to = "Species", values_to = "segid", -human.seg.id) %>%
+  separate(segid, into=c("AS_segment", "chrom", "strand", "start", "stop"), sep=":", convert=T)
+
+SignificantDevAS.OrthoSegments.TissueSpeciesPairs %>%
+  filter(pattern.x %in% c('u', 'd')) %>%
+  filter(pattern.x == pattern.y) %>%
+  inner_join(OrthologousSegmentList.long, by=c("seg.id.x"="AS_segment")) %>%
+  inner_join(OrthologousSegmentList.long, by=c("seg.id.y"="AS_segment")) %>%
+  mutate(IsSymmetric.x = (stop.x - (start.x - 1)) %% 3 == 0) %>%
+  mutate(IsSymmetric.y = (stop.y - (start.y - 1)) %% 3 == 0) %>%
+  mutate(SymmetryConservation = case_when(
+    IsSymmetric.y == IsSymmetric.x & IsSymmetric.y == T ~ "Symmetric in both",
+    IsSymmetric.y == IsSymmetric.x & IsSymmetric.y == F ~ "Asymmetric in both",
+    TRUE ~ "Symmetry status flips"
+  )) %>%
+  distinct(seg.id.x, seg.id.y, .keep_all=T) %>%
+  count(species.y, SymmetryConservation) %>%
+  mutate(species.y = factor(species.y, levels=c("mac.", "mou.", "rat.", "rab.", "opo.", "chi."))) %>%
+  ggplot(aes(x=species.y, y=n, fill=SymmetryConservation)) +
+  geom_col() +
+  Rotate_x_labels +
+  labs(y="Number devAS\nconserved w/ human", x="species") +
+  labs(fill=NULL) +
+  theme(legend.position = 'bottom') +
+  guides(fill=guide_legend(nrow=3,byrow=TRUE))
+
+# ggsave("../code/scratch/ExonSymmetryConservation.pdf", width=3.5, height=4)
+
 ```
 Ok, that makes more sense... It might be that there are random differences in power between different tissues, such that you get the more sensible answer only when you aggregate across all tissues. Note that rabbit, mouse, and rat are all equally distant from humans.
 

@@ -22,3 +22,14 @@ use rule rna_seq_annotate_juncfiles as annotate_juncfiles_NoWhitespaceGtf with:
     conda:
         "../module_workflows/snakemake-workflow_rna-seq/envs/regtools.yml"
 
+use rule rna_seq_AnnotateConcatedUniqJuncFile_basic as AnnotateConcatedUniqJuncFile_basic_NoWhitespaceGtf with:
+    input:
+        junc = "rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/{GenomeName}.uniq.junc",
+        gtf = config['GenomesPrefix'] + "{GenomeName}/Reference.NoTrailingWhitespace.gtf",
+        fa = config['GenomesPrefix'] + "{GenomeName}/Reference.fa"
+    wildcard_constraints:
+        GenomeName = "|".join(["StarletSeaAnemone_RefSeq_GCF_932526225.1"])
+    output:
+        "rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/{GenomeName}.uniq.annotated.tsv.gz"
+    conda:
+        "../module_workflows/snakemake-workflow_rna-seq/envs/regtools.yml"

@@ -149,3 +149,52 @@ bind_rows(
 
 ```
 
+### Update 8/8/24
+
+I now realize it's not trivial to make chain files, and some of these genome versions i downloaded from ensembl don't have any premade chain files to hg38 on ensembl or UCSC... Therefore, I'm going to "downgrade" some genomes to versions for which I can get pre-made chain files from UCSC... While I'm at it... I'm just going to use the UCSC genome fasta and gtf files, as specified here:
+
+```{r}
+Genomes <- read_tsv("../code/config/STAR_Genome_List.tsv")
+
+Genomes %>% tail(7) %>% knitr::kable()
+
+Genomes %>%
+  distinct(GenomeName)
+```
+
+Now let's fix the samples tsv
+
+```{r}
+NewSamplesTsv <- read_tsv("../code/config/OldConfigs/samples.tsv") %>%
+  mutate(STARGenomeName = recode(STARGenomeName, "Human_ensembl_v112"="Human_UCSC.hg38_GencodeBasic46", "Chicken_ensembl_v112"="Chicken_UCSC.galGal6_ensv101", "Macaque_ensembl_v112"="Macaque_UCSC.rheMac10_ensv101", "Opossum_ensembl_v112"="Opossum_UCSC.monDom5_ensvUnknown", "Mouse_ensembl_v112"="Mouse_UCSC.mm39_GencodeBasic46", "Rabbit_ensembl_v112"="Rabbit_UCSC.oryCun2_ensv101", "Rat_ensembl_v112"="Rat_UCSC.rn7_RefSeqv108"))
+
+write_tsv(NewSamplesTsv, "../code/config/samples.tsv")
+```
+
+Finally, let's write a table of chain files to do liftovers to and from hg38 for these new genomes...
+
+```{r}
+Genomes %>%
+  filter(str_detect(GenomeName, "UCSC" )) %>%
+  filter(!str_detect(GenomeName, "hg38")) %>%
+  dplyr::select(GenomeName) %>%
+  arrange(GenomeName) %>%
+  mutate(Hg38_to_Genome_Chain_Link = c(
+    "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToGalGal6.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToRheMac10.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToMm39.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToMonDom5.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToOryCun2.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToRn7.over.chain.gz"
+    )) %>%
+  mutate(Genome_to_Hg38_Chain_Link = c(
+    "https://hgdownload.soe.ucsc.edu/goldenPath/galGal6/liftOver/galGal6ToHg38.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/rheMac10/liftOver/rheMac10ToHg38.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/mm39/liftOver/mm39ToHg38.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/monDom5/liftOver/monDom5ToHg38.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/oryCun2/liftOver/oryCun2ToHg38.over.chain.gz",
+    "https://hgdownload.soe.ucsc.edu/goldenPath/rn7/liftOver/rn7ToHg38.over.chain.gz"
+    )) %>%
+  write_tsv("../code/config/ChainFiles.tsv")
+```
+

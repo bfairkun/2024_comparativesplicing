@@ -22,10 +22,11 @@ use rule DownloadFastaAndGtf, CopyFastq, CopyFastq_SE, STAR_make_index  from rna
 CreateSymlinksOfDir1ContentsIntoDir2("module_workflows/snakemake-workflow_rna-seq/scripts/", "scripts/")
 
 include: "rules/other.smk"
+include: "rules/LiftoverJuncs.smk"
 
 ruleorder: rna_seq_faidxGenome > faidxGenome
 ruleorder: annotate_juncfiles_NoWhitespaceGtf > rna_seq_annotate_juncfiles
-
+ruleorder: AnnotateConcatedUniqJuncFile_basic_NoWhitespaceGtf > rna_seq_AnnotateConcatedUniqJuncFile_basic
 rule all:
     input:
         # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
