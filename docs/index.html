@@ -284,7 +284,7 @@ $(document).ready(function () {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-ok text-success"
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -295,8 +295,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
-</a>
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -305,13 +305,13 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-07-11
+<strong>Last updated:</strong> 2024-11-12
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 0
+aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -335,18 +335,21 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
-</a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate"
+<div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git
-repository, you know the exact version of the code that produced these
-results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
 </div>
 </div>
 </div>
@@ -437,13 +440,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrong5495e15">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba">
 <span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>Repository version:</strong> 5495e15
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>
 </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrong5495e15"
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -452,7 +457,8 @@ and connecting the code version to the results is critical for
 reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version 5495e15.
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -467,30 +473,101 @@ were generated:
 </p>
 <pre><code>
 Ignored files:
+    Ignored:    .DS_Store
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/.Rhistory
+    Ignored:    code/.Snakefile.swp
+    Ignored:    code/.ipynb_checkpoints/
     Ignored:    code/.snakemake/
+    Ignored:    code/ChainFiles/
+    Ignored:    code/CordosoMoreira_Fastq/
+    Ignored:    code/Downloads/
     Ignored:    code/GenomeFiles/
-    Ignored:    code/SJC_annotations_d5d1043c36aa60f014dee37e6f54418aeac524c63858131c0c68769dba597410.pckle
+    Ignored:    code/LiftoverJuncs/
+    Ignored:    code/Log.out
+    Ignored:    code/MazinLeafcutterAnalysis/
+    Ignored:    code/Rplots.pdf
     Ignored:    code/Session.vim
+    Ignored:    code/config/OldConfigs/2040822_Cordoso_Moreira_SampleList.tsv
+    Ignored:    code/conservation/
+    Ignored:    code/featureCounts/
     Ignored:    code/kaessmanAnalysis/
     Ignored:    code/kaessman_AS_dat/
     Ignored:    code/logs/
-    Ignored:    code/rules/.GenomeAnnotations.smk.swp
+    Ignored:    code/rna-seq/
     Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/.vscode/
+    Ignored:    code/snakemake.log
+    Ignored:    data/.DS_Store
 
 Untracked files:
-    Untracked:  analysis/2024-07-08_CheckLeafcutter2_Classifications.Rmd
-    Untracked:  analysis/2024-07-09_Mazin_CheckNMD_Effects.Rmd
-    Untracked:  code/scripts/LeafcutterJuncClassificationsToAS_segments.R
+    Untracked:  analysis/.ipynb_checkpoints/
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_AllSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_SampleStagesFixed.Rmd
+    Untracked:  analysis/2024-08-24_BioMartLookupGenes.Rmd
+    Untracked:  analysis/2024-08-29_ExploreJuncLiftovers.Rmd
+    Untracked:  analysis/2024-08-29_OrganizeCrossSpeciesTables.Rmd
+    Untracked:  analysis/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd
+    Untracked:  analysis/2024-09-09_Organize_ConserveddevASJuncs.Rmd
+    Untracked:  analysis/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd
+    Untracked:  analysis/2024-09-23_FixMouseEnsemblBed12ToGtf.Rmd
+    Untracked:  analysis/2024-09-30_ContinousExpressionSplicingModel.Rmd
+    Untracked:  analysis/2024-09-30_ContinousTimeSplicingModel.Rmd
+    Untracked:  analysis/2024-10-03_ExplorePuzzling_UP_vs_Expression_Effects.Rmd
+    Untracked:  analysis/2024-10-14_MakeLeafcutterContrasts.Rmd
+    Untracked:  analysis/2024-10-15_HeatmapsWithLeafcutter_dPSI.Rmd
+    Untracked:  analysis/2024-10-16_FinalFigs.Rmd
+    Untracked:  analysis/20240815_LiftoverJuncsTest.ipynb
+    Untracked:  analysis/Untitled.ipynb
+    Untracked:  code/config/CordosoGenomes_Extra_Gtfs.tsv
+    Untracked:  code/config/CordosoTimeSeriesContrasts.tsv
+    Untracked:  code/config/CordosoTissueContrasts.tsv
+    Untracked:  code/config/GTEx_juncFileList.tsv
+    Untracked:  code/envs/crossmap.yml
+    Untracked:  code/envs/py27.yml
+    Untracked:  code/rules/MazinLeafcutterAnalysis.smk
+    Untracked:  code/scripts/ConcatenatePdfs.py
+    Untracked:  code/scripts/FeatureCounts_to_Mat.R
+    Untracked:  code/scripts/PrepAllJuncsFor_JunctionClassifier.R
+    Untracked:  code/scripts/QQNorm_PSITable_ByTissue.R
+    Untracked:  code/scripts/SpearmanCor_Mazin_LeafcutterPSI.R
+    Untracked:  code/scripts/SpearmanCor_Mazin_log2RPKM.R
+    Untracked:  code/scripts/SummariseJuncFilesByProductivityCounts.R
+    Untracked:  code/scripts/Untitled.ipynb
+    Untracked:  code/scripts/leafcutter_to_PSI_GTEX.R
+    Untracked:  code/scripts/tidy_leafcutter_ds_results.R
+    Untracked:  data/RefGenomeSources.txt
+    Untracked:  data/Stages_AsIn_CordosoMoreira.tsv
+    Untracked:  data/Stages_AsIn_CordosoMoreira_Recoded.txt
+    Untracked:  output/Conserved.devAS.leafcutter.tsv.gz
+    Untracked:  output/Ensembl.GeneHumanHomologs.tsv.gz
+    Untracked:  output/Ensembl.TranscriptInfo.tsv.gz
+    Untracked:  output/GTEx_DS_DE_FromChao_CordosoTissuePairs.tsv.gz
 
 Unstaged changes:
-    Modified:   analysis/2024-06-24_CheckAnnotationsOfOtherSpecies.Rmd
+    Modified:   analysis/2024-07-16_Download_CordosoMoreira_Fastq.Rmd
+    Modified:   analysis/index.Rmd
     Modified:   code/Snakefile
+    Modified:   code/config/ChainFiles.tsv
+    Modified:   code/config/Cordoso_Moreira_SampleList.tsv
+    Modified:   code/config/STAR_Genome_List.tsv
+    Modified:   code/config/samples.tsv
     Modified:   code/envs/bedparse.yml
-    Modified:   code/rules/GenomeAnnotations.smk
-    Modified:   code/scripts/AS_ExonSegments_to_AS_Junctions.py
+    Modified:   code/module_workflows/snakemake-workflow_rna-seq
+    Modified:   code/rules/LiftoverJuncs.smk
+    Modified:   code/rules/common.smk
+    Modified:   code/scripts/daiuc_leafcutter2
     Modified:   code/scripts/leafcutter2
+    Modified:   output/QC/ReadCountsPerSamples.tsv
+
+Staged changes:
+    Modified:   .gitmodules
+    New:        code/scripts/daiuc_leafcutter2
 
 </code></pre>
 <p>
@@ -537,10 +614,27 @@ Message
 <tbody>
 <tr>
 <td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/2024_comparativesplicing/77c4e9422bbfcdb7bc695e0aeeb93a655fc4957b/docs/index.html" target="_blank">77c4e94</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2024-08-01
+</td>
+<td>
+reprocess mazin data
+</td>
+</tr>
+<tr>
+<td>
 Rmd
 </td>
 <td>
-709c019
+<a href="https://github.com/bfairkun/2024_comparativesplicing/blob/709c019956cea10e148ec099b6efd991b526646c/analysis/index.Rmd" target="_blank">709c019</a>
 </td>
 <td>
 Benjmain Fair
@@ -557,7 +651,7 @@ initial commit
 html
 </td>
 <td>
-709c019
+<a href="https://rawcdn.githack.com/bfairkun/2024_comparativesplicing/709c019956cea10e148ec099b6efd991b526646c/docs/index.html" target="_blank">709c019</a>
 </td>
 <td>
 Benjmain Fair
@@ -591,9 +685,28 @@ href="2024-07-04_SimulateIndirectlyComparingTreatments.html">2024-07-04_Simulate
 href="2024-07-08_CheckLeafcutter2_Classifications.html">2024-07-08_CheckLeafcutter2_Classifications</a></p>
 <p><a
 href="2024-07-09_Mazin_CheckNMD_Effects.html">2024-07-09_Mazin_CheckNMD_Effects</a></p>
+<p><a
+href="2024-08-29_ExploreJuncLiftovers.html">2024-08-29_ExploreJuncLiftovers</a></p>
+<p><a
+href="2024-09-06_UnrpdoctuviveSplicingAndExpression.html">2024-09-06_UnrpdoctuviveSplicingAndExpression</a></p>
+<p><a
+href="2024-09-10_RedoMazinJuncAnalysisFixedClassifications.html">2024-09-10_RedoMazinJuncAnalysisFixedClassifications</a></p>
+<p><a
+href="2024-09-30_ContinousExpressionSplicingModel.html">2024-09-30_ContinousExpressionSplicingModel</a></p>
+<p><a
+href="2024-09-30_ContinousTimeSplicingModel.html">2024-09-30_ContinousTimeSplicingModel</a></p>
+<p><a
+href="2024-10-03_ExplorePuzzling_UP_vs_Expression_Effects.html">2024-10-03_ExplorePuzzling_UP_vs_Expression_Effects</a></p>
+<p><a
+href="2024-10-15_HeatmapsWithLeafcutter_dPSI.html">2024-10-15_HeatmapsWithLeafcutter_dPSI</a></p>
+<p><a href="2024-10-16_FinalFigs.html">2024-10-16_FinalFigs</a></p>
 </div>
 <div id="jupyter-notebooks" class="section level3">
 <h3>jupyter notebooks</h3>
+<p><a
+href="https://github.com/bfairkun/2024_comparativesplicing/blob/main/analysis/20240815_LiftoverJuncsTest">20240815_LiftoverJuncsTest</a></p>
+<p><a
+href="https://github.com/bfairkun/2024_comparativesplicing/blob/main/analysis/Untitled">Untitled</a></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

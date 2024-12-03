@@ -1,0 +1,3335 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2024-09-10" />
+
+<title>2024-09-10_RedoMazinJuncAnalysisFixedClassifications</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">2024_ComparativeSplicing</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">2024-09-10_RedoMazinJuncAnalysisFixedClassifications</h1>
+<h4 class="date">2024-09-10</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#intro" id="toc-intro">Intro</a>
+<ul>
+<li><a href="#classify-juncs-output"
+id="toc-classify-juncs-output">classify juncs output</a></li>
+<li><a href="#join-to-regtools-annotate-output"
+id="toc-join-to-regtools-annotate-output">join to regtools annotate
+output</a></li>
+<li><a href="#splicing-spearman-coef."
+id="toc-splicing-spearman-coef.">Splicing spearman coef.</a></li>
+<li><a href="#expression-spearman-coef."
+id="toc-expression-spearman-coef.">Expression spearman coef.</a></li>
+<li><a href="#now-join-tables-to-make-devas-table"
+id="toc-now-join-tables-to-make-devas-table">Now join tables to make
+devAS table…</a></li>
+<li><a href="#now-join-liftovers" id="toc-now-join-liftovers">now join
+liftovers</a></li>
+</ul></li>
+</ul>
+</div>
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-09-27
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>2024_comparativesplicing/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed19900924code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(19900924)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed19900924code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(19900924)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/.Rhistory
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/ChainFiles/
+    Ignored:    code/CordosoMoreira_Fastq/
+    Ignored:    code/Downloads/
+    Ignored:    code/GenomeFiles/
+    Ignored:    code/LiftoverJuncs/
+    Ignored:    code/Log.out
+    Ignored:    code/MazinLeafcutterAnalysis/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/config/OldConfigs/2040822_Cordoso_Moreira_SampleList.tsv
+    Ignored:    code/conservation/
+    Ignored:    code/featureCounts/
+    Ignored:    code/kaessmanAnalysis/
+    Ignored:    code/kaessman_AS_dat/
+    Ignored:    code/logs/
+    Ignored:    code/rna-seq/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.SpearmanCor_Mazin_log2RPKM.R.swp
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/.vscode/
+    Ignored:    code/snakemake.log
+    Ignored:    data/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/.ipynb_checkpoints/
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_AllSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_SampleStagesFixed.Rmd
+    Untracked:  analysis/2024-08-24_BioMartLookupGenes.Rmd
+    Untracked:  analysis/2024-08-29_ExploreJuncLiftovers.Rmd
+    Untracked:  analysis/2024-08-29_OrganizeCrossSpeciesTables.Rmd
+    Untracked:  analysis/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd
+    Untracked:  analysis/2024-09-09_Organize_ConserveddevASJuncs.Rmd
+    Untracked:  analysis/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd
+    Untracked:  analysis/2024-09-23_FixMouseEnsemblBed12ToGtf.Rmd
+    Untracked:  analysis/20240815_LiftoverJuncsTest.ipynb
+    Untracked:  analysis/Untitled.ipynb
+    Untracked:  code/config/CordosoGenomes_Extra_Gtfs.tsv
+    Untracked:  code/config/GTEx_juncFileList.tsv
+    Untracked:  code/envs/crossmap.yml
+    Untracked:  code/envs/py27.yml
+    Untracked:  code/rules/MazinLeafcutterAnalysis.smk
+    Untracked:  code/scripts/FeatureCounts_to_Mat.R
+    Untracked:  code/scripts/PrepAllJuncsFor_JunctionClassifier.R
+    Untracked:  code/scripts/SpearmanCor_Mazin_LeafcutterPSI.R
+    Untracked:  code/scripts/SpearmanCor_Mazin_log2RPKM.R
+    Untracked:  code/scripts/Untitled.ipynb
+    Untracked:  code/scripts/leafcutter_to_PSI_GTEX.R
+    Untracked:  data/Stages_AsIn_CordosoMoreira.tsv
+    Untracked:  data/Stages_AsIn_CordosoMoreira_Recoded.txt
+    Untracked:  output/Conserved.devAS.leafcutter.tsv.gz
+    Untracked:  output/Ensembl.GeneHumanHomologs.tsv.gz
+    Untracked:  output/Ensembl.TranscriptInfo.tsv.gz
+    Untracked:  output/GTEx_DS_DE_FromChao_CordosoTissuePairs.tsv.gz
+
+Unstaged changes:
+    Modified:   analysis/2024-07-16_Download_CordosoMoreira_Fastq.Rmd
+    Modified:   analysis/index.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/config/ChainFiles.tsv
+    Modified:   code/config/Cordoso_Moreira_SampleList.tsv
+    Modified:   code/config/STAR_Genome_List.tsv
+    Modified:   code/config/samples.tsv
+    Modified:   code/envs/bedparse.yml
+    Modified:   code/module_workflows/snakemake-workflow_rna-seq
+    Modified:   code/rules/LiftoverJuncs.smk
+    Modified:   code/rules/common.smk
+    Modified:   code/scripts/daiuc_leafcutter2
+    Modified:   code/scripts/leafcutter2
+    Modified:   output/QC/ReadCountsPerSamples.tsv
+
+Staged changes:
+    Modified:   .gitmodules
+    New:        code/scripts/daiuc_leafcutter2
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>I previously did a bunch of analyses looking at conserved
+developmentally regulated splice events from Cordoso et al RNA-seq data
+processed with leafcutter pipelines included classification of junctions
+as productive or unproductive. I now realize there was a bug in that
+when I did ClassifyJunctions.py scripts, I included unclustered
+junctions, but later realized that all the clustered junctions were off
+by one. So that makes a lot of the analysis in those previous notebooks
+just plain wrong. Here I fixed that bug and wil redo a lot of those
+analyses.</p>
+<pre class="r"><code>library(tidyverse)
+library(data.table)
+library(ggrepel)
+library(qvalue)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))</code></pre>
+<p>We have the following of data to integrate into a single table for
+convenience:</p>
+<ul>
+<li>spearman correlatino coef across developmental time for
+splicing</li>
+<li>spearman … for expression</li>
+<li>liftovers to hg38</li>
+<li>classify juncs output, whether juncs are coding or non-coding</li>
+<li>regtools annotate for each junc, also including score column which
+is total junc count</li>
+</ul>
+<div id="classify-juncs-output" class="section level3">
+<h3>classify juncs output</h3>
+<pre class="r"><code>JunctionProductivity &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.AllObserved._junction_classifications.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).AllObserved._junction_classifications.txt&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Species_AnnotationSource = recode(Species.short, &quot;Human&quot;=&quot;Human, Gencode v46&quot;, &quot;Macaque&quot;=&quot;Macaque, Ensembl v101&quot;, &quot;Mouse&quot;=&quot;Mouse, Gencode v46&quot;, &quot;Rat&quot;=&quot;Rat, RefSeq updated 2021-03-31&quot;,&quot;Rabbit&quot;=&quot;Rabbit, Ensembl v101&quot;, &quot;Opossum&quot;=&quot;Opossum, Ensembl v97&quot;, &quot;Chicken&quot;=&quot;Chicken, Ensembl v101&quot;)) %&gt;%
+  mutate(Species_AnnotationSource = factor(Species_AnnotationSource, levels=c(&quot;Human&quot;=&quot;Human, Gencode v46&quot;, &quot;Macaque&quot;=&quot;Macaque, Ensembl v101&quot;, &quot;Mouse&quot;=&quot;Mouse, Gencode v46&quot;, &quot;Rat&quot;=&quot;Rat, RefSeq updated 2021-03-31&quot;,&quot;Rabbit&quot;=&quot;Rabbit, Ensembl v101&quot;, &quot;Opossum&quot;=&quot;Opossum, Ensembl v97&quot;, &quot;Chicken&quot;=&quot;Chicken, Ensembl v101&quot;))) %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+
+
+JunctionProductivity %&gt;%
+  count(Species_AnnotationSource, Annot, Coding) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=Species_AnnotationSource, y=n, fill=Group)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  Rotate_x_labels +
+  labs(y=&quot;Number unique juncs&quot;, caption=str_wrap(&quot;GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. All observed juncs&quot;, 30), x=&quot;Species, gene model source&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="join-to-regtools-annotate-output" class="section level3">
+<h3>join to regtools annotate output</h3>
+<pre class="r"><code>Junc.regtools.annotations &lt;- Sys.glob(&quot;../code/rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/*.uniq.annotated.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/(.+?).uniq.annotated.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  mutate(end = end - 1) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{chrom}:{start}-{end}&quot;))
+
+
+JunctionProductivity.AndAnnotated &lt;- JunctionProductivity %&gt;%
+  inner_join(
+    Junc.regtools.annotations %&gt;%
+      dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+    by=c(&quot;Intron_coord&quot;, &quot;OriginGenome&quot;)
+  ) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;)))</code></pre>
+<p>One thing I want to know, for purposes of running the classifier
+script, is how many juncs per gene, to consider implementing a limit for
+computational time sake.</p>
+<pre class="r"><code>JunctionProductivity.AndAnnotated %&gt;%
+  count(OriginGenome, Gene_name) %&gt;%
+  ggplot(aes(x=n, color=OriginGenome)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,250)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;NumJuncsPerGene&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JunctionProductivity.AndAnnotated %&gt;%
+  count(OriginGenome, Gene_name) %&gt;%
+  filter(n&gt;1000) %&gt;%
+  count(OriginGenome) %&gt;%
+  ggplot(aes(x=OriginGenome, y=n)) +
+  geom_col() +
+  labs(x=&quot;Genome&quot;, y=&quot;Num &gt;1000 junc genes&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" />
+I ended up implementing an if_else statement in the classify junction
+script with a limit of 1000 juncs per gene to attempt solveNMD,
+otherwise, just assign “AlgorithmCoding” = FALSE.</p>
+<p>Anyway, Now we can repeat the previous plot faceted by “score” (total
+observed junc read count)</p>
+<pre class="r"><code>JunctionProductivity.AndAnnotated %&gt;%
+  mutate(JunctionCountGroup = cut(score, breaks=c(0, 10, 100, 1000, Inf))) %&gt;%
+  count(JunctionCountGroup, Species_AnnotationSource, Annot, Coding) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=Species_AnnotationSource, y=n, fill=Group)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  facet_wrap(~JunctionCountGroup) +
+  Rotate_x_labels +
+  labs(y=&quot;Number unique juncs&quot;, caption=str_wrap(&quot;GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. All observed juncs&quot;, 30), x=&quot;Species, gene model source&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JunctionProductivity.AndAnnotated %&gt;%
+  mutate(JunctionCountGroup = cut(score, breaks=c(0, 10, 100, 1000, Inf))) %&gt;%
+  count(JunctionCountGroup, Species_AnnotationSource, Annot, Coding) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=Species_AnnotationSource, y=n, fill=Group)) +
+  geom_col(position=&#39;fill&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  facet_wrap(~JunctionCountGroup) +
+  Rotate_x_labels +
+  labs(y=&quot;Number unique juncs&quot;, caption=str_wrap(&quot;GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. All observed juncs&quot;, 30), x=&quot;Species, gene model source&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-5-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JunctionProductivity.AndAnnotated %&gt;%
+  filter(score &gt; 100) %&gt;%
+  count(Species_AnnotationSource, Annot, Coding) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=Species_AnnotationSource, y=n, fill=Group)) +
+  geom_col(position=&#39;fill&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  Rotate_x_labels +
+  labs(y=&quot;Number unique juncs&quot;, caption=str_wrap(&quot;All observed juncs w/ &gt;100 total counts&quot;, 30), x=&quot;Species, gene model source&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-5-3.png" width="768" style="display: block; margin: auto;" />
+Another version of this weighted to junction read count would be useful.
+In other words, y-axis is count of junction reads instead of count of
+unique junctions.</p>
+<pre class="r"><code>library(ggbreak)
+
+JunctionProductivity.AndAnnotated %&gt;%
+  # filter(!UTR) %&gt;%
+  group_by(Species_AnnotationSource, Annot, Coding) %&gt;%
+  summarise(n = sum(score)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=Species_AnnotationSource, y=n, fill=Group)) +
+  geom_col(position=&#39;fill&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  Rotate_x_labels +
+  labs(y=&quot;Number unique juncs&quot;, caption=str_wrap(&quot;GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. All observed juncs&quot;, 30), x=&quot;Species, gene model source&quot;) +
+  # coord_cartesian(ylim=c(0,0.15)) +
+  scale_y_continuous(breaks=c(0, 0.05, .1, .15, .95, 1)) +
+  scale_y_break(breaks = c(.15, .95), expand=F, space=0.5) +
+  theme(legend.position=&#39;none&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>JunctionProductivity.AndAnnotated %&gt;%
+  filter(!UTR) %&gt;%
+  group_by(Species_AnnotationSource, Annot, Coding) %&gt;%
+  summarise(n = sum(score)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=Species_AnnotationSource, y=n, fill=Group)) +
+  geom_col(position=&#39;fill&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  Rotate_x_labels +
+  labs(y=&quot;Number unique juncs&quot;, caption=str_wrap(&quot;GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. Non-UTR juncs&quot;, 30), x=&quot;Species, gene model source&quot;) +
+  scale_y_continuous(breaks=c(0, 0.05, .1, .95, 1)) +
+  scale_y_break(breaks = c(.1, .95), expand=F, space=0.5) +
+  theme(legend.position=&#39;none&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now let’s contrast this with the number of annotated transcripts.</p>
+<pre class="r"><code># to do</code></pre>
+<p>and also for ensembl and refseq genomes for each when availabe:</p>
+<p>Note, that ensembl gtf from UCSC does not contain
+transcript_type=“nonsense_mediated_decay”. Transcripts that are
+“nonsense-mediated-decay” in Gencode are present in Ensembl version from
+UCSC, and are classified here as “protein_coding” because they contain
+CDS child features. In contrast, the UCSC gtf’s sourced from RefSeq does
+not CDS features for NMD (XR- and NR- prefixed transcript_ids). Below, I
+have been considering transcripts as protein_coding only if and only if
+they contain “CDS” child features.</p>
+<pre class="r"><code>Alt.Annotations.ttypes &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/*/*.TranscriptTypes.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/(.+?)/(.+?).TranscriptTypes.tsv.gz&quot;, &quot;\\1;\\2&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id = &quot;Genome_AnnotSource&quot;) %&gt;%
+  separate(Genome_AnnotSource, into=c(&quot;AnnotationSource&quot;, &quot;OriginGenome&quot;), sep=&quot;;&quot;) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;)))
+
+
+Alt.Annotations.ttypes %&gt;%
+  filter(gtype == &quot;protein_coding&quot;) %&gt;%
+  distinct(gname, AnnotationSource, Species.short) %&gt;%
+  count(AnnotationSource, Species.short)</code></pre>
+<pre><code>    AnnotationSource Species.short     n
+ 1:          Ensembl         Human 22446
+ 2:          Ensembl       Macaque 21761
+ 3:          Ensembl         Mouse 53666
+ 4:          Ensembl        Rabbit 20612
+ 5:          Ensembl       Opossum 21327
+ 6:          Ensembl       Chicken 16878
+ 7:          Gencode         Human 20089
+ 8:          Gencode         Mouse 21700
+ 9:           RefSeq         Human 20627
+10:           RefSeq       Macaque 21096
+11:           RefSeq         Mouse 22864
+12:           RefSeq           Rat 22228
+13:           RefSeq        Rabbit 20303
+14:           RefSeq       Chicken 17444</code></pre>
+<pre class="r"><code>Alt.Annotations.ttypes %&gt;%
+  filter(gtype == &quot;protein_coding&quot;) %&gt;%
+  count(ttype, Species.short, AnnotationSource) %&gt;%
+  ggplot(aes(x=Species.short, y=n, fill=ttype)) +
+  geom_col(position=&#39;fill&#39;) +
+  facet_wrap(~AnnotationSource) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction transcripts in protein_coding genes&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Alt.Annotations.ttypes %&gt;%
+  filter(gtype == &quot;protein_coding&quot;) %&gt;%
+  mutate(IsProteinCoding = ttype==&quot;protein_coding&quot;) %&gt;%
+  dplyr::rename(Species = Species.short) %&gt;%
+  group_by(Species, gname, AnnotationSource) %&gt;%
+  summarise(NumCodingTranscripts = sum(IsProteinCoding),
+         NumNoncodingTranscripts = sum(!IsProteinCoding)) %&gt;%
+  ungroup() %&gt;%
+  mutate(TotalNumTranscripts = NumCodingTranscripts + NumNoncodingTranscripts) %&gt;%
+  mutate(TotalNumTranscripts.Group = if_else(TotalNumTranscripts&gt;10, as.integer(10), TotalNumTranscripts)) %&gt;%
+  group_by(Species, TotalNumTranscripts.Group, AnnotationSource) %&gt;%
+  summarise(Frac_Noncoding = sum(NumNoncodingTranscripts)/sum(TotalNumTranscripts), NumGenes = n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(BarHeightNoncoding = Frac_Noncoding*NumGenes) %&gt;%
+  mutate(BarHeightCoding = NumGenes - BarHeightNoncoding) %&gt;%
+  dplyr::select(Species, TotalNumTranscripts.Group, AnnotationSource, BarHeightCoding, BarHeightNoncoding) %&gt;%
+  pivot_longer(names_to = &quot;Group&quot;, values_to = &quot;BarHeight&quot;, c(&quot;BarHeightCoding&quot;, &quot;BarHeightNoncoding&quot;)) %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  ggplot(aes(x=TotalNumTranscripts.Group, y=BarHeight, fill=Group)) +
+    geom_col() +
+    facet_grid(AnnotationSource~Species) +
+    theme(legend.position=&#39;bottom&#39;) +
+    scale_x_discrete(labels=c(1:9, &quot;&gt;10&quot;)) +
+    scale_fill_manual(values=c(&quot;BarHeightCoding&quot;=&quot;gray&quot;, &quot;BarHeightNoncoding&quot;=&quot;red&quot;), labels=c(&quot;BarHeightCoding&quot;=&quot;Productive&quot;, &quot;BarHeightNoncoding&quot;=&quot;Unproductive&quot;)) +
+    Rotate_x_labels +
+    labs(caption=str_wrap(&quot;RefSeq &amp; Ensembl are most recent Ensembl/RefSeq-sourced gtfs on UCSC website. Gencode from Gencode.\nMouse Ensembl is malformatted, with transcript_ids for gene_ids, hence weird plot&quot;, 35), y=&quot;Num genes&quot;, x=&quot;Num transcripts per gene&quot;) +
+  coord_cartesian(ylim=c(0, 20E3))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Let’s fix the mouse ensembl problem… I can read the true transcript
+types for mouse ensembl from a different file..</p>
+<pre class="r"><code>Mouse.ensembl.ttypes &lt;- read_tsv(&quot;../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/Ensembl/Mouse_UCSC.mm39_GencodeComprehensive46.FixedOut.bed&quot;, col_names = F) %&gt;%
+  dplyr::select(gname = X14, tname=X13, gtype = X16, ttype = X15) %&gt;%
+  mutate(AnnotationSource = &quot;Ensembl&quot;) %&gt;%
+  mutate(OriginGenome = &quot;Mouse_UCSC.mm39_GencodeComprehensive46&quot;) %&gt;%
+  mutate(Species.short = &quot;Mouse&quot;)
+
+NumTranscripts.Supp.P.dat &lt;- Alt.Annotations.ttypes %&gt;%
+  filter(!(AnnotationSource==&quot;Ensembl&quot; &amp; OriginGenome == &quot;Mouse_UCSC.mm39_GencodeComprehensive46&quot;)) %&gt;%
+  bind_rows(Mouse.ensembl.ttypes) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  filter(gtype == &quot;protein_coding&quot;) %&gt;%
+  mutate(IsProteinCoding = ttype==&quot;protein_coding&quot;) %&gt;%
+  dplyr::rename(Species = Species.short)
+
+SummaryAnnotations &lt;- inner_join(
+  NumTranscripts.Supp.P.dat %&gt;%
+    count(IsProteinCoding, Species, AnnotationSource) %&gt;%
+    mutate(IsProteinCoding = if_else(IsProteinCoding, &quot;NumCoding&quot;, &quot;NumNoncoding&quot;)) %&gt;%
+    pivot_wider(names_from = IsProteinCoding, values_from = n, values_fill=0),
+  NumTranscripts.Supp.P.dat %&gt;%
+    distinct(gname, Species, AnnotationSource) %&gt;%
+    count(Species, AnnotationSource)
+) %&gt;%
+  mutate(Total = NumCoding + NumNoncoding) %&gt;%
+  mutate( summary = str_glue(&quot;{NumCoding} +\n{NumNoncoding} =\n{Total} txs\n among\n{n} genes&quot;)) %&gt;%
+  right_join(
+      expand(., Species, AnnotationSource)) %&gt;%
+  mutate(FacetLargeText = if_else(is.na(summary), &quot;NA&quot;, NA_character_)) %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;)))
+
+
+
+NumTranscripts.Supp.P.dat %&gt;%
+  group_by(Species, gname, AnnotationSource) %&gt;%
+  summarise(NumCodingTranscripts = sum(IsProteinCoding),
+         NumNoncodingTranscripts = sum(!IsProteinCoding)) %&gt;%
+  ungroup() %&gt;%
+  mutate(TotalNumTranscripts = NumCodingTranscripts + NumNoncodingTranscripts) %&gt;%
+  mutate(TotalNumTranscripts.Group = if_else(TotalNumTranscripts&gt;10, as.integer(10), TotalNumTranscripts)) %&gt;%
+  group_by(Species, TotalNumTranscripts.Group, AnnotationSource) %&gt;%
+  summarise(Frac_Noncoding = sum(NumNoncodingTranscripts)/sum(TotalNumTranscripts), NumGenes = n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(BarHeightNoncoding = Frac_Noncoding*NumGenes) %&gt;%
+  mutate(BarHeightCoding = NumGenes - BarHeightNoncoding) %&gt;%
+  dplyr::select(Species, TotalNumTranscripts.Group, AnnotationSource, BarHeightCoding, BarHeightNoncoding) %&gt;%
+  pivot_longer(names_to = &quot;Group&quot;, values_to = &quot;BarHeight&quot;, c(&quot;BarHeightCoding&quot;, &quot;BarHeightNoncoding&quot;)) %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  ggplot(aes(x=TotalNumTranscripts.Group, y=BarHeight)) +
+    geom_col(aes(fill=Group)) +
+    scale_x_continuous(breaks=c(1:10), labels=c(1, &quot;&quot;, &quot;&quot;, &quot;&quot;, 5, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&gt;10&quot;)) +
+    geom_text(data = SummaryAnnotations, aes(label = summary), size=3.5, vjust=1, hjust=-0.1, x=-Inf, y=Inf) +
+    geom_text(data = SummaryAnnotations, aes(label = FacetLargeText), alpha=0.05,size=13, vjust=0, hjust=-0.1, x=-Inf, y=10E3) +
+    facet_grid(AnnotationSource~Species) +
+    theme(legend.position=&#39;bottom&#39;) +
+    scale_y_continuous(breaks=c(0, 10E3, 20E3), labels=c(0, &quot;10K&quot;, &quot;20K&quot;)) +
+    scale_fill_manual(values=c(&quot;BarHeightCoding&quot;=&quot;#377eb8&quot;, &quot;BarHeightNoncoding&quot;=&quot;#e41a1c&quot;), labels=c(&quot;BarHeightCoding&quot;=&quot;Productive&quot;, &quot;BarHeightNoncoding&quot;=&quot;Unproductive&quot;)) +
+    labs(y=&quot;# genes&quot;, x=&quot;# txs per protein-coding gene&quot;, fill=&quot;Annotated transcript type&quot;) +
+  coord_cartesian(ylim=c(0, 20E3))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/NumUnproductiveTranscriptsPerGene.AllGtfs.pdf&quot;, height=120, width=200, units=&quot;mm&quot;)
+
+# Also save a version with just the &#39;main&#39; gtfs, for the main figure...
+
+NumTranscripts.Supp.P.dat %&gt;%
+  group_by(Species, gname, AnnotationSource) %&gt;%
+  summarise(NumCodingTranscripts = sum(IsProteinCoding),
+         NumNoncodingTranscripts = sum(!IsProteinCoding)) %&gt;%
+  ungroup() %&gt;%
+  mutate(TotalNumTranscripts = NumCodingTranscripts + NumNoncodingTranscripts) %&gt;%
+  mutate(TotalNumTranscripts.Group = if_else(TotalNumTranscripts&gt;10, as.integer(10), TotalNumTranscripts)) %&gt;%
+  group_by(Species, TotalNumTranscripts.Group, AnnotationSource) %&gt;%
+  summarise(Frac_Noncoding = sum(NumNoncodingTranscripts)/sum(TotalNumTranscripts), NumGenes = n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(BarHeightNoncoding = Frac_Noncoding*NumGenes) %&gt;%
+  mutate(BarHeightCoding = NumGenes - BarHeightNoncoding) %&gt;%
+  dplyr::select(Species, TotalNumTranscripts.Group, AnnotationSource, BarHeightCoding, BarHeightNoncoding) %&gt;%
+  pivot_longer(names_to = &quot;Group&quot;, values_to = &quot;BarHeight&quot;, c(&quot;BarHeightCoding&quot;, &quot;BarHeightNoncoding&quot;)) %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  mutate(Species_AnnotationSource = paste(Species, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  filter(Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+  ggplot(aes(x=TotalNumTranscripts.Group, y=BarHeight)) +
+    geom_col(aes(fill=Group)) +
+    scale_x_continuous(breaks=c(1:10), labels=c(1, &quot;&quot;, &quot;&quot;, &quot;&quot;, 5, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&gt;10&quot;)) +
+    # geom_text(data = . %&gt;% 
+    #             distinct(Species, AnnotationSource) %&gt;%
+    #             inner_join(SummaryAnnotations) %&gt;%
+    #             mutate( summary = str_glue(&quot;{NumCoding} + {NumNoncoding}\n= {Total} txs among\n{n} genes&quot;)),
+    #           aes(label = summary), size=5, vjust=1, hjust=0, x=2, y=Inf) +
+    facet_wrap(~Species) +
+    theme(legend.position=&#39;bottom&#39;) +
+    scale_y_continuous(breaks=c(0, 10E3, 20E3), labels=c(0, &quot;10K&quot;, &quot;20K&quot;)) +
+    scale_fill_manual(values=c(&quot;BarHeightCoding&quot;=&quot;#377eb8&quot;, &quot;BarHeightNoncoding&quot;=&quot;#e41a1c&quot;), labels=c(&quot;BarHeightCoding&quot;=&quot;Productive&quot;, &quot;BarHeightNoncoding&quot;=&quot;Unproductive&quot;)) +
+    labs(y=&quot;# genes&quot;, x=&quot;# txs per protein-coding gene&quot;, fill=&quot;Annotated transcript type&quot;) +
+  coord_cartesian(ylim=c(0, 20E3))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/NumUnproductiveTranscriptsPerGene.MainGtfs.pdf&quot;, height=100, width=100, units=&quot;mm&quot;)</code></pre>
+<p>Let’s repeat the fraction of unproductive juncs reads using each of
+these gtfs…</p>
+<pre class="r"><code>JunctionProductivity.AllGtfs &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/*/*.AllObserved._junction_classifications.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?)/(.+?).AllObserved._junction_classifications.txt&quot;, &quot;\\1;\\2&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id = &quot;Genome_AnnotSource&quot;) %&gt;%
+  separate(Genome_AnnotSource, into=c(&quot;AnnotationSource&quot;, &quot;OriginGenome&quot;), sep=&quot;;&quot;) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+  inner_join(
+    Junc.regtools.annotations %&gt;%
+      dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+    by=c(&quot;Intron_coord&quot;, &quot;OriginGenome&quot;)
+  ) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;)))
+
+JunctionProductivity.AllGtfs.P.dat &lt;- JunctionProductivity.AllGtfs %&gt;%
+  group_by(OriginGenome,AnnotationSource, Annot, Coding) %&gt;%
+  summarise(n = sum(score)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %&gt;%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+    mutate(FacetLargeText = if_else(is.na(Group), &quot;NA&quot;, NA_character_)) %&gt;%
+  group_by(AnnotationSource, Species.short) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup()
+
+
+
+
+ggplot(JunctionProductivity.AllGtfs.P.dat, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  labs(y=&quot;Percent junction reads&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  facet_wrap(~Species.short, scales=&quot;free_x&quot;, nrow = 1) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FractionUnproductiveJuncReads.AllGtfs.pdf&quot;, height=100, width=200, units=&quot;mm&quot;)
+
+
+JunctionProductivity.AllGtfs.P.dat.CountUniqueJuncs &lt;- JunctionProductivity.AllGtfs %&gt;%
+  filter(score &gt; 100) %&gt;%
+  count(OriginGenome,AnnotationSource, Annot, Coding) %&gt;%
+  ungroup() %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+    mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %&gt;%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+    mutate(FacetLargeText = if_else(is.na(Group), &quot;NA&quot;, NA_character_)) %&gt;%
+  group_by(AnnotationSource, Species.short) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup()
+
+ggplot(JunctionProductivity.AllGtfs.P.dat.CountUniqueJuncs, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  labs(y=&quot;Percent unique junctions&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=-0.1) +
+  scale_y_continuous(expand=c(0,0)) +
+  coord_cartesian(ylim=c(0,100)) +
+  theme(legend.position=&#39;none&#39;) +
+  facet_wrap(~Species.short, scales=&quot;free_x&quot;, nrow = 1) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FractionUnproductiveUniqueJuncs.AllGtfs.pdf&quot;, height=100, width=200, units=&quot;mm&quot;)
+
+
+JunctionProductivity.AllGtfs.P.dat.CountUniqueJuncs %&gt;%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  # filter(Species.short %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position=&#39;stack&#39;) +
+  # geom_label(
+  #     aes(label = round(Percent, 1)),
+  #     position = position_stack(vjust=0.5)
+  #     # position = position_stack_and_nudge(vjust = 0.5, x = 1),
+  #     # direction = &#39;both&#39;,
+  #     # arrow=NULL
+  # )  +
+  geom_label_repel(
+      aes(label = round(Percent, 1)),
+      position = position_stack(vjust=0.5), force=1, force_pull=1, point.size = NA,
+      min.segment.length = 0.5,
+      # position = position_stack_and_nudge(vjust = 0.5, x = 1),
+      direction = &#39;y&#39;
+      # arrow=NULL
+  )  +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  labs(y=&quot;Percent unique junctions&quot;, x=NULL) +
+  scale_y_continuous(expand=c(0,0)) +
+  # coord_cartesian(ylim=c(0,1)) +
+  theme(legend.position=&#39;none&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FractionUnproductiveUniqueJuncs.MainGtfs.pdf&quot;, height=100, width=200, units=&quot;mm&quot;)
+
+
+JunctionProductivity.AllGtfs.P.dat %&gt;%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  # filter(Species.short %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  labs(y=&quot;Percent junction reads&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-10-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FractionUnproductiveJuncReads.MainGtfs.pdf&quot;, height=100, width=200, units=&quot;mm&quot;)</code></pre>
+<p>Let’s look quickly at the transcript_types from ensembl for gtfs
+actually used in most analyses…</p>
+<pre class="r"><code>main.gtf.transcript.dat &lt;- read_tsv(&quot;../output/Ensembl.TranscriptInfo.tsv.gz&quot;)
+
+main.gtf.transcript.dat %&gt;%
+  filter(gene_biotype == &quot;protein_coding&quot;) %&gt;%
+  count(Species, transcript_biotype) %&gt;%
+  ggplot(aes(x=Species, y=n, fill=transcript_biotype)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(y=&quot;fraction transcripts in protein_coding genes&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, so to recap:</p>
+<p>Gencode (and human and mouse ensembl from UCSC) contain
+nonsense_mediated_decay and other non protein_coding transcript
+biotypes, but only nonsense_mediated_decay and protein_coding contain
+CDS features. However, the gtfs sourced from Ensembl do not contain a
+“nonsense_mediated_decay” transcript type like Gencode does, so those
+transcripts are not easily distinguished as non protein_coding from the
+gtf alone. Therefore, in some histograms those are erroneously
+considered protein_coding. In contrast, as far as I can tell, gtfs from
+UCSC that are sourced from RefSeq contain predicted or validated
+nonsense-mediated-decay isoforms (prefixed with NR_ or XR_) and those
+features do not contain CDS child features and therefore are (correctly)
+considered not protein_coding transcript isoforms in all plots.</p>
+</div>
+<div id="splicing-spearman-coef." class="section level3">
+<h3>Splicing spearman coef.</h3>
+<pre class="r"><code>Spearman.tests &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/*.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/(.+?).tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  dplyr::rename(chrom=start, start=stop, stop=chrom) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{chrom}:{start}-{stop}&quot;))
+
+Spearman.tests %&gt;%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_grid(Species~Tissue)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="expression-spearman-coef." class="section level3">
+<h3>Expression spearman coef.</h3>
+<pre class="r"><code>Spearman.tests.expression &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/*.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/(.+?).tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;)
+
+Spearman.tests.expression %&gt;%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_grid(Species~Tissue)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Spearman.tests</code></pre>
+<pre><code>                         OriginGenome                                junc chrom
+      1: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+      2: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+      3: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+      4: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+      5: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+     ---                                                                       
+6893057:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+6893058:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+6893059:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+6893060:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+6893061:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+             start      stop     cluster Species     Tissue        corr
+      1: 100003234 100004243  clu_5391_+ Chicken      Brain -0.03987895
+      2: 100003234 100004243  clu_5391_+ Chicken Cerebellum  0.28296971
+      3: 100003234 100004243  clu_5391_+ Chicken      Heart  0.19501447
+      4: 100003234 100004243  clu_5391_+ Chicken     Kidney -0.23077558
+      5: 100003234 100004243  clu_5391_+ Chicken      Liver -0.10532238
+     ---                                                               
+6893057:    991425    993904 clu_67064_-     Rat Cerebellum  0.15363175
+6893058:    991425    993904 clu_67064_-     Rat      Heart  0.06666267
+6893059:    991425    993904 clu_67064_-     Rat     Kidney  0.33500013
+6893060:    991425    993904 clu_67064_-     Rat      Liver  0.10714348
+6893061:    991425    993904 clu_67064_-     Rat     Testis -0.07451586
+                  P         q             Intron_coord
+      1: 0.81737614 0.6991948 chr1:100003234-100004243
+      2: 0.09447022 0.2081755 chr1:100003234-100004243
+      3: 0.24741161 0.3598447 chr1:100003234-100004243
+      4: 0.18227279 0.2912324 chr1:100003234-100004243
+      5: 0.54097689 0.5657965 chr1:100003234-100004243
+     ---                                              
+6893057: 0.47353920 0.4928485       chrY:991425-993904
+6893058: 0.71697743 0.5473096       chrY:991425-993904
+6893059: 0.10955857 0.2716403       chrY:991425-993904
+6893060: 0.57306776 0.4302994       chrY:991425-993904
+6893061: 0.70085706 0.5964342       chrY:991425-993904</code></pre>
+</div>
+<div id="now-join-tables-to-make-devas-table" class="section level3">
+<h3>Now join tables to make devAS table…</h3>
+<pre class="r"><code>dev.AS.AllTests &lt;- JunctionProductivity.AndAnnotated %&gt;%
+  inner_join(
+    Spearman.tests %&gt;%
+      mutate(stop = stop -1) %&gt;%
+      dplyr::select(OriginGenome, chrom, start, end=stop, Tissue, corr.splicing=corr, P.splicing=P, q.splicing=q, junc, cluster)
+  ) %&gt;%
+  left_join(
+    Spearman.tests.expression %&gt;%
+      dplyr::select(OriginGenome, Gene_name=Geneid, Tissue, corr.expression=corr, P.expression=P, q.expression=q)
+  ) %&gt;%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  ))
+
+
+dev.AS.AllTests %&gt;%
+  filter(corr.splicing &lt; 0.1) %&gt;%
+  distinct(OriginGenome, Intron_coord, .keep_all=T) %&gt;%
+  count(Species_AnnotationSource, Annot, Coding) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=Species_AnnotationSource, y=n, fill=Group)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  Rotate_x_labels +
+  labs(y=&quot;Number unique devAS juncs&quot;, caption=str_wrap(&quot;GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. All observed juncs&quot;, 30), x=&quot;Species, gene model source&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(corr.splicing &lt; 0.1) %&gt;%
+  distinct(OriginGenome, cluster, .keep_all=T) %&gt;%
+  count(Species_AnnotationSource, Annot, Coding) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=Species_AnnotationSource, y=n, fill=Group)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  Rotate_x_labels +
+  labs(y=&quot;Number unique devAS clusters&quot;, caption=str_wrap(&quot;GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. All observed juncs&quot;, 30), x=&quot;Species, gene model source&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(corr.splicing &lt; 0.1) %&gt;%
+  distinct(Species.short, cluster, Tissue, .keep_all=T) %&gt;%
+  count(Species.short, Tissue, Annot, Coding) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=Species.short, y=n, fill=Group)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values = c(&quot;Productive Annot&quot;=&quot;#1f78b4&quot;, &quot;Productive Unannot&quot;=&quot;#a6cee3&quot;, &quot;Unproductive Annot&quot;=&quot;#e31a1c&quot;, &quot;Unproductive Unannot&quot;=&quot;#fb9a99&quot;)) +
+  Rotate_x_labels +
+  facet_wrap(~Tissue) +
+  labs(y=&quot;Number unique devAS clusters&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="some-unrelated-code" class="section level5">
+<h5>some unrelated code</h5>
+<p>…cause i don’t feel like opening a new notebook/session to quickly do
+this one unrelated thing</p>
+<pre class="r"><code>SM.metadata &lt;- read_tsv(&quot;/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/config/SmallMoleculeRNASeq.Samples.tsv&quot;)
+SRA.run.table &lt;- read_csv(&quot;/project2/yangili1/bjf79/scratch/SraRunTable.csv&quot;)
+
+SRA.run.table %&gt;%
+  filter(population == &quot;EUR&quot;) %&gt;%
+  mutate(TempLibName = str_replace(`Library Name`, &quot;(^.+)-rep[12]$&quot;, &quot;\\1&quot;)) %&gt;%
+  inner_join(
+    SM.metadata %&gt;%
+      mutate(TempLibName = old.sample.name) %&gt;%
+      dplyr::select(TempLibName, SampleName) %&gt;%
+      distinct(),
+  ) %&gt;%
+  dplyr::select(-TempLibName) %&gt;%
+  dplyr::rename(Corrected_Library_Name=SampleName  ) %&gt;%
+  write_csv(&quot;/project2/yangili1/bjf79/scratch/SraRunTable.RisdiplamSamples.Amended.csv&quot;)
+
+&quot;TitrationExpRis-2&quot;
+&quot;TitrationExpRis-6-rep2&quot;
+
+SRA.run.table %&gt;%
+  filter(population == &quot;EUR&quot;) %&gt;%
+  mutate(TempLibName = str_replace(`Library Name`, &quot;(^.+)-rep[12]$&quot;, &quot;\\1&quot;)) %&gt;%
+  inner_join(
+    SM.metadata %&gt;%
+      mutate(TempLibName = old.sample.name) %&gt;%
+      dplyr::select(TempLibName, SampleName) %&gt;%
+      distinct(),
+  ) %&gt;%
+  dplyr::select(-TempLibName) 
+
+SRA.run.table %&gt;%
+  filter(population == &quot;EUR&quot;) %&gt;%
+  mutate(TempLibName = str_replace(`Library Name`, &quot;(^.+)-rep[12]$&quot;, &quot;\\1&quot;)) %&gt;%
+  inner_join(
+    SM.metadata %&gt;%
+      replace_na(list(dose.nM=0)) %&gt;%
+      mutate(libType = recode(libType, &quot;chRNA&quot;=&quot;naRNA_rRNADeplete&quot;, &quot;polyA&quot;=&quot;SteadyStateTotalRNA_PolyASelection&quot;)) %&gt;%
+      mutate(NewSampleName = str_glue(&quot;{treatment}_{dose.nM}nanomolar_GM12878_{libType}_BioRep{rep}&quot;)) %&gt;%
+      mutate(TempLibName = old.sample.name) %&gt;%
+      dplyr::select(TempLibName, SampleName, NewSampleName) %&gt;%
+      distinct(),
+  ) %&gt;%
+  dplyr::select(-TempLibName) %&gt;%
+  write_tsv(&quot;/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/scratch/SRA_Run_Selecter_SamplesToReplace.tsv&quot;)
+
+SM.metadata %&gt;%
+  replace_na(list(dose.nM=0)) %&gt;%
+  mutate(libType = recode(libType, &quot;chRNA&quot;=&quot;naRNA_rRNADeplete&quot;, &quot;polyA&quot;=&quot;SteadyStateTotalRNA_PolyASelection&quot;)) %&gt;%
+  mutate(NewSampleName = str_glue(&quot;{treatment}_{dose.nM}nanomolar_GM12878_{libType}_BioRep{rep}&quot;)) %&gt;%
+  mutate(TempLibName = old.sample.name) %&gt;%
+  dplyr::select(TempLibName, SampleName, NewSampleName, R1, R2) %&gt;%
+  group_by(NewSampleName) %&gt;%
+  mutate(RunNumber = row_number()) %&gt;%
+  ungroup() %&gt;%
+  pivot_longer(names_to=c(&quot;Read&quot;), values_to = &quot;fn&quot;, c(&quot;R1&quot;, &quot;R2&quot;)) %&gt;%
+  mutate(NewFq_Name = str_glue(&quot;RisdiplamSamplesForResubmissionToGEO/{NewSampleName}_{RunNumber}_{Read}.fastq.gz&quot;)) %&gt;%
+  write_tsv(&quot;/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/config/ReorganizeRisdiplamSamplesForGEO.tsv.gz&quot;)
+
+read_tsv(&quot;/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/config/ReorganizeRisdiplamSamplesForGEO.tsv.gz&quot;) %&gt;%
+  dplyr::select(NewFq_Name, NewSampleName) %&gt;%
+  group_by(NewSampleName) %&gt;%
+  mutate(rn = row_number()) %&gt;%
+  ungroup() %&gt;%
+  pivot_wider(values_from = &quot;NewFq_Name&quot;, names_from = &quot;rn&quot;) %&gt;%
+  write_tsv(&quot;/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/scratch/GEO_FastqFiles.tsv&quot;)
+
+Samples.Recoding &lt;- read_tsv(&quot;/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/config/ReorganizeRisdiplamSamplesForGEO.tsv.gz&quot;) %&gt;%
+  dplyr::select(NewSampleName, SampleName) %&gt;%
+  deframe()
+
+feat.Counts.Risdiplam &lt;- read_tsv(&quot;/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/SmallMolecule/featureCounts/Counts.txt&quot;, comment=&quot;#&quot;) %&gt;%
+  dplyr::rename_at(vars(contains(&quot;Aligned.sortedBy&quot;)), ~str_replace(.x, &quot;SmallMolecule/AlignmentsPass2/(.+?)/Aligned.sortedByCoord.out.bam&quot;, &quot;\\1&quot;)) %&gt;%
+  dplyr::rename(!!!Samples.Recoding) %&gt;%
+  write_tsv(&quot;/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/RisdiplamSamplesForResubmissionToGEO/GeneCounts.mat.tsv.gz&quot;)</code></pre>
+<p>Now let’s check devAS juncs correlation b/n splicing and
+expression.</p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing)==sign(corr.expression)) %&gt;%
+  count(Tissue, Species.short, Coding, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, Coding) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35), x=&quot;Species&quot;, fill=&quot;Percent in Q2+Q4&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(ProductivityLabel == &quot;UP&quot;)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing)==sign(corr.expression)) %&gt;%
+  count(Tissue, Species.short, Coding, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, Coding) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35), x=&quot;Species&quot;, fill=&quot;Percent in Q2+Q4&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-16-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>ok that makes sense. let’s also facet by annotated.</p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing)==sign(corr.expression)) %&gt;%
+  count(Tissue, Species.short, Coding, Annot, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, Coding, Annot) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annotated&quot;, &quot;Unannotated&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Annot~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-17-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>Hmm the unannotated productive and unproductive look the same. That’s
+concerning.</p>
+<p>Yang suggested filtering out UTR juncs… Lets remake the above two
+plots.</p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  filter(!UTR) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing)==sign(corr.expression)) %&gt;%
+  count(Tissue, Species.short, Coding, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, Coding) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  filter(!UTR) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing)==sign(corr.expression)) %&gt;%
+  count(Tissue, Species.short, Coding, Annot, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, Coding, Annot) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annotated&quot;, &quot;Unannotated&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Annot~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-18-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Still same results… We should verify first that the classifier is
+working as intended, by looking at junc counts for various
+classifications in NMD dKD vs control</p>
+<pre class="r"><code>dat.KD &lt;- fread(&quot;/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/SplicingAnalysis/CombinedJuncTables/NMD_KD.tsv.gz&quot;)
+
+
+juncs.long.summary &lt;- 
+  dat.KD %&gt;%
+  dplyr::select(chrom, start, stop, strand, Dataset, Count) %&gt;%
+  group_by(Dataset, chrom, start, stop) %&gt;%
+  summarise(Sum=sum(Count)) %&gt;%
+  ungroup()
+
+
+
+
+Joined &lt;- juncs.long.summary %&gt;%
+  filter(Dataset %in% c(&quot;HeLa.dKD&quot;, &quot;HeLa.scr&quot;)) %&gt;%
+  group_by(Dataset) %&gt;%
+  mutate(RPM = Sum/sum(Sum)*1E6) %&gt;%
+  ungroup() %&gt;%
+  pivot_wider(names_from = c(&quot;Dataset&quot;), values_from=c(&quot;Sum&quot;, &quot;RPM&quot;)) %&gt;%
+  inner_join(
+    JunctionProductivity.AndAnnotated %&gt;%
+      filter(Species.short == &quot;Human&quot;) %&gt;%
+      dplyr::rename(stop = end)
+    )
+
+
+min(Joined$RPM_HeLa.dKD, na.rm=T)</code></pre>
+<pre><code>[1] 0.01093882</code></pre>
+<pre class="r"><code>min(Joined$RPM_HeLa.scr, na.rm=T)</code></pre>
+<pre><code>[1] 0.006682252</code></pre>
+<pre class="r"><code>Joined %&gt;%
+  replace_na(list(Sum_HeLa.scr=0, Sum_HeLa.dKD=0, RPM_HeLa.dKD=1E-4, RPM_HeLa.scr=1E-4)) %&gt;%
+  mutate(SumBoth = Sum_HeLa.dKD + Sum_HeLa.scr) %&gt;%
+  filter(SumBoth &gt;= 20) %&gt;%
+  mutate(DeltaRPM = log2(RPM_HeLa.dKD/RPM_HeLa.scr)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=DeltaRPM, color=Group)) +
+    stat_ecdf() +
+    coord_cartesian(xlim=c(-5,5)) +
+  geom_vline(xintercept = 0) +
+  labs(y=&#39;ecdf&#39;, x=&#39;Junction RPM log2FC\ndKD/Control&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, I feel good that the classifier is acutally working as intended,
+generally. But maybe I’m by including all observed juncs (including
+juncs with just one read count, instead of just leafcutter clustered
+juncs), I am coercing too many juncs into productive.. Let’s remake this
+plot with the other style of classify juncs.</p>
+<pre class="r"><code>JunctionProductivity.clustered &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.Clustered._junction_classifications.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).Clustered._junction_classifications.txt&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Species_AnnotationSource = recode(Species.short, &quot;Human&quot;=&quot;Human, Gencode v46&quot;, &quot;Macaque&quot;=&quot;Macaque, Ensembl v101&quot;, &quot;Mouse&quot;=&quot;Mouse, Gencode v46&quot;, &quot;Rat&quot;=&quot;Rat, RefSeq updated 2021-03-31&quot;,&quot;Rabbit&quot;=&quot;Rabbit, Ensembl v101&quot;, &quot;Opossum&quot;=&quot;Opossum, Ensembl v97&quot;, &quot;Chicken&quot;=&quot;Chicken, Ensembl v101&quot;)) %&gt;%
+  mutate(Species_AnnotationSource = factor(Species_AnnotationSource, levels=c(&quot;Human&quot;=&quot;Human, Gencode v46&quot;, &quot;Macaque&quot;=&quot;Macaque, Ensembl v101&quot;, &quot;Mouse&quot;=&quot;Mouse, Gencode v46&quot;, &quot;Rat&quot;=&quot;Rat, RefSeq updated 2021-03-31&quot;,&quot;Rabbit&quot;=&quot;Rabbit, Ensembl v101&quot;, &quot;Opossum&quot;=&quot;Opossum, Ensembl v97&quot;, &quot;Chicken&quot;=&quot;Chicken, Ensembl v101&quot;)))
+
+
+
+Joined &lt;- juncs.long.summary %&gt;%
+  filter(Dataset %in% c(&quot;HeLa.dKD&quot;, &quot;HeLa.scr&quot;)) %&gt;%
+  group_by(Dataset) %&gt;%
+  mutate(RPM = Sum/sum(Sum)*1E6) %&gt;%
+  ungroup() %&gt;%
+  pivot_wider(names_from = c(&quot;Dataset&quot;), values_from=c(&quot;Sum&quot;, &quot;RPM&quot;)) %&gt;%
+  inner_join(
+    JunctionProductivity.clustered %&gt;%
+      filter(Species.short == &quot;Human&quot;) %&gt;%
+      inner_join(
+        Junc.regtools.annotations %&gt;%
+          dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+        by=c(&quot;Intron_coord&quot;, &quot;OriginGenome&quot;)
+      ) %&gt;%
+      dplyr::rename(stop = end)
+    )
+
+
+
+Joined %&gt;%
+  replace_na(list(Sum_HeLa.scr=0, Sum_HeLa.dKD=0, RPM_HeLa.dKD=1E-4, RPM_HeLa.scr=1E-4)) %&gt;%
+  mutate(SumBoth = Sum_HeLa.dKD + Sum_HeLa.scr) %&gt;%
+  filter(SumBoth &gt;= 20) %&gt;%
+  mutate(DeltaRPM = log2(RPM_HeLa.dKD/RPM_HeLa.scr)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annot&quot;, &quot;Unannot&quot;)) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Group = paste(Coding, Annot)) %&gt;%
+  ggplot(aes(x=DeltaRPM, color=Group)) +
+    stat_ecdf() +
+    coord_cartesian(xlim=c(-5,5)) +
+  geom_vline(xintercept = 0) +
+  labs(y=&#39;ecdf&#39;, x=&#39;Junction RPM log2FC\ndKD/Control&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And now let’s remake the heatmap based on these.</p>
+<pre class="r"><code>dev.AS.AllTests.TwoClassificationMethods &lt;- dev.AS.AllTests %&gt;%
+  left_join(
+      JunctionProductivity.clustered %&gt;%
+        dplyr::select(Intron_coord, Gene_name, OriginGenome, Annot, Coding, UTR),
+      by=c(&quot;Intron_coord&quot;, &quot;Gene_name&quot;, &quot;OriginGenome&quot;),
+      suffix=c(&quot;&quot;, &quot;.FromClusteredOnly&quot;)
+  )
+
+
+dev.AS.AllTests.TwoClassificationMethods %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  dplyr::select(-UTR, -Coding, -Annot) %&gt;%
+  dplyr::rename(UTR=UTR.FromClusteredOnly, Coding=Coding.FromClusteredOnly, Annot=Annot.FromClusteredOnly) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing)==sign(corr.expression)) %&gt;%
+  count(Tissue, Species.short, Coding, Annot, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, Coding, Annot) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annotated&quot;, &quot;Unannotated&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Annot~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hmm. that made basically no difference. Maybe the heatmap result is
+to be expected, based on how many unannotated productive juncs are
+likely actually unproductive based on this. Let’s move on for now, and
+add liftover juncs to find conserved devAS events. Another explanation
+is related to something we’ve observed before: splicing ’error’s
+increase in lowly expressed genes. So a lot of these unannotated
+(splicing errors), both productive and unproductive ones, correlate with
+decreases in host gene expression, not because they drive the decrease
+in host gene expression (as is expected for unproductive junctions
+only), but just because lower expression means lower splicing
+fidelity.</p>
+<p>Ok, now let’s make this plot for publication…</p>
+<p>First a version for the main that shows the more simple just
+productive vs unproductive…</p>
+<p>And also an illustrative scatter plot one for one cell, to illustrate
+what percent is…</p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(Species.short == &quot;Human&quot; &amp; Tissue == &quot;Brain&quot;) %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  # filter(sign(corr.expression)==1) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(ProductivityLabel == &quot;UP&quot;)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(ProductivityLabel), desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  ggplot(aes(x=corr.splicing, y=corr.expression)) +
+  geom_point(alpha=0.1) +
+  facet_wrap(~ProductivityLabel) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35), x=&quot;Species&quot;, fill=&quot;Percent in Q2+Q4&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, I think maybe what is going on is that most genes are on very
+early in development, and get turned off during differentiation into a
+specific tissue. That means more genes have negative spearman corr. For
+these genes, we can only detect increases in rare (unannotated)
+splicing. Perhaps one way around this is to filter for genes with
+positive expression correlation coef.</p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  filter(!UTR) %&gt;%
+  filter(sign(corr.expression)==1) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(corr.splicing))) %&gt;%
+  # distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing)==sign(corr.expression)) %&gt;%
+  count(Tissue, Species.short, Coding, Annot, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, Coding, Annot) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annotated&quot;, &quot;Unannotated&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Annot~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hm, that still didn’t change that most unannotated productive juncs
+negatively correlate. And now that I think of it, this is actually the
+opposite trend I was expecting to see!</p>
+<p>Maybe I ought to subset for the Mazin events that I previously saw
+the expected effect… Wait, actually that isn’t straightforward since I
+used old genome assemblies for that analyis. Well I suppose I could look
+at the few genome assemblies (rabbit) where I am still using the same
+genome assembly</p>
+<pre class="r"><code>AS_segment_classifications.rabbit &lt;- read_tsv(&quot;../code/kaessmanAnalysis/leaf2_to_AS_segments/Rabbit_ensemblv_84.full.tsv.gz&quot;) %&gt;%
+  mutate(junc_chrom = paste0(&quot;chr&quot;, junc_chrom)) %&gt;%
+  mutate(Intron_coord = paste0(&quot;chr&quot;, Intron_coord)) %&gt;%
+  dplyr::select(transcript, AS_segment, WhichIsoformIsAnnotated, isoform, WhichIsoformIsAnnotated, chrom=junc_chrom, start=junc_start, end=junc_end, Strand=junc_strand, Annot, Coding, UTR, Gene_name) %&gt;%
+  inner_join(
+    dev.AS.AllTests %&gt;%
+      filter(Species.short == &quot;Rabbit&quot;),
+    by=c(&quot;chrom&quot;, &quot;start&quot;, &quot;end&quot;, &quot;Strand&quot;), suffix=c(&quot;.old&quot;, &quot;&quot;)
+  )
+
+
+AS_segment_classifications.rabbit %&gt;%
+  distinct(Intron_coord, .keep_all=T) %&gt;%
+  count(Coding, Coding.old)</code></pre>
+<pre><code># A tibble: 4 × 3
+  Coding Coding.old     n
+  &lt;lgl&gt;  &lt;lgl&gt;      &lt;int&gt;
+1 FALSE  FALSE       4210
+2 FALSE  TRUE         581
+3 TRUE   FALSE       2110
+4 TRUE   TRUE       15016</code></pre>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  # arrange(Coding)
+  filter(q.splicing &lt; 0.1) %&gt;%
+  # filter(!UTR) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing)==sign(corr.expression)) %&gt;%
+  count(Tissue, Species.short, Coding, Annot, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, Coding, Annot) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annotated&quot;, &quot;Unannotated&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Annot~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hmm, this isn’t obviously the expected result.</p>
+<p>Let’s check that the spearman coef is generally concordant between
+the mazin quantifications and mine…</p>
+<pre class="r"><code>AS_segment_classifications &lt;- Sys.glob(&quot;../code/kaessmanAnalysis/leaf2_to_AS_segments/*.collapsed.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/kaessmanAnalysis/leaf2_to_AS_segments/(.+?).collapsed.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;Species&quot;) %&gt;% pivot_wider(names_from = &quot;isoform&quot;, values_from = c(&quot;PercentCoding&quot;, &quot;n&quot;), names_sep=&quot;.&quot;) %&gt;%
+  mutate(ChangeInCoding_InclusionToExclusion = PercentCoding.AS_seg_included - PercentCoding.AS_seg_excluded)
+  
+devAS.events.all.Mazin &lt;- read_csv(&quot;../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_9.csv&quot;) %&gt;%
+  rename(&quot;segment.name&quot;=&quot;...1&quot;) %&gt;%
+  pivot_longer(cols=-c(1:8), names_to = c(&quot;.value&quot;, &quot;tissue&quot;), values_to = c(&quot;value&quot;), names_pattern=c(&quot;(^.+)\\.(.+$)&quot;)) %&gt;%
+  filter(pattern %in% c(&quot;d&quot;, &quot;u&quot;)) %&gt;%
+  inner_join(AS_segment_classifications, by=c(&quot;seg.id&quot;=&quot;AS_segment&quot;)) %&gt;%
+  mutate(tissue = str_to_title(tissue)) %&gt;%
+  dplyr::select(-ens_id)
+
+
+
+MazinStages &lt;- read_tsv(&quot;../output/CordosoMoreira_CalibratedStageTable.tsv&quot;)
+
+PSI.Mazin.Rabbit &lt;- Sys.glob(&quot;../code/kaessman_AS_dat/FromWebApp/rabbit/PSI.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/kaessman_AS_dat/FromWebApp/(.+?)/PSI.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, sep=&#39;,&#39;) %&gt;%
+  lapply(function(x) filter(x, V1 %in% devAS.events.all.Mazin$segment.name)) %&gt;%
+  lapply(function(x) pivot_longer(x, names_to = &quot;sample&quot;,values_to = &quot;PSI&quot;,-V1)) %&gt;%
+  bind_rows() %&gt;%
+  dplyr::rename(&quot;seg.id&quot;=&quot;V1&quot;) %&gt;%
+  separate(sample, into=c(&quot;Species&quot;, &quot;Tissue&quot;, &quot;StageName&quot;, &quot;Dummy&quot;), convert=T, remove=F) %&gt;%
+  inner_join(MazinStages)
+
+PSI.Mazin.Rabbit.cor &lt;- PSI.Mazin.Rabbit %&gt;%
+  group_by(Tissue, seg.id) %&gt;%
+  summarise(cor.PSI = cor(PSI, OrdinalStage.Manual, method = &quot;sp&quot;)) %&gt;%
+  ungroup()
+
+AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  ggplot(aes(x=cor.PSI, y=corr.splicing)) +
+  geom_point(alpha=0.1) +
+  facet_wrap(~Tissue) +
+  labs(x=&quot;spearman coef\nPSI from Mazin&quot;, y=&quot;spearman coef\nleafcutter PSI for inclusion junctions&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;)  %&gt;%
+  distinct(Intron_coord, Tissue, .keep_all=T) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  dplyr::select(Tissue, Intron_coord, cor.PSI, corr.splicing) %&gt;%
+  pivot_longer(names_to = c(&quot;PSI_Source&quot;), values_to = &quot;SpearmanCorr&quot;, c(&quot;cor.PSI&quot;, &quot;corr.splicing&quot;)) %&gt;%
+  mutate(PSI_Source = recode(PSI_Source, &quot;cor.PSI&quot;=&quot;Cordoso et al&quot;, &quot;corr.splicing&quot;=&quot;Myself&quot;)) %&gt;%
+  ggplot(aes(x=SpearmanCorr)) +
+  geom_histogram() +
+  facet_grid(PSI_Source~Tissue)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-25-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, we should make the same plot for expression now…</p>
+<pre class="r"><code>RPKM.Mazin.Rabbit &lt;- Sys.glob(&quot;../code/kaessman_AS_dat/FromWebApp/rabbit/RPKM.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/kaessman_AS_dat/FromWebApp/(.+?)/RPKM.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, sep=&#39; &#39;) %&gt;%
+  lapply(function(x) filter(x, Names %in% AS_segment_classifications.rabbit$Gene_name.old)) %&gt;%
+  lapply(function(x) pivot_longer(x, names_to = &quot;sample&quot;,values_to = &quot;RPKM&quot;,-Names)) %&gt;%
+  bind_rows(.id=&quot;Species&quot;) %&gt;%
+  mutate(sample = paste(str_to_title(Species), sample, sep=&quot;.&quot;)) %&gt;%
+  separate(sample, into=c(&quot;Species&quot;, &quot;Tissue&quot;, &quot;StageName&quot;, &quot;Dummy&quot;), convert=T, remove=F) %&gt;%
+  inner_join(MazinStages)
+
+RPKM.Mazin.Rabbit.cor &lt;- RPKM.Mazin.Rabbit %&gt;%
+  group_by(Tissue, Names) %&gt;%
+  summarise(cor.RPKM = cor(RPKM, OrdinalStage.Manual, method = &quot;sp&quot;)) %&gt;%
+  ungroup()
+
+AS_segment_classifications.rabbit %&gt;%
+  distinct(Gene_name.old, Tissue, .keep_all=T) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  ggplot(aes(x=cor.RPKM, y=corr.expression)) +
+  geom_point(alpha=0.1) +
+  facet_wrap(~Tissue) +
+  labs(x=&quot;spearman coef\nRPKM from Mazin&quot;, y=&quot;spearman coef\nTPM from my analysis&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  distinct(Gene_name.old, Tissue, .keep_all=T) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  dplyr::select(Tissue, Gene_name.old, cor.RPKM, corr.expression) %&gt;%
+  pivot_longer(names_to = c(&quot;RPKM_Source&quot;), values_to = &quot;SpearmanCorr&quot;, c(&quot;cor.RPKM&quot;, &quot;corr.expression&quot;)) %&gt;%
+  mutate(RPKM_Source = recode(RPKM_Source, &quot;cor.RPKM&quot;=&quot;Cordoso et al&quot;, &quot;corr.expression&quot;=&quot;Myself&quot;)) %&gt;%
+  ggplot(aes(x=SpearmanCorr)) +
+  geom_histogram() +
+  facet_grid(RPKM_Source~Tissue)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-26-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, so I’ve checked that the junction productivity classes are
+generally the same between previous analysis with Mazin data, the
+spearman coef for splicing and expression generally match. Ok, let’s
+reproduce previous result given the spearman coefs I just recalculated
+from Mazin et al quantifications…</p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  group_by(Species.short, Tissue, ProductivityLabel) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ProductivityLabel, ncol=1) +
+  theme(legend.position = &#39;bottom&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-27-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, that is the result I was expecting… Let’s go back to using my
+spearman coefs</p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  group_by(Species.short, Tissue, ProductivityLabel) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(corr.splicing, corr.expression, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ProductivityLabel, ncol=1) +
+  theme(legend.position = &#39;bottom&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;" />
+That doesn’t look as good. I notice the worst looking tissues are liver,
+kidney, and heart. These are also the tissues for which the spearman
+coef for RPKM from Mazin is systematically higher than mine. What are
+these genes, that are likely problematic that I calculate really
+negative spearman coef in these tissues.</p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(cor.PSI)==sign(cor.RPKM)) %&gt;%
+  count(Tissue, Species.short, ProductivityLabel, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, ProductivityLabel) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  group_by(Species.short, Tissue, ProductivityLabel) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ProductivityLabel, ncol=1) +
+  theme(legend.position = &#39;bottom&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, now I think the UP is just a tad lighter. Maybe the sign thing
+just isn’t the right way to summarise the data. Let’s go back to the
+original data and summarise with spearman coef.</p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  # filter(!UTR) %&gt;%
+  # filter(sign(corr.expression)==1) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  group_by(Annot, Coding, Tissue, Species.short) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(corr.splicing, corr.expression, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annotated&quot;, &quot;Unannotated&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=n), size=3) +
+  facet_grid(Annot~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>That didn’t help… Let’s try using Mazin RPKM spearman and our
+splicing spearman…</p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  group_by(Species.short, Tissue, ProductivityLabel) %&gt;%
+  # summarise(spearman.of_CorPSI_vs_CorRPKM = cor(corr.splicing, corr.expression, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ProductivityLabel, ncol=1) +
+  theme(legend.position = &#39;bottom&#39;) +
+  labs(title=&quot;Mazin splicing, Mazin expression&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  group_by(Species.short, Tissue, ProductivityLabel) %&gt;%
+  # summarise(spearman.of_CorPSI_vs_CorRPKM = cor(corr.splicing, corr.expression, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(corr.splicing, cor.RPKM, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ProductivityLabel, ncol=1) +
+  theme(legend.position = &#39;bottom&#39;) +
+  labs(title=&quot;My splicing, Mazin expression&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-31-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  group_by(Species.short, Tissue, ProductivityLabel) %&gt;%
+  # summarise(spearman.of_CorPSI_vs_CorRPKM = cor(corr.splicing, corr.expression, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(cor.PSI, corr.expression, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ProductivityLabel, ncol=1) +
+  theme(legend.position = &#39;bottom&#39;) +
+  labs(title=&quot;Mazin spicing, My expression&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-31-3.png" width="672" style="display: block; margin: auto;" />
+Ok, interestingly though, it does work when I use Mazin’s PSI
+quantifications.</p>
+<pre class="r"><code>library(GGally)
+
+my_scatter &lt;- function(data, mapping, ...) {
+  ggplot(data = data, mapping=mapping) +
+    geom_point(..., alpha=0.01) +
+    geom_smooth(method=&#39;lm&#39;)
+}
+
+
+AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  # filter(!Coding) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  dplyr::select(ProductivityLabel, Tissue, corr.splicing, cor.PSI, cor.RPKM, corr.expression) %&gt;%
+  # drop_na() %&gt;%
+  ggpairs(columns = 3:6,
+          # ggplot2::aes(colour = Tissue),
+          ggplot2::aes(color = ProductivityLabel),
+          lower=list(continuous=my_scatter), title=&quot;All&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  # filter(!Coding) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  dplyr::select(ProductivityLabel, Tissue, corr.splicing, cor.PSI, cor.RPKM, corr.expression) %&gt;%
+  drop_na() %&gt;%
+  ggpairs(columns = 3:6,
+          # ggplot2::aes(colour = Tissue),
+          ggplot2::aes(color = ProductivityLabel),
+          lower=list(continuous=my_scatter), title=&quot;After dropping na&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-32-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So it could be that Mazin PSI is just more accurate, and leafcutter
+PSI is just more noisy which dilutes signal, and on top of that, there
+is a general positive trend. I’m quite confused.</p>
+<p>Let’s go back to figuring out what genes are very negative spearman
+when I calculate.</p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  distinct(Gene_name, Tissue, .keep_all=T) %&gt;%
+  dplyr::select(Gene_name, Tissue, corr.expression) %&gt;%
+  pivot_wider(names_from = &quot;Tissue&quot;, values_from = &quot;corr.expression&quot;) %&gt;%
+  mutate(LiverUnderThreshold = Liver &lt; -0.95) %&gt;%
+  pivot_longer(names_to = &quot;Tissue&quot;, values_to = &quot;corr.expression&quot;, -c(&quot;Gene_name&quot;, &quot;LiverUnderThreshold&quot;)) %&gt;%
+  filter(!is.na(LiverUnderThreshold)) %&gt;%
+  ggplot(aes(x=corr.expression, color=Tissue)) +
+  stat_ecdf() +
+  facet_wrap(~LiverUnderThreshold)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, so the extreme negative spearman cor for liver genes are not
+obviously the same as the extreme negatives for heart or kidney.</p>
+<pre class="r"><code>ExtremeNegativeLiverGenes &lt;- AS_segment_classifications.rabbit %&gt;%
+  distinct(Gene_name, Tissue, .keep_all=T) %&gt;%
+  dplyr::select(Gene_name, Tissue, corr.expression) %&gt;%
+  pivot_wider(names_from = &quot;Tissue&quot;, values_from = &quot;corr.expression&quot;) %&gt;%
+  filter(Liver &lt; -0.95) %&gt;%
+  pull(Gene_name)
+
+Counts.rabbit &lt;- fread(&quot;../code/MazinLeafcutterAnalysis/Expression/Rabbit_UCSC.oryCun2_ensv101.counts.tsv.gz&quot;)
+TPM.rabbit &lt;- fread(&quot;../code/MazinLeafcutterAnalysis/Expression/Rabbit_UCSC.oryCun2_ensv101.log2tpm.tsv.gz&quot;)
+
+CordosoSamples &lt;- read_tsv(&quot;../code/config/Cordoso_Moreira_SampleList.tsv&quot;)
+
+set.seed(0)
+bind_rows(
+  TPM.rabbit %&gt;%
+    filter(Geneid %in% ExtremeNegativeLiverGenes) %&gt;%
+    mutate(set = &quot;ExtremeNegative&quot;) %&gt;%
+    sample_n(5),
+  TPM.rabbit %&gt;%
+    filter(!Geneid %in% ExtremeNegativeLiverGenes) %&gt;%
+    sample_n(5) %&gt;%
+    mutate(set = &quot;ControlSet&quot;)
+) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;log2TPM&quot;, -c(&quot;Geneid&quot;, &quot;set&quot;)) %&gt;%
+  inner_join(CordosoSamples %&gt;%
+               separate_rows(Tissue_ForDevelopementalAnalysis, sep=&quot;,&quot;)) %&gt;%
+  mutate(Group = paste(set, Geneid,sep=&quot;\n&quot;)) %&gt;%
+  ggplot(aes(x=Ordinal_stage, y=log2TPM, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.2) +
+  geom_smooth(method=&#39;loess&#39;, se=F) +
+  facet_wrap(~Group, scales=&quot;free&quot;) +
+  labs(color=&quot;Tissue&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>set.seed(0)
+bind_rows(
+  Counts.rabbit %&gt;%
+    filter(Geneid %in% ExtremeNegativeLiverGenes) %&gt;%
+    mutate(set = &quot;ExtremeNegative&quot;) %&gt;%
+    sample_n(6),
+  Counts.rabbit %&gt;%
+    filter(!Geneid %in% ExtremeNegativeLiverGenes) %&gt;%
+    sample_n(6) %&gt;%
+    mutate(set = &quot;ControlSet&quot;)
+) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;log2TPM&quot;, -c(&quot;Geneid&quot;, &quot;set&quot;)) %&gt;%
+  inner_join(CordosoSamples %&gt;%
+               separate_rows(Tissue_ForDevelopementalAnalysis, sep=&quot;,&quot;)) %&gt;%
+  mutate(Group = paste(set, Geneid,sep=&quot;\n&quot;)) %&gt;%
+  ggplot(aes(x=Ordinal_stage, y=log2TPM, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.2) +
+  geom_smooth(method=&#39;loess&#39;, se=F) +
+  facet_wrap(~Group, scales=&quot;free&quot;) +
+  labs(color=&quot;Tissue&quot;, y=&quot;Read counts&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-34-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hmm, it’s not like those extreme negative coefs are all from really
+lowly expressed genes compared to control set. Maybe I should try
+quantifying splicing based on PSI (not divided by max). Or by
+cluster-level unproductive rate.</p>
+<pre class="r"><code>Rabbit.PSI &lt;- fread(&quot;../code/rna-seq/SplicingAnalysis/leafcutter/Rabbit_UCSC.oryCun2_ensv101/juncTableBeds/PSI.sorted.bed.gz&quot;) %&gt;%
+  dplyr::rename(&quot;chrom&quot;=&quot;#Chrom&quot;)
+
+Rabbit.Counts &lt;- fread(&quot;../code/rna-seq/SplicingAnalysis/leafcutter/Rabbit_UCSC.oryCun2_ensv101/juncTableBeds/JuncCounts.sorted.bed.gz&quot;) %&gt;%
+  dplyr::rename(&quot;chrom&quot;=&quot;#Chrom&quot;)
+
+Cluster.Level.UnproductiveSummary &lt;- Rabbit.PSI %&gt;%
+  mutate(end = end-1) %&gt;%
+  inner_join(
+    JunctionProductivity.AndAnnotated %&gt;%
+      filter(OriginGenome == &quot;Rabbit_UCSC.oryCun2_ensv101&quot;) %&gt;%
+      dplyr::select(OriginGenome:strand)
+  ) %&gt;%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  )) %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;, values_to = &quot;PSI&quot;, contains(&quot;Rabbit_&quot;)) %&gt;%
+  group_by(gid, OriginGenome, ProductivityLabel, sample) %&gt;%
+  summarise(ClusterProductivityLabel_SumPSI = sum(PSI)) %&gt;%
+  ungroup()
+
+Gene.Level.UnproductiveSummary &lt;- Rabbit.Counts %&gt;%
+  mutate(end = end-1) %&gt;%
+  inner_join(
+    JunctionProductivity.AndAnnotated %&gt;%
+      filter(OriginGenome == &quot;Rabbit_UCSC.oryCun2_ensv101&quot;) %&gt;%
+      dplyr::select(OriginGenome:strand)
+  ) %&gt;%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  )) %&gt;%
+  filter(!ProductivityLabel==&quot;NE&quot;) %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;, values_to = &quot;Counts&quot;, contains(&quot;Rabbit_&quot;)) %&gt;%
+  group_by(Gene_name, OriginGenome, ProductivityLabel, sample) %&gt;%
+  summarise(ClusterProductivityLabel_SumCounts = sum(Counts)) %&gt;%
+  ungroup() %&gt;%
+  group_by(Gene_name, OriginGenome, sample) %&gt;%
+  mutate(PercentUP = ClusterProductivityLabel_SumCounts / sum(ClusterProductivityLabel_SumCounts) * 100) %&gt;%
+  ungroup() %&gt;%
+  filter(ProductivityLabel == &quot;UP&quot;)
+
+Gene.Level.UnproductiveSummary %&gt;%
+  ggplot(aes(x=ClusterProductivityLabel_SumCounts)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,50))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Gene.Level.UnproductiveSummary.filtered &lt;- Gene.Level.UnproductiveSummary %&gt;%
+  inner_join(CordosoSamples %&gt;%
+               filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;)) %&gt;%
+               dplyr::select(ID:ID_libNumber, Tissue_ForDevelopementalAnalysis, Ordinal_stage) %&gt;%
+               separate_rows(Tissue_ForDevelopementalAnalysis, sep=&quot;,&quot;),
+                             by=c(&quot;sample&quot;=&quot;ID&quot;)) %&gt;%
+  mutate(group = paste(Gene_name, OriginGenome, Tissue_ForDevelopementalAnalysis, sep=&quot;;&quot;)) %&gt;%
+  mutate(NonZeroPSI = PercentUP&gt;0) %&gt;%
+  group_by(group) %&gt;%
+  mutate(NumberNonZeroPSI_Samples = sum(NonZeroPSI, na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  filter(NumberNonZeroPSI_Samples &gt; 5)
+
+spearman.coefs &lt;- lapply(split(Gene.Level.UnproductiveSummary.filtered, Gene.Level.UnproductiveSummary.filtered$group), function(x){cor.test(x$PercentUP, x$Ordinal_stage, method = &quot;spearman&quot;, exact=F)$estimate})
+spearman.pvals &lt;- lapply(split(Gene.Level.UnproductiveSummary.filtered, Gene.Level.UnproductiveSummary.filtered$group), function(x){cor.test(x$PercentUP, x$Ordinal_stage, method = &quot;spearman&quot;, exact=F)$p.value})
+
+
+# Bring it together
+Gene.Level.UnproductiveSummary.filtered.spearmans &lt;- data.frame(group = names(spearman.coefs), corr = unlist(spearman.coefs), P=unlist(spearman.pvals), row.names = NULL) %&gt;%
+  separate(group, into=c(&quot;Gene_name&quot;, &quot;Species&quot;, &quot;Tissue&quot;), sep=&quot;;&quot;) %&gt;%
+  group_by(Tissue, Species) %&gt;%
+  mutate(q = qvalue(P)$qvalue) %&gt;%
+  ungroup()
+
+
+Gene.Level.UnproductiveSummary.filtered.spearmans %&gt;%
+  ggplot(aes(x=corr)) +
+  geom_histogram() +
+  facet_wrap(~Tissue)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-35-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Gene.Level.UnproductiveSummary.filtered.spearmans %&gt;%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_wrap(~Tissue)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-35-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Gene.Level.UnproductiveSummary.filtered.spearmans %&gt;%
+  filter(q &lt; 0.1) %&gt;%
+  inner_join(
+    dev.AS.AllTests %&gt;%
+      distinct(OriginGenome, Tissue, Gene_name, .keep_all=T) %&gt;%
+      dplyr::select(Species = OriginGenome, Tissue, Gene_name, corr.expression)
+  ) %&gt;%
+  ggplot(aes(x=corr, y=corr.expression)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=&#39;lm&#39;) +
+  facet_wrap(~Tissue) +
+  labs(x=&quot;spearman, %Unproductive aross gene&quot;, y=&quot;spearman, TPM&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-35-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Wow, again the negative trend compared to what I was expecting.</p>
+<p>I wonder if it has something to do with differential expression of
+neighboring genes that share a leafcutter cluster and thereby mess up
+splicing quantifications… How common is it for a cluster to have juncs
+in more than one gene anyway?</p>
+<pre class="r"><code>dev.AS.AllTests %&gt;%
+  distinct(Species.short, Gene_name, cluster) %&gt;%
+  count(Species.short, cluster) %&gt;%
+  ggplot(aes(x=n, color=Species.short)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;Num genes per cluster&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;" />
+Ok so I don’t think that’s the case…</p>
+<p>Let’s go back to considering how spearman from PSI from Mazin (which
+gives the correct result) is differnt from spearman from leafcutter PSI
+(which gives the incorrect result), despite that both are well
+correlated. I think this implies that the difference betwen the Mazin
+and the leafcutter spearman will be very strongly correlated in the
+opposite direction. Let’s see what this difference is correlated with,
+to see what may be driving it.</p>
+<pre class="r"><code>AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  # filter(!Coding) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  dplyr::select(Gene_name.old, Intron_coord, ProductivityLabel, Tissue, corr.splicing, cor.PSI, cor.RPKM, corr.expression) %&gt;%
+  mutate(Leaf.Minus.Mazin = corr.splicing - cor.PSI,
+         Mazin.Minus.Leaf = cor.PSI - corr.splicing) %&gt;%
+  pivot_longer(names_to = &quot;stat&quot;, values_to = &quot;value&quot;, c(&quot;corr.splicing&quot;, &quot;cor.PSI&quot;, &quot;Leaf.Minus.Mazin&quot;, &quot;Mazin.Minus.Leaf&quot;)) %&gt;%
+  group_by(stat, Tissue, ProductivityLabel) %&gt;%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(value, corr.expression, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(stat = recode(stat, &quot;corr.splicing&quot;=&quot;rho, leafcutter2 PSI&quot;, &quot;cor.PSI&quot;=&quot;rho, Mazin PSI&quot;, &quot;Mazin.Minus.Leaf&quot;=&quot;rho_Mazin - rho_leaf&quot;, &quot;Leaf.Minus.Mazin&quot;=&quot;rho_leaf - rho_Mazin&quot;)) %&gt;%
+  ggplot(aes(x=stat, y=Tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_raster() +
+  geom_text(aes(label=n)) +
+  scale_fill_gradient2() +
+  facet_wrap(~ProductivityLabel, nrow=1) +
+  theme(legend.position = &#39;bottom&#39;) +
+  labs(title=&quot;Mazin spicing, My expression&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;" />
+So basically, I think the “rho_leaf - rho_Mazin” is the not directly
+observed troubling/confounding metric that I want to be able to adjust
+for. Let’s see what kinds of directly observable things that might
+correlate with…</p>
+<pre class="r"><code>ConfoundingMetric.df &lt;- AS_segment_classifications.rabbit %&gt;%
+  filter(isoform == &quot;LongIsoform&quot;) %&gt;%
+  group_by(OriginGenome, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(corr.splicing))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %&gt;%
+  # filter(!Coding) %&gt;%
+  inner_join(PSI.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, AS_segment=seg.id, cor.PSI)) %&gt;%
+  inner_join(RPKM.Mazin.Rabbit.cor %&gt;%
+               dplyr::select(Tissue, Gene_name.old=Names, cor.RPKM)) %&gt;%
+  dplyr::select(Gene_name.old, Intron_coord, ProductivityLabel, Tissue, corr.splicing, cor.PSI, cor.RPKM, corr.expression) %&gt;%
+  mutate(ConfoundingMetric = corr.splicing - cor.PSI)
+
+ConfoundingMetric.df %&gt;%
+  ggplot(aes(x=ConfoundingMetric, color=ProductivityLabel)) +
+  geom_vline(xintercept = 0) +
+  stat_ecdf() +
+  facet_wrap(~Tissue) +
+  coord_cartesian(xlim=c(-.5, .5)) +
+  labs(y=&#39;ecdf&#39;, x=&#39;confounding metric&#39;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" />
+Ok, as I noticed before, this confounder has the biggest effect in
+kidney, liver, heart. Which also happens to be the tissues with some
+very negative expression spearmans. I wonder if this is related to
+unreliable PSI speifically in things with really low read counts.</p>
+<p>Let’s just move on for now…</p>
+</div>
+</div>
+<div id="now-join-liftovers" class="section level3">
+<h3>now join liftovers</h3>
+<p>actually want to do a psuedo-join by liftover… Join tables by having
+at least one common succesful liftover junc in the cluster</p>
+<pre class="r"><code>Liftovers.AsFlanks &lt;- Sys.glob(&quot;../code/LiftoverJuncs/AsFlanks/*.Lifted.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/LiftoverJuncs/AsFlanks/(.+?).Lifted.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;end&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickStop&quot;, &quot;color&quot;, &quot;nBlocks&quot;, &quot;blockSizes&quot;, &quot;blockStarts&quot;)) %&gt;%
+  bind_rows(.id = &quot;OriginGenome&quot;)
+
+juncs.and.clusters &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.Clustered.juncList.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).Clustered.juncList.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id = &quot;OriginGenome&quot;) %&gt;%
+  filter(str_detect(chrom, &quot;clu_NA&quot;, negate = T)) %&gt;%
+  separate(chrom, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;cluster&quot;), sep=&quot;:&quot;, convert=T) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{chrom}:{start}-{stop}&quot;)) %&gt;%
+  mutate(strand = str_extract(cluster, &quot;[-+]$&quot;)) %&gt;%
+  mutate(name = str_glue(&quot;{chrom}_{start}_{stop}_{strand}&quot;))
+
+
+Cluster2ClusterMap &lt;- Liftovers.AsFlanks %&gt;%
+  mutate(start = start +1, end=end-1) %&gt;%
+  dplyr::select(OriginGenome, name, JuncCount = score, Hg38_chrom=chrom, Hg38_start=start, Hg38_end=end, Hg38_strand=strand) %&gt;%
+  inner_join(juncs.and.clusters, by=c(&quot;OriginGenome&quot;, &quot;name&quot;)) %&gt;%
+  inner_join(juncs.and.clusters %&gt;%
+               filter(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+               dplyr::select(Hg38_chrom=chrom, Hg38_start=start, Hg38_end=stop, Hg38_strand=strand, Hg38Name = name, Hg38Cluster = cluster),
+             by=c(&quot;Hg38_chrom&quot;, &quot;Hg38_start&quot;, &quot;Hg38_end&quot;, &quot;Hg38_strand&quot;)) %&gt;%
+  dplyr::rename(OriginName = name)
+
+Cluster2ClusterMap %&gt;%
+  distinct(OriginGenome, cluster, Hg38Cluster) %&gt;%
+  count(OriginGenome, cluster) %&gt;%
+  ggplot(aes(x=n, color=OriginGenome)) +
+  stat_ecdf() +
+  labs(x=&quot;Num human clusters for\neach OriginGenome cluster&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, clusters generally map one to one, so it’s safe to just join by a
+cluster that contains a succesful liftover, without duplicating too many
+rows from the join</p>
+<pre class="r"><code>MappedByClusters &lt;- dev.AS.AllTests.TwoClassificationMethods %&gt;%
+  filter(q.splicing &lt; 0.1) %&gt;%
+  filter(!OriginGenome==&quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+  dplyr::rename(OriginName = name) %&gt;%
+  inner_join(
+    Cluster2ClusterMap %&gt;%
+      dplyr::select(OriginGenome, OriginName, cluster, Hg38Name, Hg38Cluster),
+    by=c(&quot;OriginGenome&quot;, &quot;OriginName&quot;, &quot;cluster&quot;)
+  ) %&gt;%
+  inner_join(
+    dev.AS.AllTests.TwoClassificationMethods %&gt;%
+      filter(q.splicing &lt; 0.1) %&gt;%
+      filter(OriginGenome==&quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+      dplyr::rename(Hg38Cluster=cluster) %&gt;%
+      dplyr::select(-OriginGenome, -Species.short, -Species_AnnotationSource),
+    by=c(&quot;Hg38Cluster&quot;, &quot;Tissue&quot;),
+    suffix = c(&quot;.OtherSpecies&quot;, &quot;.Human&quot;)
+  ) %&gt;%
+  mutate(IsExactLiftover = Hg38Name == name)
+
+MappedByClusters %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches b/n human&quot;
+  )) %&gt;%
+  mutate(Group = factor(Group, levels=c(&quot;Unproductive&quot;, &quot;Productive&quot;, &quot;Switches b/n human&quot;))) %&gt;%
+  arrange(OriginGenome, cluster, desc(IsExactLiftover), Group, desc(abs(corr.splicing.OtherSpecies))) %&gt;%
+  distinct(OriginGenome, cluster, OriginName, .keep_all=T) %&gt;%
+  mutate(IsMatchingSigns = sign(corr.splicing.Human)==sign(corr.splicing.OtherSpecies)) %&gt;%
+  count(IsMatchingSigns, Species.short, IsExactLiftover, Group) %&gt;%
+  mutate(Liftover = if_else(IsExactLiftover, &quot;Exact junc liftover&quot;, &quot;Non-exact&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=n, fill=IsMatchingSigns)) +
+  geom_col(position=&#39;stack&#39;) +
+  facet_grid(Liftover~Group) +
+  Rotate_x_labels +
+  labs(x=&quot;Species&quot;, y=&quot;Num devAS juncs\n(one representative per cluster)&quot;, fill=&quot;SpearmanCoef sign\nmatches cross species?&quot;, caption=str_wrap(&quot;Single representative juncs per cluster chosen by ordered critera (1) Exact liftover (2) Productivity group (3) Greatest coef&quot;,30))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>MappedByClusters %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches b/n human&quot;
+  )) %&gt;%
+  mutate(Group = factor(Group, levels=c(&quot;Unproductive&quot;, &quot;Productive&quot;, &quot;Switches b/n human&quot;))) %&gt;%
+  arrange(OriginGenome, cluster, desc(IsExactLiftover), Group, desc(abs(corr.splicing.OtherSpecies))) %&gt;%
+  distinct(OriginGenome, cluster, OriginName, .keep_all=T) %&gt;%
+  mutate(IsMatchingSigns = sign(corr.splicing.Human)==sign(corr.splicing.OtherSpecies)) %&gt;%
+  count(IsMatchingSigns, Species.short, IsExactLiftover, Group) %&gt;%
+  mutate(Liftover = if_else(IsExactLiftover, &quot;Exact junc liftover&quot;, &quot;Non-exact&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=n, fill=IsMatchingSigns)) +
+  geom_col(position=&#39;fill&#39;) +
+  facet_grid(Liftover~Group) +
+  Rotate_x_labels +
+  labs(x=&quot;Species&quot;, y=&quot;Num devAS juncs\n(one representative per cluster)&quot;, fill=&quot;SpearmanCoef sign\nmatches cross species?&quot;, caption=str_wrap(&quot;Single representative juncs per cluster chosen by ordered critera (1) Exact liftover (2) Productivity group (3) Greatest coef&quot;,30)) +
+  geom_hline(yintercept = 0.5)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-41-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So, again, the ones that only match by cluster often aren’t the same
+sign. There could be technical reasons for this… Like I am choosing the
+‘best’ (strongest coef) to match juncs that don’t perfectly liftover but
+are nontheless in matching clusters. That is not ideal, like better
+would be to count total unproductive coef for cluster.</p>
+<p>Nonetheless, the identification of hundreds of unproductive
+conserved-to-chicken- devAS clusters with exact junc liftovers is
+interesting. Let’s look at these and verify the expected effects on
+expression.</p>
+<pre class="r"><code>MappedByClusters %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches b/n human&quot;
+  )) %&gt;%
+  filter(IsExactLiftover) %&gt;%
+  mutate(Group = factor(Group, levels=c(&quot;Unproductive&quot;, &quot;Productive&quot;, &quot;Switches b/n human&quot;))) %&gt;%
+  arrange(OriginGenome, Tissue, cluster, desc(IsExactLiftover), Group, desc(abs(corr.splicing.OtherSpecies))) %&gt;%
+  distinct(OriginGenome, Tissue, cluster, OriginName, .keep_all=T) %&gt;%
+  mutate(IsMatchingSigns = sign(corr.splicing.Human)==sign(corr.splicing.OtherSpecies)) %&gt;%
+  filter(IsMatchingSigns) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing.OtherSpecies)==sign(corr.expression.OtherSpecies)) %&gt;%
+  count(Tissue, Species.short, Coding.OtherSpecies, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species.short, Coding.OtherSpecies) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  mutate(Coding = if_else(Coding.OtherSpecies, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I think another analysis that ought to be done is based on max PSI,
+or dpsi between tissues. I think I should calculate the dpsi and maxPSI
+in terminal stages for each tissue as a starting point.</p>
+<p>But first… we want to identify some of the conserved evenst that
+would also be in GTEx. Let’s first make a tidy list of conserved
+unproductive devAS juncs as I have previously done, and then manually go
+through that list to find best cnadidates.</p>
+<pre class="r"><code>Conserved.dev.AS.toHighlight &lt;- MappedByClusters %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches b/n human&quot;
+  )) %&gt;%
+  filter(IsExactLiftover) %&gt;%
+  filter(Group == &quot;Unproductive&quot;) %&gt;%
+  mutate(Species.Tissue = paste(Species.short, Tissue)) %&gt;%
+  filter(sign(corr.splicing.OtherSpecies) == sign(corr.splicing.Human)) %&gt;%
+  filter(!sign(corr.splicing.OtherSpecies) == sign(corr.expression.OtherSpecies)) %&gt;%
+  filter(!sign(corr.splicing.Human) == sign(corr.expression.Human)) %&gt;%
+  distinct(Species.Tissue, Intron_coord.Human, .keep_all=T) %&gt;%
+  dplyr::select(Intron_coord.Human, Species.Tissue, Species.short, Tissue, Intron_coord.OtherSpecies, contains(&quot;corr.&quot;), Gene_name.Human, Strand.Human) %&gt;%
+  inner_join(
+    main.gtf.transcript.dat %&gt;%
+      filter(Species == &quot;Human&quot;) %&gt;%
+      dplyr::select(external_gene_name, ensembl_gene_id_version) %&gt;%
+      distinct(),
+    by=c(&quot;Gene_name.Human&quot;=&quot;ensembl_gene_id_version&quot;)
+  ) %&gt;%
+  arrange(Tissue, Species.short) %&gt;%
+  mutate(SplicingDevSign = sign(corr.splicing.OtherSpecies)) %&gt;%
+  # filter(Intron_coord.Human == &quot;chr2:170842654-170844044&quot;) %&gt;%
+  group_by(Intron_coord.Human, Gene_name.Human,  external_gene_name, SplicingDevSign, Strand.Human ) %&gt;%
+  summarise(Species.Tissues = paste0(Species.Tissue,collapse = &#39;, &#39;), NumberConservedSpeciesTissuePairs=n()) %&gt;%
+  ungroup() %&gt;%
+  filter(NumberConservedSpeciesTissuePairs &gt; 4) %&gt;%
+  arrange(desc(NumberConservedSpeciesTissuePairs), external_gene_name)
+
+Conserved.dev.AS.toHighlight</code></pre>
+<pre><code># A tibble: 20 × 7
+   Intron_coord.Human       Gene_name.Human    external_gene_na… SplicingDevSign
+   &lt;glue&gt;                   &lt;chr&gt;              &lt;chr&gt;                       &lt;dbl&gt;
+ 1 chr7:26191128-26192494   ENSG00000122566.22 HNRNPA2B1                       1
+ 2 chr9:83974589-83976994   ENSG00000165119.22 HNRNPK                          1
+ 3 chr16:2768261-2768504    ENSG00000167978.19 SRRM2                           1
+ 4 chr19:38840559-38841612  ENSG00000104824.18 HNRNPL                          1
+ 5 chr20:35632923-35655201  ENSG00000244462.8  RBM12                           1
+ 6 chr12:51780271-51786541  ENSG00000196876.19 SCN8A                          -1
+ 7 chr6:83854161-83864174   ENSG00000065615.14 CYB5R4                          1
+ 8 chr20:63931182-63931464  ENSG00000101152.12 DNAJC5                         -1
+ 9 chr19:38841682-38843841  ENSG00000104824.18 HNRNPL                          1
+10 chr14:23348306-23349271  ENSG00000092096.19 SLC22A17                       -1
+11 chr14:64197104-64202800  ENSG00000054654.20 SYNE2                           1
+12 chr16:24954730-24959910  ENSG00000140750.17 ARHGAP17                        1
+13 chr7:134962934-134965305 ENSG00000122786.20 CALD1                           1
+14 chr2:170842648-170844044 ENSG00000128683.14 GAD1                           -1
+15 chr2:170842654-170844044 ENSG00000128683.14 GAD1                           -1
+16 chr5:55468149-55534571   ENSG00000067113.17 PLPP1                          -1
+17 chr2:152694622-152714549 ENSG00000196504.21 PRPF40A                         1
+18 chr14:58247832-58252123  ENSG00000100567.13 PSMA3                           1
+19 chr17:76735158-76735771  ENSG00000161547.17 SRSF2                           1
+20 chr5:72897151-72900973   ENSG00000083312.19 TNPO1                           1
+# … with 3 more variables: Strand.Human &lt;chr&gt;, Species.Tissues &lt;chr&gt;,
+#   NumberConservedSpeciesTissuePairs &lt;int&gt;</code></pre>
+<p>Some promising ones to look at:</p>
+<ul>
+<li>chr2:152694622-152714549, PRPF40A</li>
+<li>chr14:23348306-23349271, SLC22A17</li>
+<li>chr2:170842654-170844044, GAD1</li>
+<li>chr12:51780271-51786541, SCN8A</li>
+</ul>
+<p>Let’s see which if any of these are in Chao’s GTEx results</p>
+<pre class="r"><code>GTEx.DE.DS &lt;- read_tsv(&quot;../output/GTEx_DS_DE_FromChao_CordosoTissuePairs.tsv.gz&quot;)
+
+GTEx.DE.DS %&gt;%
+  mutate(Intron_coord.Human = str_glue(&quot;{Hg38_chrom}:{Hg38_start}-{Hg38_end}&quot;)) %&gt;%
+  inner_join(Conserved.dev.AS.toHighlight) %&gt;%
+  distinct(intron, .keep_all=T)</code></pre>
+<pre><code># A tibble: 9 × 23
+  GTEx_Tissue1     GTex_Tissue2   gene_id gene_name intron Hg38_chrom Hg38_start
+  &lt;chr&gt;            &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;     &lt;chr&gt;  &lt;chr&gt;           &lt;dbl&gt;
+1 Brain-Cerebellum Heart-LeftVen… ENSG00… PRPF40A   chr2:… chr2        152694622
+2 Brain-Cerebellum Heart-LeftVen… ENSG00… PLPP1     chr5:… chr5         55468149
+3 Brain-Cerebellum Heart-LeftVen… ENSG00… CALD1     chr7:… chr7        134962934
+4 Brain-Cerebellum Heart-LeftVen… ENSG00… ARHGAP17  chr16… chr16        24954730
+5 Brain-Cerebellum Heart-LeftVen… ENSG00… SRSF2     chr17… chr17        76735158
+6 Brain-Cerebellum Kidney-Cortex  ENSG00… SCN8A     chr12… chr12        51780271
+7 Brain-Cerebellum Kidney-Cortex  ENSG00… DNAJC5    chr20… chr20        63931182
+8 Brain-Cerebellum Liver          ENSG00… SRRM2     chr16… chr16         2768261
+9 Brain-Cerebellum Testis         ENSG00… HNRNPL    chr19… chr19        38841682
+# … with 16 more variables: Hg38_end &lt;dbl&gt;, GTExAnalysisClusterName &lt;chr&gt;,
+#   cluster &lt;chr&gt;, itype &lt;chr&gt;, ctype &lt;chr&gt;, deltapsi &lt;dbl&gt;, g_l2fc &lt;dbl&gt;,
+#   g_z &lt;dbl&gt;, g_l2fcSE &lt;dbl&gt;, Intron_coord.Human &lt;glue&gt;,
+#   Gene_name.Human &lt;chr&gt;, external_gene_name &lt;chr&gt;, SplicingDevSign &lt;dbl&gt;,
+#   Strand.Human &lt;chr&gt;, Species.Tissues &lt;chr&gt;,
+#   NumberConservedSpeciesTissuePairs &lt;int&gt;</code></pre>
+<pre class="r"><code>Conserved.dev.AS.toHighlight.WithGTEx &lt;- GTEx.DE.DS %&gt;%
+  mutate(Intron_coord.Human = str_glue(&quot;{Hg38_chrom}:{Hg38_start}-{Hg38_end}&quot;)) %&gt;%
+  inner_join(Conserved.dev.AS.toHighlight) %&gt;%
+  arrange(intron, GTEx_Tissue1) %&gt;%
+  filter(GTEx_Tissue1 == &quot;Brain-Cerebellum&quot; | GTex_Tissue2 == &quot;Brain-Cerebellum&quot;)
+
+Conserved.dev.AS.toHighlight.WithGTEx</code></pre>
+<pre><code># A tibble: 31 × 23
+   GTEx_Tissue1     GTex_Tissue2  gene_id gene_name intron Hg38_chrom Hg38_start
+   &lt;chr&gt;            &lt;chr&gt;         &lt;chr&gt;   &lt;chr&gt;     &lt;chr&gt;  &lt;chr&gt;           &lt;dbl&gt;
+ 1 Brain-Cerebellum Kidney-Cortex ENSG00… SCN8A     chr12… chr12        51780271
+ 2 Brain-Cerebellum Liver         ENSG00… SCN8A     chr12… chr12        51780271
+ 3 Brain-Cerebellum Ovary         ENSG00… SCN8A     chr12… chr12        51780271
+ 4 Brain-Cerebellum Testis        ENSG00… SCN8A     chr12… chr12        51780271
+ 5 Brain-Cerebellum Heart-LeftVe… ENSG00… ARHGAP17  chr16… chr16        24954730
+ 6 Brain-Cerebellum Kidney-Cortex ENSG00… ARHGAP17  chr16… chr16        24954730
+ 7 Brain-Cerebellum Liver         ENSG00… ARHGAP17  chr16… chr16        24954730
+ 8 Brain-Cerebellum Ovary         ENSG00… ARHGAP17  chr16… chr16        24954730
+ 9 Brain-Cerebellum Testis        ENSG00… ARHGAP17  chr16… chr16        24954730
+10 Brain-Cerebellum Liver         ENSG00… SRRM2     chr16… chr16         2768261
+# … with 21 more rows, and 16 more variables: Hg38_end &lt;dbl&gt;,
+#   GTExAnalysisClusterName &lt;chr&gt;, cluster &lt;chr&gt;, itype &lt;chr&gt;, ctype &lt;chr&gt;,
+#   deltapsi &lt;dbl&gt;, g_l2fc &lt;dbl&gt;, g_z &lt;dbl&gt;, g_l2fcSE &lt;dbl&gt;,
+#   Intron_coord.Human &lt;glue&gt;, Gene_name.Human &lt;chr&gt;, external_gene_name &lt;chr&gt;,
+#   SplicingDevSign &lt;dbl&gt;, Strand.Human &lt;chr&gt;, Species.Tissues &lt;chr&gt;,
+#   NumberConservedSpeciesTissuePairs &lt;int&gt;</code></pre>
+<pre class="r"><code>Conserved.dev.AS.toHighlight.WithGTEx.EventNames &lt;- Liftovers.AsFlanks %&gt;%
+  mutate(start = start +1, end=end-1) %&gt;%
+  dplyr::select(OriginGenome, name, JuncCount = score, Hg38_chrom=chrom, Hg38_start=start, Hg38_end=end, Hg38_strand=strand) %&gt;%
+  mutate(Intron_coord.Human = str_glue(&quot;{Hg38_chrom}:{Hg38_start}-{Hg38_end}&quot;)) %&gt;%
+  filter(Intron_coord.Human %in% Conserved.dev.AS.toHighlight.WithGTEx$Intron_coord.Human) %&gt;%
+  dplyr::select(Intron_coord.Human, OriginGenome, name) %&gt;%
+  inner_join(
+    Conserved.dev.AS.toHighlight.WithGTEx %&gt;%
+      dplyr::select(Intron_coord.Human, NumberConservedSpeciesTissuePairs, gene_id, gene_name, Species.Tissues, SplicingDevSign, Strand.Human)
+  ) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;)))
+
+Conserved.dev.AS.toHighlight.WithGTEx.EventNames %&gt;%
+  distinct(OriginGenome, name, .keep_all=T) %&gt;%
+  mutate(EventName = str_glue(&quot;{gene_name};{Intron_coord.Human}&quot;)) %&gt;%
+  count(EventName, Species.short) %&gt;%
+  ggplot(aes(x=EventName, y=Species.short, fill=n)) +
+  geom_tile() +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PSI.tables &lt;- fread(&quot;tabix -h ../code/rna-seq/SplicingAnalysis/leafcutter/Human_UCSC.hg38_GencodeComprehensive46/juncTableBeds/PSI.sorted.bed.gz chr2:152694622-152714549&quot;) %&gt;%
+  mutate(end = end - 1) %&gt;%
+  dplyr::rename(&quot;chrom&quot;=&quot;#Chrom&quot;) %&gt;%
+  mutate(Intron_coord.Human = str_glue(&quot;{chrom}:{start}-{end}&quot;)) %&gt;%
+  filter(Intron_coord.Human %in% Conserved.dev.AS.toHighlight.WithGTEx.EventNames$Intron_coord.Human)
+
+samples &lt;- read_tsv(&quot;../code/config/Cordoso_Moreira_SampleList.tsv&quot;)
+
+PSI.tables %&gt;%
+  dplyr::select(-c(1:6)) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;PSI&quot;, -Intron_coord.Human) %&gt;%
+  inner_join(samples) %&gt;%
+  ggplot(aes(x=Ordinal_stage, y=PSI, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point() +
+  geom_smooth(method=&#39;loess&#39;) +
+  facet_grid(Tissue_ForDevelopementalAnalysis~Intron_coord.Human) +
+  coord_cartesian(ylim=c(0,50))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Let’s do this more systematically. I will write out bed file of these
+juncs of interest for each species , then use that for genome browsing
+and also to subset juncs from tabix tables.</p>
+<pre class="r"><code>dir.create(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight/&quot;, showWarnings = FALSE)
+
+ConservedJuncs.beds &lt;- bind_rows(
+  Conserved.dev.AS.toHighlight.WithGTEx.EventNames %&gt;%
+    distinct(OriginGenome, Intron_coord.Human, .keep_all=T) %&gt;%
+    dplyr::select(gene_name, Intron_coord.Human, Strand.Human) %&gt;%
+    separate(Intron_coord.Human, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;), sep=&quot;[:-]&quot;, convert=T, remove=F) %&gt;%
+    unite(name, gene_name, Intron_coord.Human, sep=&quot;;&quot;) %&gt;%
+    dplyr::rename(strand = Strand.Human) %&gt;%
+    mutate(OriginGenome = &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;),
+  Conserved.dev.AS.toHighlight.WithGTEx.EventNames %&gt;%
+    distinct(OriginGenome, name, .keep_all=T) %&gt;%
+    dplyr::select(gene_name, name, Intron_coord.Human, OriginGenome) %&gt;%
+    separate(name, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;strand&quot;), sep=&quot;_&quot;, convert=T) %&gt;%
+    unite(name, gene_name, Intron_coord.Human, sep=&quot;;&quot;)
+) %&gt;%
+  mutate(score = &quot;.&quot;) %&gt;%
+  dplyr::select(chrom, start, stop, name, score, strand, OriginGenome) %&gt;%
+  arrange(chrom, start, stop) %&gt;%
+  mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{stop}&quot;))
+
+ConservedJuncs.beds %&gt;%
+  dplyr::select(-JuncCoord) %&gt;%
+  group_by(OriginGenome) %&gt;%
+  distinct() %&gt;%
+  group_walk(~ write_tsv(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight/&quot;,.y$OriginGenome, &quot;.bed&quot;), col_names =F))
+
+# fread(&quot;tabix -h ../code/rna-seq/SplicingAnalysis/leafcutter/Human_UCSC.hg38_GencodeComprehensive46/juncTableBeds/PSI.sorted.bed.gz chr2:152694622-152714549&quot;)
+
+GetJuncsOfInterest &lt;- function(fn){
+  OriginGenome &lt;- str_replace(fn, &quot;../code/rna-seq/SplicingAnalysis/leafcutter/(.+?)/juncTableBeds/(.+?).sorted.bed.gz&quot;, &quot;\\1&quot;)
+  cmd &lt;- str_glue(&quot;tabix -h  -R ../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight/{OriginGenome}.bed {fn}&quot;)
+  fread(cmd) %&gt;%
+    mutate(end = as.numeric(end) - 1) %&gt;%
+    dplyr::rename(&quot;chrom&quot;=&quot;#Chrom&quot;) %&gt;%
+    # return()
+    mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{end}&quot;)) %&gt;%
+    filter(JuncCoord %in% ConservedJuncs.beds$JuncCoord) %&gt;%
+    dplyr::select(-c(1:6)) %&gt;%
+    pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;PSI&quot;, -JuncCoord) %&gt;%
+    mutate(Species = OriginGenome) %&gt;%
+    return()
+}
+
+df &lt;- GetJuncsOfInterest(&quot;../code/rna-seq/SplicingAnalysis/leafcutter/Human_UCSC.hg38_GencodeComprehensive46/juncTableBeds/PSI_ByMax.sorted.bed.gz&quot;)
+
+
+PSI &lt;- str_glue(&quot;../code/rna-seq/SplicingAnalysis/leafcutter/{unique(dev.AS.AllTests$OriginGenome)}/juncTableBeds/PSI_ByMax.sorted.bed.gz&quot;) %&gt;%
+  lapply(GetJuncsOfInterest) %&gt;%
+  bind_rows()</code></pre>
+<pre class="r"><code>PSI %&gt;%
+  dplyr::rename(OriginGenome = Species) %&gt;%
+  inner_join(samples) %&gt;%
+  inner_join(
+    ConservedJuncs.beds
+  ) %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis %in% c(&quot;Brain&quot;, &quot;Liver&quot;, &quot;Heart&quot;)) %&gt;%
+  mutate(Group = str_replace(name, &quot;^(.+?);(.+?)$&quot;, &quot;\\1\n\\2&quot;)) %&gt;%
+  ggplot(aes(x=Ordinal_stage, y=PSI, color=ID_Species)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=&#39;loess&#39;, se = F) +
+  # geom_line() +
+  facet_grid(Group~Tissue_ForDevelopementalAnalysis, scales=&quot;free&quot;, labeller = label_wrap_gen(10)) +
+  coord_cartesian(ylim=c(0,40))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-47-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Great, now let’s make the same plots for three GTEx tissues: heart,
+brain, and liver</p>
+<p>First need to run leafcutter. Chao has junc files. let’s write a
+config samples tsv file for snakemake to handle the rest of this
+pre-processing…</p>
+<pre class="r"><code>data.frame(fn = Sys.glob(c(&quot;/project/yangili1/cdai/SpliFi/code/resources/GTEx/juncs/groupped_juncs/Brain-Cortex/converted/*.tsv.gz&quot;, &quot;/project/yangili1/cdai/SpliFi/code/resources/GTEx/juncs/groupped_juncs/Liver/converted/*.tsv.gz&quot;, &quot;/project/yangili1/cdai/SpliFi/code/resources/GTEx/juncs/groupped_juncs/Heart-LeftVentricle/converted/*.tsv.gz&quot;))) %&gt;%
+  mutate(Tissue.IndID = str_replace(fn, &quot;/project/yangili1/cdai/SpliFi/code/resources/GTEx/juncs/groupped_juncs/(.+?)/converted/(.+?).tsv.gz&quot;, &quot;\\1_\\2&quot;)) %&gt;%
+  separate(Tissue.IndID, into=c(&quot;Tissue&quot;, &quot;IndID&quot;), sep=&quot;_&quot;, remove=F) %&gt;%
+  dplyr::select(sample=Tissue.IndID, Tissue, IndID, fn) %&gt;%
+  write_tsv(&quot;../code/config/GTEx_juncFileList.tsv&quot;)</code></pre>
+<p>Ok, now read in PSI</p>
+<pre class="r"><code>&quot;../code/MazinLeafcutterAnalysis/leafcutter/juncTableBeds/PSI_ByMax.sorted.bed.gz&quot;</code></pre>
+<pre><code>[1] &quot;../code/MazinLeafcutterAnalysis/leafcutter/juncTableBeds/PSI_ByMax.sorted.bed.gz&quot;</code></pre>
+<pre class="r"><code>GTEX.PSI &lt;- fread(&quot;tabix -h  -R ../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight/Human_UCSC.hg38_GencodeComprehensive46.bed ../code/MazinLeafcutterAnalysis/leafcutter/juncTableBeds/PSI_ByMax.sorted.bed.gz&quot;)
+
+
+
+GTEX.PSI %&gt;%
+  rename(&quot;chrom&quot;=&quot;#Chrom&quot;, &quot;stop&quot;=&quot;end&quot;) %&gt;%
+  mutate(stop = stop -1) %&gt;%
+  dplyr::select(-c(4,5,6)) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;PSI&quot;, -c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;)) %&gt;%
+  inner_join(
+    ConservedJuncs.beds %&gt;%
+      filter(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+      dplyr::select(chrom, start, stop, name, JuncCoord)
+  ) %&gt;%
+  mutate(Group = str_replace(name, &quot;^(.+?);(.+?)$&quot;, &quot;\\1\n\\2&quot;)) %&gt;%
+  separate(ID, into=c(&quot;Tissue&quot;, &quot;IndID&quot;), sep=&quot;_&quot;) %&gt;%
+  ggplot(aes(x=Tissue, y=PSI, color=Tissue)) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(width=0.5, alpha=0.01) +
+  facet_wrap(~Group, scales=&quot;free&quot;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-49-1.png" width="672" style="display: block; margin: auto;" />
+most compelling to highlight imo are DNAJC5, SCN8A, PRPF40A</p>
+<pre class="r"><code>Conserved.dev.AS.toHighlight</code></pre>
+<pre><code># A tibble: 20 × 7
+   Intron_coord.Human       Gene_name.Human    external_gene_na… SplicingDevSign
+   &lt;glue&gt;                   &lt;chr&gt;              &lt;chr&gt;                       &lt;dbl&gt;
+ 1 chr7:26191128-26192494   ENSG00000122566.22 HNRNPA2B1                       1
+ 2 chr9:83974589-83976994   ENSG00000165119.22 HNRNPK                          1
+ 3 chr16:2768261-2768504    ENSG00000167978.19 SRRM2                           1
+ 4 chr19:38840559-38841612  ENSG00000104824.18 HNRNPL                          1
+ 5 chr20:35632923-35655201  ENSG00000244462.8  RBM12                           1
+ 6 chr12:51780271-51786541  ENSG00000196876.19 SCN8A                          -1
+ 7 chr6:83854161-83864174   ENSG00000065615.14 CYB5R4                          1
+ 8 chr20:63931182-63931464  ENSG00000101152.12 DNAJC5                         -1
+ 9 chr19:38841682-38843841  ENSG00000104824.18 HNRNPL                          1
+10 chr14:23348306-23349271  ENSG00000092096.19 SLC22A17                       -1
+11 chr14:64197104-64202800  ENSG00000054654.20 SYNE2                           1
+12 chr16:24954730-24959910  ENSG00000140750.17 ARHGAP17                        1
+13 chr7:134962934-134965305 ENSG00000122786.20 CALD1                           1
+14 chr2:170842648-170844044 ENSG00000128683.14 GAD1                           -1
+15 chr2:170842654-170844044 ENSG00000128683.14 GAD1                           -1
+16 chr5:55468149-55534571   ENSG00000067113.17 PLPP1                          -1
+17 chr2:152694622-152714549 ENSG00000196504.21 PRPF40A                         1
+18 chr14:58247832-58252123  ENSG00000100567.13 PSMA3                           1
+19 chr17:76735158-76735771  ENSG00000161547.17 SRSF2                           1
+20 chr5:72897151-72900973   ENSG00000083312.19 TNPO1                           1
+# … with 3 more variables: Strand.Human &lt;chr&gt;, Species.Tissues &lt;chr&gt;,
+#   NumberConservedSpeciesTissuePairs &lt;int&gt;</code></pre>
+<p>Let’s make more specific boxplots for these specific genes.</p>
+<pre class="r"><code>PSI %&gt;%
+  dplyr::rename(OriginGenome = Species) %&gt;%
+  inner_join(samples) %&gt;%
+  inner_join(
+    ConservedJuncs.beds
+  ) %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis %in% c(&quot;Brain&quot;, &quot;Liver&quot;, &quot;Heart&quot;)) %&gt;%
+  mutate(Group = str_replace(name, &quot;^(.+?);(.+?)$&quot;, &quot;\\1\n\\2&quot;)) %&gt;%
+  separate(Group, into=c(&quot;gene&quot;, &quot;junc&quot;), sep=&quot;\n&quot;, remove=F) %&gt;%
+  filter(gene %in% c(&quot;DNAJC5&quot;, &quot;SCN8A&quot;, &quot;PRPF40A&quot;)) %&gt;%
+  # filter(gene %in% c(&quot;PRPF40A&quot;)) %&gt;%
+  ggplot(aes(x=Ordinal_stage, y=PSI, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=&#39;loess&#39;, se = F) +
+  # geom_line() +
+  facet_grid(ID_Species~Group, scales=&quot;free&quot;, labeller = label_wrap_gen(10))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-51-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PSI %&gt;%
+  dplyr::rename(OriginGenome = Species) %&gt;%
+  inner_join(samples) %&gt;%
+  inner_join(
+    ConservedJuncs.beds
+  ) %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis %in% c(&quot;Brain&quot;, &quot;Liver&quot;, &quot;Heart&quot;)) %&gt;%
+  mutate(Group = str_replace(name, &quot;^(.+?);(.+?)$&quot;, &quot;\\1\n\\2&quot;)) %&gt;%
+  separate(Group, into=c(&quot;gene&quot;, &quot;junc&quot;), sep=&quot;\n&quot;, remove=F) %&gt;%
+  filter(gene %in% c(&quot;DNAJC5&quot;)) %&gt;%
+  distinct() %&gt;%
+  ggplot(aes(x=Ordinal_stage, y=PSI, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=&#39;loess&#39;, se = F) +
+  # geom_line() +
+  facet_wrap(~ID_Species, scales=&quot;free&quot;, labeller = label_wrap_gen(10))</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-51-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Timepoints &lt;- read_tsv(&quot;../data/Stages_AsIn_CordosoMoreira_Recoded.txt&quot;)
+
+library(ggnewscale)
+
+Spearman.tests$Tissue %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;Brain&quot;      &quot;Cerebellum&quot; &quot;Heart&quot;      &quot;Kidney&quot;     &quot;Liver&quot;     
+[6] &quot;Ovary&quot;      &quot;Testis&quot;    </code></pre>
+<pre class="r"><code>PSI.JuncsOfInterest &lt;- PSI %&gt;%
+  dplyr::rename(OriginGenome = Species) %&gt;%
+  inner_join(samples) %&gt;%
+  inner_join(
+    ConservedJuncs.beds
+  ) %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis %in% c(&quot;Brain&quot;, &quot;Liver&quot;, &quot;Heart&quot;)) %&gt;%
+  mutate(Group = str_replace(name, &quot;^(.+?);(.+?)$&quot;, &quot;\\1\n\\2&quot;)) %&gt;%
+  separate(Group, into=c(&quot;gene&quot;, &quot;junc&quot;), sep=&quot;\n&quot;, remove=F) %&gt;%
+  filter(gene %in% c(&quot;DNAJC5&quot;, &quot;SCN8A&quot;, &quot;PRPF40A&quot;)) %&gt;%
+  distinct() %&gt;%
+  mutate(stop = stop+1) %&gt;%
+  left_join(Spearman.tests %&gt;%
+               dplyr::select(Tissue_ForDevelopementalAnalysis=Tissue, OriginGenome, chrom, start, stop, corr, P, q)) %&gt;%
+  inner_join(Timepoints %&gt;%
+               dplyr::select(ID_Species = Species, Marker, ID_Stage=Stage_From_SampleName)) %&gt;%
+  mutate(ID_Species = factor(ID_Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;)))
+
+GTEX.PSI.JuncsOfInterest &lt;- GTEX.PSI %&gt;%
+  rename(&quot;chrom&quot;=&quot;#Chrom&quot;, &quot;stop&quot;=&quot;end&quot;) %&gt;%
+  mutate(stop = stop -1) %&gt;%
+  dplyr::select(-c(4,5,6)) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;PSI&quot;, -c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;)) %&gt;%
+  inner_join(
+    ConservedJuncs.beds %&gt;%
+      filter(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+      dplyr::select(chrom, start, stop, name, JuncCoord)
+  ) %&gt;%
+  mutate(Group = str_replace(name, &quot;^(.+?);(.+?)$&quot;, &quot;\\1\n\\2&quot;)) %&gt;%
+  separate(Group, into=c(&quot;gene&quot;, &quot;junc&quot;), sep=&quot;\n&quot;, remove=F) %&gt;%
+  filter(gene %in% c(&quot;DNAJC5&quot;, &quot;SCN8A&quot;, &quot;PRPF40A&quot;)) %&gt;%
+  separate(ID, into=c(&quot;Tissue&quot;, &quot;IndID&quot;), sep=&quot;_&quot;) %&gt;%
+  mutate(Tissue = recode(Tissue, &quot;Brain.Cortex&quot;=&quot;Brain&quot;, &quot;Heart.LeftVentricle&quot;=&quot;Heart&quot;)) %&gt;%
+  mutate(Species = &quot;Human, GTEx&quot;)</code></pre>
+<p>Now save some nicer looking plots</p>
+<pre class="r"><code>PlotPSI_AcrossDevelopmentAndSpecies &lt;- function(df){
+  P &lt;- df %&gt;%
+    ggplot(aes(x=Ordinal_stage, y=PSI, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=&#39;loess&#39;, se = F, span=5, degree=3) +
+  geom_text(data = . %&gt;%
+              filter(!is.na(PSI)) %&gt;%
+              arrange(ID_Species, Tissue_ForDevelopementalAnalysis, desc(Ordinal_stage), PSI) %&gt;%
+              distinct(ID_Species, Tissue_ForDevelopementalAnalysis, .keep_all=T) %&gt;%
+              mutate( SigCode = if_else(P&lt;0.05, &quot;*&quot;, NA_character_)),
+            aes(label=SigCode), size=10) +
+  new_scale_color() +
+  geom_vline(data = . %&gt;%
+               filter(!is.na(Marker)) %&gt;%
+               distinct(ID_Species, Marker, Ordinal_stage),
+             aes(xintercept=Ordinal_stage, color=Marker)) +
+  scale_color_brewer(palette = &quot;Dark2&quot;) +
+  facet_wrap(~ID_Species, ncol=1,scales=&quot;free&quot;, labeller = label_wrap_gen(10), strip.position=&#39;right&#39;) +
+  labs(y=&quot;PSI of highlighted junction&quot;, color=&quot;Tissue&quot;, x=&quot;Developmental time&quot;) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position=&quot;none&quot;)
+  return(P)
+}
+
+P.SCN8A &lt;- PSI.JuncsOfInterest %&gt;%
+  filter(gene == &quot;SCN8A&quot;) %&gt;%
+  PlotPSI_AcrossDevelopmentAndSpecies() +
+  scale_y_continuous(breaks=c(0, 25, 50)) +
+  coord_cartesian(ylim=c(0,50))
+P.SCN8A</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-52-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.SCN8A.GTEx &lt;- GTEX.PSI.JuncsOfInterest %&gt;%
+  filter(gene == &quot;SCN8A&quot;) %&gt;%
+  ggplot(aes(x=Tissue, y=PSI, color=Tissue)) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(width=0.5, alpha=0.01) +
+  scale_y_continuous(breaks=c(0,50,100)) +
+  facet_wrap(~Species, strip.position=&#39;right&#39;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(y=NULL)
+P.SCN8A.GTEx</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-53-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/SCN8A.PSI.pdf&quot;, P.SCN8A, height=7, width=2)
+ggsave(&quot;../code/scratch/SCN8A.GTEx.PSI.pdf&quot;, P.SCN8A.GTEx, height=2, width=3.2)
+
+
+PSI.JuncsOfInterest %&gt;% distinct(OriginGenome)</code></pre>
+<pre><code># A tibble: 7 × 1
+  OriginGenome                          
+  &lt;chr&gt;                                 
+1 Chicken_UCSC.galGal6_ensv101          
+2 Human_UCSC.hg38_GencodeComprehensive46
+3 Macaque_UCSC.rheMac10_ensv101         
+4 Mouse_UCSC.mm39_GencodeComprehensive46
+5 Opossum_UCSC.monDom5_ensvUnknown      
+6 Rabbit_UCSC.oryCun2_ensv101           
+7 Rat_UCSC.rn7_RefSeqv108               </code></pre>
+<pre class="r"><code>PSI.JuncsOfInterest %&gt;%
+  distinct(ID_Species, Tissue_ForDevelopementalAnalysis, gene, junc, corr, P, q) %&gt;%
+  arrange(gene, Tissue_ForDevelopementalAnalysis, ID_Species)</code></pre>
+<pre><code># A tibble: 51 × 7
+   ID_Species Tissue_ForDevelopementalAn… gene  junc      corr        P        q
+   &lt;fct&gt;      &lt;chr&gt;                       &lt;chr&gt; &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+ 1 Human      Brain                       DNAJ… chr2… -6.19e-1 7.69e- 7 1.62e- 5
+ 2 Macaque    Brain                       DNAJ… chr2… -5.47e-1 3.82e- 3 8.25e- 2
+ 3 Mouse      Brain                       DNAJ… chr2… -8.73e-1 4.05e-18 4.31e-16
+ 4 Rat        Brain                       DNAJ… chr2… -9.05e-1 4.48e-25 7.03e-23
+ 5 Rabbit     Brain                       DNAJ… chr2… -7.03e-1 1.08e- 9 4.04e- 8
+ 6 Human      Heart                       DNAJ… chr2…  9.16e-2 5.64e- 1 5.37e- 1
+ 7 Macaque    Heart                       DNAJ… chr2…  1.43e-2 9.42e- 1 7.69e- 1
+ 8 Mouse      Heart                       DNAJ… chr2… -3.11e-1 2.09e- 2 1.08e- 1
+ 9 Rat        Heart                       DNAJ… chr2… -2.19e-4 9.99e- 1 6.24e- 1
+10 Rabbit     Heart                       DNAJ… chr2… -7.10e-2 6.03e- 1 6.00e- 1
+# … with 41 more rows</code></pre>
+<p>Same for other genes</p>
+<pre class="r"><code>P.PRPF40A &lt;- PSI.JuncsOfInterest %&gt;%
+  filter(gene %in% c(&quot;PRPF40A&quot;)) %&gt;%
+  PlotPSI_AcrossDevelopmentAndSpecies() +
+  scale_y_continuous(breaks=c(0, 15, 30)) +
+  coord_cartesian(ylim=c(0,30))
+P.PRPF40A</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-54-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.PRPF40A.GTEx &lt;- GTEX.PSI %&gt;%
+  rename(&quot;chrom&quot;=&quot;#Chrom&quot;, &quot;stop&quot;=&quot;end&quot;) %&gt;%
+  mutate(stop = stop -1) %&gt;%
+  dplyr::select(-c(4,5,6)) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;PSI&quot;, -c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;)) %&gt;%
+  inner_join(
+    ConservedJuncs.beds %&gt;%
+      filter(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+      dplyr::select(chrom, start, stop, name, JuncCoord)
+  ) %&gt;%
+  mutate(Group = str_replace(name, &quot;^(.+?);(.+?)$&quot;, &quot;\\1\n\\2&quot;)) %&gt;%
+  separate(Group, into=c(&quot;gene&quot;, &quot;junc&quot;), sep=&quot;\n&quot;, remove=F) %&gt;%
+  filter(gene == &quot;PRPF40A&quot;) %&gt;%
+  separate(ID, into=c(&quot;Tissue&quot;, &quot;IndID&quot;), sep=&quot;_&quot;) %&gt;%
+  mutate(Tissue = recode(Tissue, &quot;Brain.Cortex&quot;=&quot;Brain&quot;, &quot;Heart.LeftVentricle&quot;=&quot;Heart&quot;)) %&gt;%
+  mutate(Species = &quot;Human, GTEx&quot;) %&gt;%
+  ggplot(aes(x=Tissue, y=PSI, color=Tissue)) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(width=0.5, alpha=0.01) +
+  scale_y_continuous(breaks=c(0,25,50), limits = c(0,50)) +
+  facet_wrap(~Species, strip.position=&#39;right&#39;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(y=NULL)
+P.PRPF40A.GTEx</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-54-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/PRPF40A.PSI.pdf&quot;, P.PRPF40A, height=7, width=2)
+ggsave(&quot;../code/scratch/PRPF40A.GTEx.PSI.pdf&quot;, P.PRPF40A.GTEx, height=2, width=3.2)
+
+
+P.DNAJC5 &lt;- PSI.JuncsOfInterest %&gt;%
+  filter(gene %in% c(&quot;DNAJC5&quot;)) %&gt;%
+  PlotPSI_AcrossDevelopmentAndSpecies() +
+  scale_y_continuous(breaks=c(0,20,40)) +
+  coord_cartesian(ylim=c(0,40))
+P.DNAJC5</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-54-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PSI.JuncsOfInterest %&gt;%
+  # filter(gene %in% c(&quot;DNAJC5&quot;)) %&gt;%
+  filter(!is.na(PSI)) %&gt;%
+              arrange(gene, ID_Species, Tissue_ForDevelopementalAnalysis, desc(Ordinal_stage), PSI) %&gt;%
+              distinct(gene, ID_Species, Tissue_ForDevelopementalAnalysis, .keep_all=T) %&gt;%
+              mutate( SigCode = if_else(P&lt;0.05, &quot;*&quot;, NA_character_)) %&gt;%
+  dplyr::select(gene, ID_Species, Tissue_ForDevelopementalAnalysis,SigCode)</code></pre>
+<pre><code># A tibble: 51 × 4
+   gene   ID_Species Tissue_ForDevelopementalAnalysis SigCode
+   &lt;chr&gt;  &lt;fct&gt;      &lt;chr&gt;                            &lt;chr&gt;  
+ 1 DNAJC5 Human      Brain                            *      
+ 2 DNAJC5 Human      Heart                            &lt;NA&gt;   
+ 3 DNAJC5 Human      Liver                            *      
+ 4 DNAJC5 Macaque    Brain                            *      
+ 5 DNAJC5 Macaque    Heart                            &lt;NA&gt;   
+ 6 DNAJC5 Macaque    Liver                            *      
+ 7 DNAJC5 Mouse      Brain                            *      
+ 8 DNAJC5 Mouse      Heart                            *      
+ 9 DNAJC5 Mouse      Liver                            &lt;NA&gt;   
+10 DNAJC5 Rat        Brain                            *      
+# … with 41 more rows</code></pre>
+<pre class="r"><code>P.DNAJC5.GTEx &lt;- GTEX.PSI %&gt;%
+  rename(&quot;chrom&quot;=&quot;#Chrom&quot;, &quot;stop&quot;=&quot;end&quot;) %&gt;%
+  mutate(stop = stop -1) %&gt;%
+  dplyr::select(-c(4,5,6)) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;PSI&quot;, -c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;)) %&gt;%
+  inner_join(
+    ConservedJuncs.beds %&gt;%
+      filter(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+      dplyr::select(chrom, start, stop, name, JuncCoord)
+  ) %&gt;%
+  mutate(Group = str_replace(name, &quot;^(.+?);(.+?)$&quot;, &quot;\\1\n\\2&quot;)) %&gt;%
+  separate(Group, into=c(&quot;gene&quot;, &quot;junc&quot;), sep=&quot;\n&quot;, remove=F) %&gt;%
+  filter(gene == &quot;DNAJC5&quot;) %&gt;%
+  separate(ID, into=c(&quot;Tissue&quot;, &quot;IndID&quot;), sep=&quot;_&quot;) %&gt;%
+  mutate(Tissue = recode(Tissue, &quot;Brain.Cortex&quot;=&quot;Brain&quot;, &quot;Heart.LeftVentricle&quot;=&quot;Heart&quot;)) %&gt;%
+  mutate(Species = &quot;Human, GTEx&quot;) %&gt;%
+  ggplot(aes(x=Tissue, y=PSI, color=Tissue)) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(width=0.5, alpha=0.01) +
+  scale_y_continuous(breaks=c(0,50,100)) +
+  facet_wrap(~Species, strip.position=&#39;right&#39;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(y=NULL)
+P.DNAJC5.GTEx</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-54-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/DNAJC5.PSI.pdf&quot;, P.DNAJC5, height=7, width=2)
+ggsave(&quot;../code/scratch/DNAJC5.GTEx.PSI.pdf&quot;, P.DNAJC5.GTEx, height=2, width=3.2)</code></pre>
+<p>To help with pygenometracks across species, let’s write out juncs in
+cluster for each species</p>
+<pre class="r"><code>Juncs.To.Plot &lt;- ConservedJuncs.beds %&gt;%
+  distinct() %&gt;%
+  separate(name, into=c(&quot;gene&quot;, &quot;Human.junc&quot;), sep=&quot;;&quot;, remove=F) %&gt;%
+  filter(gene %in% c(&quot;DNAJC5&quot;, &quot;SCN8A&quot;, &quot;PRPF40A&quot;)) %&gt;%
+  dplyr::select(-JuncCoord) %&gt;%
+  inner_join(
+    juncs.and.clusters %&gt;% dplyr::rename(juncname = name)
+  ) %&gt;%
+  inner_join(
+    juncs.and.clusters %&gt;%
+      dplyr::select(OriginGenome, cluster, Intron_coord),
+    by=c(&quot;OriginGenome&quot;, &quot;cluster&quot;),
+    suffix=c(&quot;&quot;, &quot;.OthersInCluster&quot;)
+  ) %&gt;%
+  inner_join(
+    JunctionProductivity.AndAnnotated %&gt;%
+      dplyr::select(OriginGenome, Gene_name, Intron_coord.OthersInCluster=Intron_coord, Annot, Coding, UTR)
+  )
+
+# Write out juncs as links files, separated by coding or not
+# may want to later change to PR, UP, or NE
+Juncs.To.Plot %&gt;%
+  # filter(!UTR) %&gt;%
+  dplyr::select(Intron_coord.OthersInCluster, Coding, Annot, OriginGenome) %&gt;%
+  separate(Intron_coord.OthersInCluster, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;), sep=&quot;[:-]&quot;) %&gt;%
+  mutate(chrom2 = chrom, start2=start, stop2=stop, score=1) %&gt;%
+  dplyr::select(chrom, start, start2, chrom2, stop, stop2, score, OriginGenome, Coding, Annot) %&gt;%
+  group_by(Coding, Annot, OriginGenome) %&gt;%
+  group_walk(~ write_tsv(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight/ClusterLinks&quot;,.y$OriginGenome, &quot;.&quot;, .y$Coding, &quot;.&quot;, .y$Annot, &quot;.links&quot;), col_names =F))
+
+
+Juncs.To.Plot %&gt;%
+  filter(Intron_coord == Intron_coord.OthersInCluster) %&gt;%
+  group_by(OriginGenome) %&gt;%
+  group_walk(~ write_tsv(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight/BedRegionsToHighlight.&quot;,.y$OriginGenome, &quot;.bed&quot;), col_names =F))</code></pre>
+<p>Also get one single gene structure to plot for each species</p>
+<pre class="r"><code>genes_bed12 &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ReformatedGTFs/*.bed&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ReformatedGTFs/(.+?).bed&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;)
+
+genes_bed12 %&gt;%
+  inner_join(
+    Juncs.To.Plot %&gt;%
+      dplyr::select(Gene_name, OriginGenome, gene) %&gt;%
+      distinct(),
+    by=c(&quot;V13&quot;=&quot;Gene_name&quot;, &quot;OriginGenome&quot;)
+  ) %&gt;%
+  filter(V16 == &quot;protein_coding&quot;) %&gt;%
+  mutate(Len = V3 - V2) %&gt;%
+  arrange(OriginGenome, desc(Len), desc(V10), desc(V21)) %&gt;%
+  # distinct(OriginGenome, gene, .keep_all=T) %&gt;%
+  distinct(OriginGenome, V13, .keep_all=T) %&gt;%
+  dplyr::select(OriginGenome, V1:V12) %&gt;%
+  group_by(OriginGenome) %&gt;%
+  group_walk(~ write_tsv(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight/HostGenes.&quot;,.y$OriginGenome, &quot;.bed&quot;), col_names =F))</code></pre>
+<p>And now write inis for pygenometracks</p>
+<pre class="r"><code>Juncs.To.Plot %&gt;%
+  # filter(!UTR) %&gt;%
+  dplyr::select(Intron_coord.OthersInCluster, Coding, Annot, OriginGenome) %&gt;%
+  distinct(OriginGenome, Coding, Annot) %&gt;%
+  mutate(JuncColor = case_when(
+    Coding &amp; Annot ~ &quot;#1f78b4&quot;,
+    !Coding &amp; Annot ~ &quot;#e31a1c&quot;,
+    Coding &amp; !Annot ~ &quot;#a6cee3&quot;,
+    !Coding &amp; !Annot ~ &quot;#fb9a99&quot;
+  )) %&gt;%
+  mutate(JuncTracks = str_glue(
+&quot;
+[{Coding}_{Annot}]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight/ClusterLinks{OriginGenome}.{Coding}.{Annot}.links
+height = 1
+overlay_previous = yes
+links_type = arcs
+color = {JuncColor}
+# alpha = 1
+# if line_width is not given, the score is used to set the line width
+# using the following formula (0.5 * square root(score)
+line_width = 1.5
+# options for line_style are &#39;solid&#39;, &#39;dashed&#39;, &#39;dotted&#39;, and &#39;dashdot&#39;
+line_style = solid
+file_type = links
+&quot;
+  )) %&gt;%
+  group_by(OriginGenome) %&gt;%
+  summarise(JuncTracksCollapsed = paste0(JuncTracks,collapse = &#39;\n\n&#39;)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Ini = str_glue(
+&quot;
+[spacer]
+height = 1
+
+{JuncTracksCollapsed}
+    
+[Genes]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight/HostGenes.{OriginGenome}.bed
+height = 1
+color = darkblue
+labels = false
+fontsize = 10
+#style = UCSC
+style = flybase
+#style = tssarrow
+# if you use UCSC style, you can set the relative distance between 2 arrows on introns
+# default is 2
+#arrow_interval = 2
+# if you use tssarrow style, you can choose the length of the arrow in bp
+# (default is 4% of the plotted region)
+#arrow_length = 5000
+# if you use flybase or tssarrow style, you can choose the color of non-coding intervals:
+color_utr = darkblue
+height_utr = 0.5
+file_type = bed
+    
+
+[JuncOfInterest]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight/BedRegionsToHighlight.{OriginGenome}.bed
+type = vhighlight
+&quot;)) %&gt;%
+  mutate(Ini= if_else(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;, paste(&quot;[PhyloP]
+file = ../../20211209_JingxinRNAseq/code/PhyloP/SourceTrack/PhyloP.hg38.bw
+title = PhyloP
+height = 1
+color = #666666
+min_value = 0
+#max_value = auto
+number_of_bins = 700
+nans_to_zeros = true
+summary_method = mean
+show_data_range = true
+file_type = bigwig
+&quot;, Ini, sep=&quot;\n&quot;), as.character(Ini))) %&gt;%
+  dplyr::select(OriginGenome, Ini) %&gt;%
+  group_by(OriginGenome) %&gt;%
+  group_walk(~ write.table(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight/Tracks.&quot;,.y$OriginGenome, &quot;.ini&quot;),quote=F, sep=&quot;\t&quot;, row.names=F, col.names = F))
+
+Juncs.To.Plot %&gt;%
+  filter(Intron_coord.OthersInCluster == Intron_coord) %&gt;%
+  distinct() %&gt;%
+  dplyr::select(chrom, start, stop, gene, strand, OriginGenome) %&gt;%
+  mutate(Orientation = if_else(strand == &quot;+&quot;, &quot;&quot;, &quot;--decreasingXAxis&quot;)) %&gt;%
+  mutate(Cmd = str_glue(&quot;pyGenomeTracks --tracks ../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight/Tracks.{OriginGenome}.ini --region {chrom}:{start-2000}-{stop+2000} {Orientation} --outFileName ../code/scratch/{gene}_{OriginGenome}.pdf&quot;)) %&gt;%
+  arrange(gene, OriginGenome) %&gt;%
+  dplyr::select(Cmd) %&gt;%
+  write_tsv(&quot;../code/scratch/MakePlots.sh&quot;, col_names = F)
+
+Juncs.To.Plot %&gt;%
+  filter(Intron_coord.OthersInCluster == Intron_coord) %&gt;%
+  distinct() %&gt;%
+  filter(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+  mutate(start = start - 2000, stop = stop + 2000) %&gt;%
+  dplyr::select(chrom, start, stop) %&gt;%
+  write_tsv(&quot;../code/scratch/Human.PlotRegions.bed&quot;, col_names = F)</code></pre>
+<p>Ok, those look nice. I forgot to plot expression. let’s add that for
+those three genes.</p>
+<pre class="r"><code>pivot_longer_GTEx &lt;- function(df){
+    pivot_longer(df, names_to = &quot;sample&quot;, values_to = &quot;TPM&quot;, -c(1:3)) %&gt;%
+      return()
+}
+
+GTEx.TPMs &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/GTEx/TPMs/*.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/GTEx/TPMs/(.+?).tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  lapply(pivot_longer_GTEx) %&gt;%
+  bind_rows(.id=&quot;GTExTissue&quot;) %&gt;%
+  filter(Description %in% c(&quot;DNAJC5&quot;, &quot;SCN8A&quot;, &quot;PRPF40A&quot;))
+
+
+  
+GTEx.TPMs %&gt;%
+  ggplot(aes(x=GTExTissue, y=TPM, color=GTExTissue)) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(width=0.5, alpha=0.01) +
+  scale_y_continuous(trans=&#39;log10&#39;) +
+  facet_wrap(~Description, scales=&quot;free&quot;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(y=NULL)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-58-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>GenesToKeep &lt;- ConservedJuncs.beds %&gt;%
+  distinct() %&gt;%
+  separate(name, into=c(&quot;gene&quot;, &quot;Human.junc&quot;), sep=&quot;;&quot;, remove=F) %&gt;%
+  filter(gene %in% c(&quot;DNAJC5&quot;, &quot;SCN8A&quot;, &quot;PRPF40A&quot;)) %&gt;%
+  inner_join(
+    JunctionProductivity %&gt;%
+      dplyr::select(OriginGenome, Gene_name, JuncCoord=Intron_coord)
+  )
+
+Cordoso.TPMs &lt;-
+  Sys.glob(&quot;../code/MazinLeafcutterAnalysis/Expression/*.log2tpm.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/Expression/(.+?).log2tpm.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  lapply(function(x) filter(x, Geneid %in% GenesToKeep$Gene_name)) %&gt;%
+  lapply(function(x) pivot_longer(x, names_to = &quot;ID&quot;, values_to = &quot;log2TPM&quot;, -Geneid)) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  inner_join(
+    GenesToKeep %&gt;%
+      dplyr::select(OriginGenome, Geneid = Gene_name, gene)
+  ) %&gt;%
+  inner_join(samples) %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis %in% c(&quot;Brain&quot;, &quot;Liver&quot;, &quot;Heart&quot;)) %&gt;%
+  distinct() %&gt;%
+  inner_join(Timepoints %&gt;%
+               dplyr::select(ID_Species = Species, Marker, ID_Stage=Stage_From_SampleName)) %&gt;%
+  mutate(ID_Species = factor(ID_Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  group_by(Species, Geneid) %&gt;%
+  mutate(MeanExpression = mean(log2TPM, na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  group_by(Species, gene) %&gt;%
+  filter(MeanExpression == max(MeanExpression)) %&gt;%
+  ungroup() %&gt;%
+  left_join(Spearman.tests.expression %&gt;%
+              dplyr::select(OriginGenome, Geneid, corr, P, q, Tissue_ForDevelopementalAnalysis
+=Tissue)) %&gt;%
+  mutate(TPM = 2**log2TPM)
+
+Cordoso.TPMs %&gt;%
+ggplot(aes(x=Ordinal_stage, y=TPM, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=&#39;loess&#39;, se = F, span=5, degree=3) +
+  new_scale_color() +
+  geom_vline(data = . %&gt;%
+               filter(!is.na(Marker)) %&gt;%
+               distinct(ID_Species, Marker, Ordinal_stage),
+             aes(xintercept=Ordinal_stage, color=Marker)) +
+  scale_color_brewer(palette = &quot;Dark2&quot;) +
+  scale_y_continuous(trans=&#39;log10&#39;) +
+  facet_grid(gene~ID_Species, scales=&quot;free&quot;) +
+  # facet_wrap(~ID_Species, ncol=1,scales=&quot;free&quot;, labeller = label_wrap_gen(10), strip.position=&#39;right&#39;) +
+  labs(y=&quot;log2TPM&quot;, color=&quot;Tissue&quot;, x=&quot;Developmental time&quot;) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position=&quot;none&quot;)</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-58-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(ggrepel)
+
+
+PlotTPM_AcrossDevelopmentAndSpecies &lt;- function(df){
+  P &lt;- df %&gt;%
+    ggplot(aes(x=Ordinal_stage, y=TPM, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=&#39;loess&#39;, se = F, span=5, degree=3) +
+  scale_y_continuous(trans=&#39;log10&#39;) +
+  geom_text_repel(data = . %&gt;%
+              filter(!is.na(P)) %&gt;%
+              group_by(ID_Species, Tissue_ForDevelopementalAnalysis, P) %&gt;%
+              filter(Ordinal_stage == max(Ordinal_stage)) %&gt;%
+              summarise(medianTPM = median(TPM, na.rm=T)) %&gt;%
+              ungroup() %&gt;%
+              mutate( SigCode = if_else(P&lt;0.05, &quot;*&quot;, NA_character_)) %&gt;%
+              filter(!is.na(SigCode)),
+            aes(label=SigCode, y=medianTPM), x=Inf, direction=&quot;y&quot;, nudge_x=1, size=8) +
+  new_scale_color() +
+  geom_vline(data = . %&gt;%
+               filter(!is.na(Marker)) %&gt;%
+               distinct(ID_Species, Marker, Ordinal_stage),
+             aes(xintercept=Ordinal_stage, color=Marker)) +
+  scale_color_brewer(palette = &quot;Dark2&quot;) +
+  facet_wrap(~ID_Species, ncol=1,scales=&quot;free&quot;, labeller = label_wrap_gen(10), strip.position=&#39;right&#39;) +
+  labs(y=&quot;TPM of host gene&quot;, color=&quot;Tissue&quot;, x=&quot;Developmental time&quot;) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position=&quot;none&quot;)
+  return(P)
+}
+
+
+Cordoso.TPMs %&gt;%
+  filter(gene == &quot;SCN8A&quot;) %&gt;%
+  PlotTPM_AcrossDevelopmentAndSpecies</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-58-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/SCN8A.TPM.pdf&quot;, height=7, width=2)
+
+
+Cordoso.TPMs %&gt;%
+  filter(gene == &quot;PRPF40A&quot;) %&gt;%
+  PlotTPM_AcrossDevelopmentAndSpecies</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-58-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/PRPF40A.TPM.pdf&quot;, height=7, width=2)
+
+Cordoso.TPMs %&gt;%
+  filter(gene == &quot;DNAJC5&quot;) %&gt;%
+  PlotTPM_AcrossDevelopmentAndSpecies</code></pre>
+<p><img src="figure/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd/unnamed-chunk-58-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/DNAJC5.TPM.pdf&quot;, height=7, width=2)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ggnewscale_0.4.8  GGally_2.1.2      ggbreak_0.1.1     qvalue_2.28.0    
+ [5] ggrepel_0.9.1     data.table_1.14.2 forcats_0.5.1     stringr_1.4.0    
+ [9] dplyr_1.0.9       purrr_0.3.4       readr_2.1.2       tidyr_1.2.0      
+[13] tibble_3.1.7      ggplot2_3.3.6     tidyverse_1.3.1  
+
+loaded via a namespace (and not attached):
+ [1] nlme_3.1-157       fs_1.5.2           lubridate_1.8.0    bit64_4.0.5       
+ [5] RColorBrewer_1.1-3 httr_1.4.3         rprojroot_2.0.3    tools_4.2.0       
+ [9] backports_1.4.1    bslib_0.3.1        utf8_1.2.2         R6_2.5.1          
+[13] mgcv_1.8-40        DBI_1.1.2          colorspace_2.0-3   withr_2.5.0       
+[17] tidyselect_1.1.2   bit_4.0.4          compiler_4.2.0     git2r_0.30.1      
+[21] textshaping_0.3.6  cli_3.6.2          rvest_1.0.2        xml2_1.3.3        
+[25] labeling_0.4.2     sass_0.4.1         scales_1.3.0       systemfonts_1.0.4 
+[29] digest_0.6.29      yulab.utils_0.0.6  rmarkdown_2.14     R.utils_2.11.0    
+[33] pkgconfig_2.0.3    htmltools_0.5.2    dbplyr_2.1.1       fastmap_1.1.0     
+[37] highr_0.9          rlang_1.0.2        readxl_1.4.0       rstudioapi_0.13   
+[41] gridGraphics_0.5-1 jquerylib_0.1.4    farver_2.1.0       generics_0.1.2    
+[45] jsonlite_1.8.0     vroom_1.5.7        R.oo_1.24.0        magrittr_2.0.3    
+[49] ggplotify_0.1.0    Matrix_1.5-3       patchwork_1.1.1    Rcpp_1.0.12       
+[53] munsell_0.5.0      fansi_1.0.3        lifecycle_1.0.1    R.methodsS3_1.8.1 
+[57] stringi_1.7.6      yaml_2.3.5         plyr_1.8.7         grid_4.2.0        
+[61] parallel_4.2.0     promises_1.2.0.1   crayon_1.5.1       lattice_0.20-45   
+[65] haven_2.5.0        splines_4.2.0      hms_1.1.1          knitr_1.39        
+[69] pillar_1.7.0       reshape2_1.4.4     reprex_2.0.1       glue_1.6.2        
+[73] evaluate_0.15      ggfun_0.0.9        modelr_0.1.8       vctrs_0.4.1       
+[77] tzdb_0.3.0         httpuv_1.6.5       cellranger_1.1.0   gtable_0.3.0      
+[81] reshape_0.8.9      assertthat_0.2.1   xfun_0.30          broom_0.8.0       
+[85] later_1.3.0        ragg_1.2.5         aplot_0.1.10       workflowr_1.7.0   
+[89] ellipsis_0.3.2    </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

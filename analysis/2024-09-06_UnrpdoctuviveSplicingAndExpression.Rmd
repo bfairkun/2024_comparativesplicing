@@ -1,0 +1,303 @@
+---
+title: "2024-09-06_UnrpdoctuviveSplicingAndExpression"
+output: html_document
+date: '2024-09-06'
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+I previously showed from a reanalysis of Mazin's splicing quantifications that there is the expected correlation between unproductive splicing and expression. I have reprocessed things purely with leafcutter2 approach for splicing, from raw data, and now I want to repeat finding those trends, both both species-specific, and conserved devAS juncs.
+
+```{r}
+library(tidyverse)
+library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+Get devAS juncs, genes, and productivity classifications...
+
+```{r}
+JunctionProductivity <- JuncAnnotations <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.AllObserved._junction_classifications.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).AllObserved._junction_classifications.txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Species") %>%
+  mutate(Species.short = str_replace(Species, "^(.+?)_.+", "\\1"))
+```
+
+Because of a bug in the classify juncs script at time these files were made, I have to fix the junc coordiantes to propoerly join...
+
+```{r}
+# JunctionProductivity.fixed <- JunctionProductivity %>%
+#   # head() %>%
+#   separate(Intron_coord, into=c("chrom", "start", "stop"), sep='[-:]', convert=T) %>%
+#   mutate(Intron_coord = case_when(
+#     Annot ~ str_glue("{chrom}:{start}-{stop-1}"),
+#     TRUE ~ str_glue("{chrom}:{start}-{stop}")
+#   )) %>%
+#   dplyr::select(-chrom, -start, -stop)
+
+Spearman.tests <- Sys.glob("../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/*.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/(.+?).tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome") %>%
+  dplyr::rename(chrom=start, start=stop, stop=chrom) %>%
+  mutate(Intron_coord = str_glue("{chrom}:{start}-{stop}"))
+
+Spearman.tests.expression <- Sys.glob("../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/*.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/(.+?).tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome")
+
+
+
+```
+
+Before we join tables, let's quickly eyeball p val distribution for spearman tests
+
+```{r}
+Spearman.tests %>%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_grid(Tissue~Species)
+
+Spearman.tests.expression %>%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_grid(Tissue~Species)
+```
+
+Ok, good enough I suppose.
+
+```{r}
+Spearman.tests.WithProductivity <- Spearman.tests %>%
+  inner_join(
+    JunctionProductivity,
+    by=c("OriginGenome"="Species", "Intron_coord")
+  ) %>%
+  inner_join(
+    Spearman.tests.expression,
+    by=c("Tissue", "OriginGenome", "Gene_name"="Geneid", "Species"),
+    suffix=c(".Splicing", ".Expression")
+  )
+
+Spearman.tests.WithProductivity %>%
+  count(Species)
+```
+
+
+```{r}
+Spearman.tests.WithProductivity %>%
+  filter(q.Splicing < 0.01 & !Coding) %>%
+  ggplot(aes(x=corr.Splicing, y=corr.Expression)) +
+  geom_hex(bins=100) +
+  scale_fill_viridis_c() +
+  facet_grid(Tissue~Species)
+
+Spearman.tests.WithProductivity %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  filter(q.Splicing < 0.01) %>%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.Splicing)==sign(corr.Expression)) %>%
+  count(Tissue, Species, Coding, SplicingAndExpresionCoefSameSign) %>%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %>%
+  group_by(Tissue, Species, Coding) %>%
+  mutate(N = sum(n)) %>%
+  ungroup() %>%
+  mutate(Percent = n/N*100) %>%
+  filter(SplicingAndExpresionCoefSameSign) %>%
+  ggplot(aes(x=Species, y=Tissue, fill=Percent)) +
+  geom_raster() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_wrap(~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("fraction events where splicing coef same sign as expression coef, among signif splicing coefs", 35))
+```
+Ok, that makes sense, let's also look at annotated vs unannotated
+
+```{r}
+Spearman.tests.WithProductivity %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Annot = if_else(Annot, "Annotated", "Unannotated")) %>%
+  filter(q.Splicing < 0.01) %>%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.Splicing)==sign(corr.Expression)) %>%
+  count(Tissue, Species, Coding, Annot, SplicingAndExpresionCoefSameSign) %>%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %>%
+  group_by(Tissue, Species, Coding, Annot) %>%
+  mutate(N = sum(n)) %>%
+  ungroup() %>%
+  mutate(Percent = n/N*100) %>%
+  filter(SplicingAndExpresionCoefSameSign) %>%
+  ggplot(aes(x=Species, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Coding~Annot) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("fraction events where splicing coef same sign as expression coef, among signif splicing coefs", 35))
+
+Spearman.tests.WithProductivity %>%
+  filter(Annot)
+```
+
+Hm, maybe this classifier is overly classifying things as productive, when in actuality most of those unannotated juncs that are classified as productive are unproductive... Maybe I would get more sensible results if I just subset the events with a reasonably high delta PSI, since the juncs that actually effect gene expression would probably only be the ones with a large delta PSI.
+
+
+Maybe we can start by just using one representative junc per cluster for conserved events...
+
+```{r}
+Conserved.dev.AS <- read_tsv("../output/Conserved.devAS.leafcutter.tsv.gz")
+
+
+
+Spearman.tests.WithProductivity %>%
+  filter(q.Splicing < 0.01) %>%
+  inner_join(Conserved.dev.AS %>%
+               filter(IsRepresentativeJuncForCluster) %>%
+               dplyr::select(junc, OriginGenome) %>%
+               distinct()) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Annot = if_else(Annot, "Annotated", "Unannotated")) %>%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.Splicing)==sign(corr.Expression)) %>%
+  count(Tissue, Species, Coding, Annot, SplicingAndExpresionCoefSameSign) %>%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %>%
+  group_by(Tissue, Species, Coding, Annot) %>%
+  mutate(N = sum(n)) %>%
+  ungroup() %>%
+  mutate(Percent = n/N*100) %>%
+  filter(SplicingAndExpresionCoefSameSign) %>%
+  ggplot(aes(x=Species, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Coding~Annot) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("fraction events where splicing coef same sign as expression coef, among signif splicing coefs", 35))
+```
+
+Some code from Chao to get GTEx differential splicing results...
+
+```{r}
+get_DS_DGE_table <- function(rds, contrast, FDR = 1e-5, selection = 'all', plot=FALSE) {
+    # rds: a single rds file, previousp rocessed in "../../SpliFi/prepdata.smk"
+    # contrast: a string, the contrast name
+    # return a joined table (on gene_names) of differential spliced junctions and diffenetially expressed genes
+    data <- readRDS(rds)
+    ds <- data$ds
+    dge <- data$dge
+    dge_dsc <- data$dge_dsc
+
+    joined_dt <- inner_join(
+        x = ds[abs(deltapsi) > .1 & `p.adjust` < FDR & ctype %in% c('PR', 'PR,UP'), 
+        .(gene_id, gene_name, intron, cluster, itype, ctype, deltapsi)],
+        y = dge[, .(gene_id, g_l2fc = log2FoldChange, g_z = stat, g_l2fcSE = lfcSE)],
+        by = 'gene_id'
+    )
+
+    if (selection == 'maxClu') {
+        joined_dt  <- joined_dt[
+            , .(intron, deltapsi, g_l2fc, g_z, g_l2fcSE, rk = rank(-abs(deltapsi), ties.method = "random")), 
+            by = .(gene_id, gene_name, cluster, itype, ctype)
+            ][rk == 1, -c('rk')]
+    } else if (selection == 'maxGene') {
+        joined_dt <- joined_dt[
+            , .(intron, deltapsi, g_l2fc, g_z, g_l2fcSE, rk = rank(-abs(deltapsi), ties.method = "random")), 
+            by = .(gene_id, gene_name, itype)
+            ][rk == 1, -c('rk')]
+    }
+
+    return(joined_dt)
+}
+
+
+example.table <- get_DS_DGE_table("/project/yangili1/cdai/SpliFi/data/ds_v_dge/Adipose-Visceral_Omentum__v_Brain-Cerebellum_data.rds")
+
+```
+
+Ok, now let's get all tables... 
+
+```{r}
+
+All.Gtex.Contrasts <- Sys.glob("/project/yangili1/cdai/SpliFi/data/ds_v_dge/*_v_*.rds") %>%
+  setNames(str_replace(., "/project/yangili1/cdai/SpliFi/data/ds_v_dge/(.+?)_v_(.+?)_data.rds", "\\1;\\2")) %>%
+  lapply(get_DS_DGE_table) %>%
+  bind_rows(.id="Contrast") %>%
+  separate(intron, into=c("Hg38_chrom", "Hg38_start", "Hg38_end", "GTExAnalysisClusterName"), sep=":", convert=T, remove=F) %>%
+  separate(Contrast, into=c("GTEx_Tissue1", "GTex_Tissu2"), sep=";")
+
+All.Gtex.Contrasts %>%
+  count(GTEx_Tissue1)
+
+All.Gtex.Contrasts %>%
+  count(GTex_Tissu2)
+
+All.Gtex.Contrasts %>%
+  count(GTEx_Tissue1, GTex_Tissu2) %>%
+  ggplot(aes(x=GTEx_Tissue1, y=GTex_Tissu2, fill=n)) +
+  geom_tile() +
+  Rotate_x_labels
+
+Conserved.dev.AS %>%
+  filter(IsRepresentativeJuncForCluster) %>%
+  inner_join(
+    All.Gtex.Contrasts %>%
+    distinct(intron, .keep_all=T) %>%
+    dplyr::select(-cluster)
+  ) %>%
+  distinct(Junc.Human, .keep_all=T) %>%
+  count(Annot.Human, Coding.Human)
+
+Conserved.dev.AS %>%
+  filter(Group == "Unproductive") %>%
+  count(Tissue)
+
+Cordoso_ReleventGTExTissues <- c("Cerebellum"="Brain-Cerebellum", "Brain"="Brain-Cortex", "Heart"="Heart-LeftVentricle", "Kidney"="Kidney-Cortex", "Liver"="Liver", "Ovary"="Ovary", "Testis"="Testis")
+
+All.Gtex.Contrasts %>%
+  filter(GTEx_Tissue1 %in% Cordoso_ReleventGTExTissues & GTex_Tissu2 %in% Cordoso_ReleventGTExTissues) %>%
+  filter(itype == "UP") %>%
+  ggplot(aes(x=deltapsi, y=g_l2fc)) +
+  geom_point(alpha=0.1) +
+  facet_wrap(GTEx_Tissue1~GTex_Tissu2)
+
+# All.Gtex.Contrasts %>%
+#   filter(GTEx_Tissue1 == "Brain-Cortex" & GTex_Tissu2 == "Testis") %>%
+#   filter(itype == "UP") %>%
+#   filter(!sign(deltapsi)==sign(g_l2fc)) %>%
+#   inner_join(
+#     Conserved.dev.AS %>%
+#       filter(IsRepresentativeJuncForCluster) %>%
+#       filter(!Coding.OtherSpecies) %>%
+#       filter()
+#   )
+
+
+```
+
+
+```{r}
+Conserved.dev.AS %>%
+  filter(Group == "Unproductive") %>%
+  count(Tissue)
+
+
+```
+
+```{r, eval=F}
+All.Gtex.Contrasts %>%
+  filter(GTEx_Tissue1 %in% Cordoso_ReleventGTExTissues & GTex_Tissu2 %in% Cordoso_ReleventGTExTissues) %>%
+  dplyr::rename(GTex_Tissue2 = GTex_Tissu2) %>%
+  write_tsv("../output/GTEx_DS_DE_FromChao_CordosoTissuePairs.tsv.gz")
+```
+

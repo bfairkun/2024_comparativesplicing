@@ -1,0 +1,103 @@
+---
+title: "2024-09-23_FixMouseEnsemblBed12ToGtf"
+output: html_document
+date: '2024-09-23'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Intro
+
+for some reasons UCSC mouse ensembl has transript ids in place of gene_ids. I can fix this with the help of this R script and my python script that makes a gtf from a bed12 with extra columns for transcript_name, gene_name, transcript_type, and gene_type.
+
+```{r}
+library(tidyverse)
+library(biomaRt)
+
+bed12 <- read_tsv("../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/Ensembl/Mouse_UCSC.mm39_GencodeComprehensive46.bed", col_names = F, col_types = cols(.default = "c")) %>%
+  dplyr::select(X1:X16)
+
+transcripts <- read_tsv("../output/Ensembl.TranscriptInfo.tsv.gz") %>%
+  filter(Species == "Mouse")
+
+transcripts %>%
+  distinct(ensembl_transcript_id_version)
+
+bed12 %>%
+  inner_join(transcripts,
+             by=c("X13"="ensembl_transcript_id_version")) %>%
+  add_count(X4) %>%
+  filter(n > 1)
+  
+bed12 %>%
+  anti_join(transcripts,
+             by=c("X13"="ensembl_transcript_id_version")) 
+ 
+anti_join(transcripts,bed12,
+             by=c("ensembl_transcript_id_version"="X13")) 
+
+```
+
+
+let's try a few different ensembl archives till i get the ones with perfect join
+
+```{r}
+listEnsemblArchives()
+
+
+# Mouse.mart <- useMart(
+#     biomart = "ENSEMBL_MART_ENSEMBL",
+#     dataset = "mmusculus_gene_ensembl",
+#     host = "https://may2024.archive.ensembl.org"
+# )
+# 
+# Mouse.mart <- useMart(
+#     biomart = "ENSEMBL_MART_ENSEMBL",
+#     dataset = "mmusculus_gene_ensembl",
+#     host = "https://aug2020.archive.ensembl.org"
+# )
+
+
+Mouse.mart <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "mmusculus_gene_ensembl",
+    host = "https://jul2023.archive.ensembl.org"
+)
+
+
+
+Get_transcript.info <- function(Mart){
+  attributes <- c(
+    "ensembl_gene_id",      # Gene ID
+    "ensembl_gene_id_version",
+    "gene_biotype",         # Gene biotype
+    "ensembl_transcript_id", # Transcript ID
+    "ensembl_transcript_id_version",
+    "transcript_biotype",    # Transcript type/biotype
+    "external_gene_name"
+    )
+   getBM(
+    attributes = attributes,
+    mart = Mart
+) %>%
+  as_tibble() %>%
+  return()
+}
+
+Mouse.TranscriptsfromBiomart <- Get_transcript.info(Mouse.mart)
+
+Mouse.TranscriptsfromBiomart %>% nrow()
+```
+
+Ok so july 2023 ensembl (v110) is what UCSC seems to be using
+
+```{r}
+bed12 %>%
+  inner_join(Mouse.TranscriptsfromBiomart,
+             by=c("X13"="ensembl_transcript_id_version")) %>%
+  dplyr::select(X1:X12, X13, ensembl_gene_id_version, transcript_biotype, gene_biotype) %>%
+  write_tsv("../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/Ensembl/Mouse_UCSC.mm39_GencodeComprehensive46.Fixed.bed", col_names = F)
+```
+

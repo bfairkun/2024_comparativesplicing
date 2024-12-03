@@ -1,0 +1,147 @@
+---
+title: "2024-11-12_SpliceAI_test"
+output: html_document
+date: '2024-11-12'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+```{r}
+library(tidyverse)
+library(ggrepel)
+
+wdrr26.dat <- read_csv("../code/scratch/wdr26.region.spliceai.tsv", col_names = c("Pos", "Something", "AcceptorProb", "DonorProb")) %>%
+  mutate(Source = "wdr26_construct")
+
+lamtor.dat <- read_csv("../code/scratch/lamtor2.region.spliceai.tsv", col_names = c("Pos", "Something", "AcceptorProb", "DonorProb")) %>%
+  mutate(Source = "lamtor_construct")
+
+bind_rows(wdrr26.dat, lamtor.dat) %>%
+  pivot_longer(names_to = "SpliceSiteType", values_to ="Prob", cols=c("AcceptorProb", "DonorProb")) %>%
+  ggplot(aes(x=Pos, y=Prob, color=SpliceSiteType)) +
+  geom_point() +
+  geom_text_repel( data = . %>%
+                     filter(Prob > 0.03),
+                   aes(label=Pos)) +
+  facet_wrap(~Source, scales="free") +
+  coord_cartesian(ylim=c(0, 1)) +
+  labs(x="Position, relative to TSS (CGTTTAGTGA...)",
+       caption="134-268 is chimeric intron included in both constructs")
+
+
+```
+I made the input by quickly replacing the input sequence in the python script in the [spliceAI readme](https://github.com/Illumina/SpliceAI)... I have since wrote a quick wrapper script to do this for multiple inputs and write output to a single file... I did that once, let's read in that output and remake the plot...
+
+```{r}
+dat <- read_tsv("/project2/yangili1/bjf79/sm_splicingmodulators/code/scratch/testspliceai.tsv" )
+
+dat %>%
+  mutate(sequence = gsub('\\B', ',', sequence, perl = T)) %>%
+  separate_rows(c("sequence", "donor_probabilities", "acceptor_probabilities"), sep=",", convert=T) %>%
+  group_by(name) %>%
+  mutate(Pos = row_number()) %>%
+  ungroup() %>%
+  pivot_longer(names_to = "SpliceSiteType", values_to ="Prob", cols=c("acceptor_probabilities", "donor_probabilities")) %>%
+  ggplot(aes(x=Pos, y=Prob, color=SpliceSiteType)) +
+  geom_point() +
+  geom_text_repel( data = . %>%
+                     filter(Prob > 0.03),
+                   aes(label=Pos)) +
+  facet_wrap(~name, scales="free") +
+  coord_cartesian(ylim=c(0, 1)) +
+  labs(x="Position, relative to TSS (CGTTTAGTGA...)",
+       caption="134-268 is chimeric intron included in both constructs")
+```
+Ok, now let's do this but test a sliding window of 6bp NNNNNN substitutions to find any potential ESEs.
+
+```{r}
+SlidingWindowMutagenesis.dat <- read_tsv("/project2/yangili1/bjf79/sm_splicingmodulators/code/scratch/testspliceai.mutatgenesis.out.tsv") %>%
+  mutate(sequence = gsub('\\B', ',', sequence, perl = T)) %>%
+  mutate(PosOfN = as.numeric(str_replace(name, ".+_(.+)$", "\\1"))) %>%
+  mutate(OriginSeq = str_replace(name, "^(.+?)_.+$", "\\1")) %>%
+  separate_rows(c("sequence", "donor_probabilities", "acceptor_probabilities"), sep=",", convert=T) %>%
+  group_by(name) %>%
+  mutate(Pos = row_number()) %>%
+  ungroup() %>%
+  mutate(MaxProb = pmax(donor_probabilities, acceptor_probabilities))
+
+Wt.sequences <- dat %>%
+  mutate(sequence = str_to_upper(sequence)) %>%
+  mutate(sequence = gsub('\\B', ',', sequence, perl = T)) %>%
+  separate_rows(c("sequence", "donor_probabilities", "acceptor_probabilities"), sep=",", convert=T) %>%
+  group_by(name) %>%
+  mutate(Pos = row_number()) %>%
+  ungroup() %>%
+  dplyr::select(name, sequence, Pos)
+
+SlidingWindowMutagenesis.dat %>%
+  filter(OriginSeq == "lamtor2") %>%
+  mutate(MaxProb = if_else(sequence == 'N', NA_real_, MaxProb)) %>%
+  ggplot(aes(x=Pos, y=PosOfN)) +
+  geom_raster(aes( fill=MaxProb)) +
+  scale_fill_viridis_c() +
+  facet_wrap(~OriginSeq) +
+  scale_x_continuous(expand=c(0,0)) +
+  geom_text(data = Wt.sequences %>%
+              filter(name=="lamtor2"),
+            aes(label=sequence, color=sequence),
+            y=295, size=1) +
+  coord_cartesian(xlim=c(300, 500), ylim=c(300,500)) +
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(x="Position, relative to TSS (CGTTTAGTGA...)", y="In silico mutants", fill="Splice site prob")
+
+ggsave("../code/scratch/lamtor2.slidingwindowdeletions.spliceai.heatmap.pdf")
+
+SlidingWindowMutagenesis.dat %>%
+  filter(OriginSeq == "wdr26") %>%
+  mutate(MaxProb = if_else(sequence == 'N', NA_real_, MaxProb)) %>%
+  ggplot(aes(x=Pos, y=PosOfN)) +
+  geom_raster(aes(fill=MaxProb)) +
+  scale_fill_viridis_c() +
+  facet_wrap(~OriginSeq) +
+  scale_x_continuous(expand=c(0,0)) +
+  geom_text(data = Wt.sequences %>%
+              filter(name=="wdr26"),
+            aes(label=sequence, color=sequence),
+            y=295, size=1) +
+  coord_cartesian(xlim=c(300, 605), ylim=c(300, 592)) +
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  labs(x="Position, relative to TSS (CGTTTAGTGA...)", y="In silico mutants", fill="Splice site prob")
+
+ggsave("../code/scratch/wdr26.slidingwindowdeletions.spliceai.heatmap.pdf")
+
+
+  
+```
+
+Ok, after creating a few new versions that should reduce splicing of the unintended intron, let's see the splice ai results
+
+```{r}
+NewSeqs <- read_tsv("/project2/yangili1/bjf79/sm_splicingmodulators/code/scratch/testspliceai.output_3newversionstsv") %>%
+  mutate(sequence = gsub('\\B', ',', sequence, perl = T)) %>%
+  separate_rows(c("sequence", "donor_probabilities", "acceptor_probabilities"), sep=",", convert=T) %>%
+  group_by(name) %>%
+  mutate(Pos = row_number()) %>%
+  ungroup()
+
+NewSeqs %>%
+  pivot_longer(names_to = "SpliceSiteType", values_to ="Prob", cols=c("acceptor_probabilities", "donor_probabilities")) %>%
+  ggplot(aes(x=Pos, y=Prob, color=SpliceSiteType)) +
+  geom_point() +
+  geom_text_repel( data = . %>%
+                     filter(Prob > 0.03),
+                   aes(label=Pos)) +
+  facet_wrap(~name, scales="free") +
+  coord_cartesian(ylim=c(0, 1)) +
+  labs(x="Position, relative to TSS (CGTTTAGTGA...)",
+       caption="134-268 is chimeric intron included in both constructs")
+
+ggsave("../code/scratch/new_versions.pdf", height=7, width=10)
+```
+

@@ -1,0 +1,279 @@
+---
+title: "2024-09-30_ContinousTimeSplicingModel"
+output: html_document
+date: '2024-09-30'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Had some wierd results using spearman correlation coef as proxy for effect size (beta) when making the splicing beta vs expression beta scatter plots across developmental time in various tissues/species. Mabye that spearman correlation coef is just not the way to go with leafcutter quantifications. Maybe if we prepare the expression quantifications a little more carefully (eg standardization and normalization as in sQTL splicing table preperation), then get 'beta's from linear model (Splicing ~ OrdinalDevelopmentalTime) within each species:tissue combination, the problem will go away. Let's try setting up that, here (and possibly later incorporating that work into the snakemake).
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(magrittr)
+
+expression.table <- read_tsv("../code/MazinLeafcutterAnalysis/Expression/Rabbit_UCSC.oryCun2_ensv101.log2rpkm.tsv.gz") %>%
+  mutate(Geneid = str_replace(Geneid, "^(.+?)\\..+$", "\\1"))
+
+CordosoSamples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+
+expression.table.tidy <- expression.table %>%
+  pivot_longer(names_to = "ID", values_to = "log2expression", -Geneid) %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")
+  )
+
+
+```
+
+Now let's tidy the data by standardizing the rows, qqnorm the columns, within each tissue.
+
+```{r}
+
+expression.table.tidy.qqnormed <- expression.table.tidy %>%
+  group_by(Geneid, Tissue_ForDevelopementalAnalysis) %>%
+  mutate(log2expression.normalized = scale(log2expression)) %>%
+  mutate(var.log2expression = var(log2expression, na.rm = T)) %>%
+  mutate(maxExpression = max(log2expression, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %>%
+  mutate(log2expression.normalized = qnorm(dense_rank(log2expression.normalized)/(sum(!is.na(log2expression.normalized)) + 1))) %>%
+  ungroup()
+  
+
+```
+Let's check PCA goes with time course, before considering linear model (with no covariates).
+
+```{r}
+pca.results <- expression.table.tidy.qqnormed %>%
+  filter(var.log2expression > 0) %>%
+  filter(maxExpression > 0) %>%
+  filter(Tissue_ForDevelopementalAnalysis == "Liver") %>%
+  dplyr::select(ID, Geneid, log2expression.normalized) %>%
+  pivot_wider(names_from = "ID", values_from = "log2expression.normalized") %>%
+  drop_na() %>%
+  column_to_rownames("Geneid") %>%
+  t() %>%
+  prcomp()
+
+
+pca.results$x %>%
+  as.data.frame() %>%
+  rownames_to_column("ID") %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")) %>%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title="PCA, liver, expression.normalized")
+
+pca.results <- expression.table.tidy.qqnormed %>%
+  filter(var.log2expression > 0) %>%
+  filter(maxExpression > 0) %>%
+  filter(Tissue_ForDevelopementalAnalysis == "Heart") %>%
+  dplyr::select(ID, Geneid, log2expression.normalized) %>%
+  pivot_wider(names_from = "ID", values_from = "log2expression.normalized") %>%
+  drop_na() %>%
+  column_to_rownames("Geneid") %>%
+  t() %>%
+  prcomp()
+
+
+pca.results$x %>%
+  as.data.frame() %>%
+  rownames_to_column("ID") %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")) %>%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title="PCA, heart, expression.normalized")
+
+
+```
+
+Wow, these PCA's actually make sense. Unlike the splicing PCAs. Maybe there is some read depth effect going on in the splicing PCA's. In any case, let's try recalculating expression spearmans in a way that might not create all these extreme negatives which I think might be problematic...
+
+
+```{r}
+spearman.coefs <- expression.table.tidy.qqnormed %>%
+  group_by(Geneid, Tissue_ForDevelopementalAnalysis) %>%
+  summarise(cor.normalized = cor(log2expression.normalized, Ordinal_stage, method='s'),
+            cor.raw = cor(log2expression, Ordinal_stage, method='s')) %>%
+  ungroup()
+
+spearman.coefs %>%
+  inner_join(
+    expression.table.tidy.qqnormed %>%
+      distinct(Geneid, Tissue_ForDevelopementalAnalysis, .keep_all=T) %>%
+      dplyr::select(Geneid, Tissue_ForDevelopementalAnalysis, maxExpression, var.log2expression)
+  ) %>%
+  mutate(MaxExpressionOver1 = maxExpression > 1) %>%
+  ggplot(aes(x=cor.normalized, y=cor.raw)) +
+  geom_point(alpha=0.01) +
+  facet_grid(Tissue_ForDevelopementalAnalysis~MaxExpressionOver1) +
+  labs(x="cor(expression_qqnorm_by_tissue, stage)", y="cor(expression, stage)")
+
+spearman.coefs %>%
+  inner_join(
+    expression.table.tidy.qqnormed %>%
+      distinct(Geneid, Tissue_ForDevelopementalAnalysis, .keep_all=T) %>%
+      dplyr::select(Geneid, Tissue_ForDevelopementalAnalysis, maxExpression, var.log2expression)
+  ) %>%
+  # mutate(MaxExpressionOver1 = maxExpression > 1) %>%
+  ggplot(aes(x=cor.normalized, y=cor.raw, color=maxExpression)) +
+  geom_point(alpha=0.01) +
+  scale_color_viridis_c() +
+  facet_wrap(~Tissue_ForDevelopementalAnalysis) +
+  labs(x="cor(expression_qqnorm_by_tissue, stage)", y="cor(expression, stage)")
+
+
+```
+
+Ok, so there is clearly a problem for the lowly expressed genes whether you correlate by raw expression, or after qqnormed by tissue.
+
+
+Really, filtering by max CPM makes slightly more sense than RPKM/TPM, since gene length isn't so relevant in adjusting for this technical issue of lowly *counted* genes. Nonetheless, just using a filter of max TPM>1 is probably sufficicent.
+
+Let's see if this is related to the difference in spearman with Maxin RPKM quantifications...
+
+```{r}
+MazinStages <- read_tsv("../output/CordosoMoreira_CalibratedStageTable.tsv")
+
+
+RPKM.Mazin.Rabbit <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/rabbit/RPKM.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/RPKM.gz", "\\1")) %>%
+  lapply(fread, sep=' ') %>%
+  lapply(function(x) filter(x, Names %in% spearman.coefs$Geneid)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "sample",values_to = "RPKM",-Names)) %>%
+  bind_rows(.id="Species") %>%
+  mutate(sample = paste(str_to_title(Species), sample, sep=".")) %>%
+  separate(sample, into=c("Species", "Tissue", "StageName", "Dummy"), convert=T, remove=F) %>%
+  inner_join(MazinStages)
+
+
+CordosoSamples %>%
+  dplyr::select(Species = ID_Species, StageName=Label_As_in_PreviousAnalysis, Ordinal_stage_new=Ordinal_stage) %>%
+  distinct() %>%
+  inner_join(MazinStages) %>%
+  ggplot(aes(x=Ordinal_stage_new, y=OrdinalStage.Manual
+)) +
+  geom_point() +
+  facet_wrap(~Species) +
+  labs(title="Check that old ordinal stage is same as new")
+
+RPKM.Mazin.Rabbit.cor <- RPKM.Mazin.Rabbit %>%
+  group_by(Tissue, Names) %>%
+  summarise(cor.RPKM = cor(RPKM, OrdinalStage.Manual, method = "sp")) %>%
+  ungroup()
+
+
+# my_scatter <- function(data, mapping, ...) {
+#   ggplot(data = data, mapping=mapping) +
+#     geom_point(..., aes(color=maxExpression), alpha=0.01) +
+#     scale_color_viridis_c() +
+# }
+
+spearman.coefs %>%
+  inner_join(
+    expression.table.tidy.qqnormed %>%
+      distinct(Geneid, Tissue_ForDevelopementalAnalysis, .keep_all=T) %>%
+      dplyr::select(Geneid, Tissue_ForDevelopementalAnalysis, maxExpression, var.log2expression)
+  ) %>%
+  inner_join(
+    RPKM.Mazin.Rabbit.cor %>%
+      dplyr::select(Tissue_ForDevelopementalAnalysis=Tissue, Geneid=Names, cor.MazinRPKM=cor.RPKM)
+  ) %>%
+  ggplot(aes(x=cor.MazinRPKM, y=cor.raw, color=maxExpression)) +
+  geom_point(alpha=0.01) +
+  scale_color_viridis_c() +
+  facet_wrap(~Tissue_ForDevelopementalAnalysis) +
+  labs(x="cor(expression_Mazin, stage)", y="cor(expression, stage)")
+
+spearman.coefs %>%
+  inner_join(
+    expression.table.tidy.qqnormed %>%
+      distinct(Geneid, Tissue_ForDevelopementalAnalysis, .keep_all=T) %>%
+      dplyr::select(Geneid, Tissue_ForDevelopementalAnalysis, maxExpression, var.log2expression)
+  ) %>%
+  inner_join(
+    RPKM.Mazin.Rabbit.cor %>%
+      dplyr::select(Tissue_ForDevelopementalAnalysis=Tissue, Geneid=Names, cor.MazinRPKM=cor.RPKM)
+  ) %>%
+  ggplot(aes(x=cor.MazinRPKM, y=cor.normalized, color=maxExpression)) +
+  geom_point(alpha=0.01) +
+  scale_color_viridis_c() +
+  facet_wrap(~Tissue_ForDevelopementalAnalysis) +
+  labs(x="cor(expression_Mazing, stage)", y="cor(expression_qqnorm_by_tissue, stage)")
+
+
+spearman.coefs %>%
+  inner_join(
+    expression.table.tidy.qqnormed %>%
+      distinct(Geneid, Tissue_ForDevelopementalAnalysis, .keep_all=T) %>%
+      dplyr::select(Geneid, Tissue_ForDevelopementalAnalysis, maxExpression, var.log2expression)
+  ) %>%
+  inner_join(
+    RPKM.Mazin.Rabbit.cor %>%
+      dplyr::select(Tissue_ForDevelopementalAnalysis=Tissue, Geneid=Names, cor.MazinRPKM=cor.RPKM)
+  ) %>%
+  pivot_longer(names_to = "stat", values_to = "rho", c("cor.normalized", "cor.raw", "cor.MazinRPKM")) %>%
+  ggplot(aes(x=rho, fill=maxExpression>1)) +
+  geom_histogram(position = "stack") +
+  facet_grid(Tissue_ForDevelopementalAnalysis~stat)
+
+spearman.coefs %>%
+  inner_join(
+    expression.table.tidy.qqnormed %>%
+      distinct(Geneid, Tissue_ForDevelopementalAnalysis, .keep_all=T) %>%
+      dplyr::select(Geneid, Tissue_ForDevelopementalAnalysis, maxExpression, var.log2expression)
+  ) %>%
+  inner_join(
+    RPKM.Mazin.Rabbit.cor %>%
+      dplyr::select(Tissue_ForDevelopementalAnalysis=Tissue, Geneid=Names, cor.MazinRPKM=cor.RPKM)
+  ) %>%
+  pivot_longer(names_to = "stat", values_to = "rho", c("cor.normalized", "cor.raw", "cor.MazinRPKM")) %>%
+  ggplot(aes(x=rho)) +
+  geom_histogram() +
+  facet_grid(Tissue_ForDevelopementalAnalysis~stat)
+
+```
+I'm confused now why there aren't all those extreme negatives I previously observed in Liver, Heart, Kidney. Let's read in the previous expression rhos I calculated.
+
+```{r}
+Old.spearman.coefs <- read_tsv("../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/Rabbit_UCSC.oryCun2_ensv101.log2rpkm.tsv.gz") %>%
+  mutate(Geneid = str_replace(Geneid, "^(.+?)\\..+$", "\\1"))
+
+Old.spearman.coefs %>%
+  ggplot(aes(x=corr)) +
+  geom_histogram() +
+  facet_wrap(~Tissue)
+```
+
+Ok from looking at my other notebook, those negative correlations are from the subset of things that had devAS in Mazin, and also from TPM, not RPKM.
+
+```{r}
+Old.spearman.coefs <- read_tsv("../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/Rabbit_UCSC.oryCun2_ensv101.log2tpm.tsv.gz") %>%
+  mutate(Geneid = str_replace(Geneid, "^(.+?)\\..+$", "\\1"))
+
+Old.spearman.coefs %>%
+  ggplot(aes(x=corr)) +
+  geom_histogram() +
+  facet_wrap(~Tissue)
+```
+
+Ok, wow I think the TPM is the issue.
+
+

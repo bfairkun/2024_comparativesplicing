@@ -1,0 +1,961 @@
+---
+title: "2024-10-03_ExplorePuzzling_UP_vs_Expression_Effects"
+output: html_document
+date: '2024-10-03'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+In a previous notebook (2024-09-10_RedoMazin...Rmd), I noted that unproductive junction spearman (leafcutter junction PSI vs developemental time in a particular species:tissue pair) is actually positively correlated with rpkm spearman (rpkm vs developmental time in a particular species:tissue pair). This is very confusing as we were expecting a negative correlation, and in previous analysis using Mazin et al's PSI and RPKM values, the same type of analysis yielded the expected negative correlation in unproductive but not productive junctions. In that previous notebook, I also showed that the spearman coefs calculated from our leafcutter PSI is well correlated (R^2 ~ .8) with the spearman coefs calculated from Mazin, and same for expression, which is also puzzling that we get opposite effects when we correlate the splicing spearman vs expression spearmans. So here I'm going to start a fresh notebook to troubleshoot why this is. I have re-calculated spearman coefs, and linear model betas on standardized and inverse-normalized per tissue splicing and expression quantifications, and considered different metrics for expression (log2RPKM with psueodcount, log2TPM with pseudocount, log2CPM with no psueodocount). Here I will explore if any of these alternative metrics 'fix' the problem, and explore other things that might fix the problem, and try to better figure out what the problem really is by more closely investigating a couple example junctions that might highlight the problem.
+
+## Analysis
+
+load libraries, set plot style
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(qvalue)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
+```
+
+
+Read in data... I wrote some tables for Yang that already containing most of the relevant data in a fairly tidy table...
+
+```{r}
+dat <- fread("../code/scratch/ForYang.AllSpearmanCoefsFromMyProcessedData.tsv.gz")
+```
+
+Firstly, let's recreate the plot in question...
+
+```{r}
+
+
+dat %>%
+  filter(q.splicing < 0.1) %>%
+  
+  ## select one representative junc per cluster
+  group_by(OriginGenome, Tissue, cluster) %>%
+  mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  ungroup() %>%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %>%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %>%
+  ##
+  
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.splicing)==sign(corr.expression)) %>%
+  count(Tissue, Species.short, Coding, SplicingAndExpresionCoefSameSign) %>%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %>%
+  group_by(Tissue, Species.short, Coding) %>%
+  mutate(N = sum(n)) %>%
+  ungroup() %>%
+  mutate(Percent = n/N*100) %>%
+  filter(SplicingAndExpresionCoefSameSign) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("fraction events where splicing coef same sign as expression coef, among signif splicing coefs, one representative junc per clust", 35), x="Species", fill="Percent in Q1+Q3")
+
+dat %>%
+  filter(q.splicing < 0.1) %>%
+  
+  ## select one representative junc per cluster
+  group_by(OriginGenome, Tissue, cluster) %>%
+  mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  ungroup() %>%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %>%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %>%
+  ##
+  group_by(Tissue, Species.short, Coding) %>%
+  summarise(SpearmanSummary = cor(corr.splicing, corr.expression, method='s', use="pairwise.complete.obs"),
+            N = n()) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=SpearmanSummary)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Spearman of expression vs splicing effect sizes (spearman over development stages", 35), x="Species", fill=NULL)
+
+```
+
+Also, let's recreate the plot using Mazin's PSI/RPKM quantifications (just for Rabbit, since that is the only species where I don't have to liftover juncs to a different genome to combine rows from the table based on Mazin's PSI/RPKM quantifications with my own rows)
+
+```{r}
+MazinQuantification.Spearman.dat <- read_tsv("../code/scratch/Rabbit_CombinedMazinAndMySpearmans.tsv.gz")
+
+MazinQuantification.Spearman.dat %>%
+  ggplot(aes(x=corr.splicing, y=corr.splicing.MazinPSI)) +
+  geom_point(alpha=0.1) +
+  facet_wrap(~Tissue) +
+  labs(x="corr.splicing.leafcutterPSI", title="splicing spearmans are well correlated", caption="Rabbit AS events only")
+
+MazinQuantification.Spearman.dat %>%
+  ggplot(aes(x=corr.expression, y=corr.expression.MazinRPKM)) +
+  geom_point(alpha=0.1) +
+  facet_wrap(~Tissue) +
+  labs(x="corr.splicing.My.RPKM", title="expression spearmans are well correlated")
+
+MazinQuantification.Spearman.dat %>%
+  drop_na() %>%
+  group_by(Tissue, Coding) %>%
+  summarise(
+    MyExpression_vs_MySplicing = cor(corr.splicing, corr.expression, method='s'),
+    MazinExpression_vs_MySplicing = cor(corr.splicing, corr.expression.MazinRPKM, method='s'),
+    MazinExpression_vs_MazinSplicing = cor(corr.splicing.MazinPSI, corr.expression.MazinRPKM, method='s'),
+    MyExpression_vs_MazinSplicing = cor(corr.splicing.MazinPSI, corr.expression, method='s'),
+    n = n()
+  ) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  pivot_longer(names_to = "Comparison", values_to = "SpearmanOfSplicingVsExpressionEffectSizes", -c("Tissue", "Coding", "n")) %>%
+  ggplot(aes(x=Comparison, y=Tissue, fill=SpearmanOfSplicingVsExpressionEffectSizes)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=n), size=3) +
+  facet_grid(~Coding) +
+  Rotate_x_labels +
+  theme(legend.position = "bottom")
+  
+```
+
+Ok, actually maybe that fixed things, albeit our red is a little less red, but maybe that is just expected with leafcutter being a bit noiser cause it uses less data per event. In my last notebook I was actually using TPM, which I think was problematic. Now at least I have the right sign, for the subset of events that we also use in Mazin... Mabye just using RPKM, and using a minimum expression level, will fix things across species...
+
+Let's explore that a bit...
+
+```{r}
+expression.spearman.many.ways <- Sys.glob("../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/*.Extended.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/(.+?)\\.(log2.+?).Extended.tsv.gz", "\\1;\\2")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome_Metric") %>%
+  separate(OriginGenome_Metric, into=c("OriginGenome", "ExpressionMetric"), sep=";")
+
+expression.spearman.many.ways %>%
+  count(OriginGenome, ExpressionMetric)
+
+
+expression.spearman.many.ways %>%
+  filter(OriginGenome == "Rabbit_UCSC.oryCun2_ensv101") %>%
+  group_by(ExpressionMetric, Tissue) %>%
+  mutate(MaxExpressionRank = rank(desc(maxExpression))) %>%
+  mutate(IsTop10KExpressedByMetric = MaxExpressionRank < 12000) %>%
+  ungroup() %>%
+  # count(IsTop10KExpressedByMetric, ExpressionMetric, Tissue)
+  dplyr::select(UnNormSpearman_estimate,spearman_estimate,  lm_estimate, maxExpression, Tissue, Geneid,ExpressionMetric, IsTop10KExpressedByMetric ) %>%
+  mutate(IsTop10KExpressedByMetric = if_else(IsTop10KExpressedByMetric, "Top12KExpressedByMetric", "LowlyExpressed")) %>%
+  pivot_longer(names_to = "CorrelationSummaryMetric", values_to = "value", c("UnNormSpearman_estimate", "spearman_estimate", "lm_estimate")) %>%
+  mutate(CorrelationSummaryMetric = str_replace_all(CorrelationSummaryMetric, "_", "\n")) %>%
+  ggplot(aes(x=value, fill=IsTop10KExpressedByMetric)) +
+  geom_histogram(position='stack') +
+  facet_grid(ExpressionMetric~CorrelationSummaryMetric~Tissue, scales="free") +
+  xlim(c(-1.5,1.5)) +
+  labs(fill=NULL) +
+  theme(strip.text = element_text(size = 8), legend.position = "bottom")
+
+```
+
+Ok, so yes, TPM gets some things weird in particular tissues, particularly for lowly expressed genes.
+
+In any case, my intuition is that one thing that might work is to use expression spearman based on log2rpkm but filter for well expressed genes.
+
+```{r}
+expression.spearman.many.ways %>%
+  filter(ExpressionMetric == "log2rpkm") %>%
+  ggplot(aes(x=maxExpression)) +
+  geom_histogram() +
+  facet_wrap(~Tissue)
+
+dat %>%
+  filter(q.splicing < 0.1) %>%
+  
+  ## select one representative junc per cluster
+  group_by(OriginGenome, Tissue, cluster) %>%
+  mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  ungroup() %>%
+  arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %>%
+  distinct(OriginGenome, Tissue, cluster, .keep_all=T) %>%
+  ##
+  
+  inner_join(
+    expression.spearman.many.ways %>%
+      filter(ExpressionMetric == "log2rpkm") %>%
+      dplyr::select(OriginGenome, lm_estimate, spearman_estimate, UnNormSpearman_estimate, maxExpression, Tissue,Geneid),
+    by=c("OriginGenome", "Tissue", "Gene_name"="Geneid")
+  ) %>%
+  
+  mutate(IsMaxGreatherThanThreshold = if_else(maxExpression > 2, "High Expression", "Low Expression")) %>%
+  group_by(Tissue, Species.short, Coding, IsMaxGreatherThanThreshold) %>%
+  summarise(SpearmanSummary = cor(corr.splicing, lm_estimate, method='s', use="pairwise.complete.obs"),
+            N = n()) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=SpearmanSummary)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(IsMaxGreatherThanThreshold~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Spearman of expression vs splicing effect sizes (spearman over development stages).", 35), x="Species", fill=NULL)
+```
+
+Hmm. that still doesn't work.
+
+Even though it seemed to maybe work for the Mazin AS events as shown below...
+
+
+```{r}
+
+
+dat %>%
+  filter(q.splicing < 0.1) %>%
+  ##
+  
+  left_join(
+    MazinQuantification.Spearman.dat %>%
+      dplyr::select(Tissue, junc, OriginGenome, corr.splicing.MazinPSI) %>%
+      filter(!is.na(corr.splicing.MazinPSI)) %>%
+      mutate(IsQuantifiedByMazin = "Defined in Mazin")
+  ) %>%
+  
+  replace_na(list(IsQuantifiedByMazin = "leafcuter-unique event")) %>%
+  group_by(Tissue, Species.short, Coding, IsQuantifiedByMazin) %>%
+  summarise(SpearmanSummary = cor(corr.splicing, corr.expression, method='s', use="pairwise.complete.obs"),
+            N = n()) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=SpearmanSummary)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(IsQuantifiedByMazin~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Spearman of expression vs splicing effect sizes (spearman over development stages).", 35), x="Species", fill=NULL)
+```
+Ok, so what's different about the Mazin defined events that makes them 'work'. Perhaps I should see if it's related to max junc count or PSI within timecourse.
+
+```{r}
+set.seed(0)
+SetsToCompare <- dat %>%
+  filter(q.splicing < 0.1) %>%
+  filter(OriginGenome == "Rabbit_UCSC.oryCun2_ensv101") %>%
+  filter(ProductivityLabel == "UP") %>%
+  left_join(
+    MazinQuantification.Spearman.dat %>%
+      dplyr::select(Tissue, junc, OriginGenome, corr.splicing.MazinPSI) %>%
+      filter(!is.na(corr.splicing.MazinPSI)) %>%
+      mutate(IsQuantifiedByMazin = "Defined in Mazin")
+  ) %>%
+  replace_na(list(IsQuantifiedByMazin = "leafcuter-unique event")) %>%
+  group_by(junc) %>%
+  mutate(IsJuncQuantifiedByMazin = any(IsQuantifiedByMazin=="Defined in Mazin")) %>%
+  ungroup()
+
+CordosoSamples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+
+
+Rabbit.PSI <- fread("../code/rna-seq/SplicingAnalysis/leafcutter/Rabbit_UCSC.oryCun2_ensv101/juncTableBeds/PSI.sorted.bed.gz") %>%
+  filter(junc %in% SetsToCompare$junc) %>%
+  pivot_longer(names_to = "ID", values_to = "value", -c(1:6)) %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",") %>%
+      dplyr::select(ID,Tissue_ForDevelopementalAnalysis, Ordinal_stage )
+  )
+
+Rabbit.JuncCounts <- fread("../code/rna-seq/SplicingAnalysis/leafcutter/Rabbit_UCSC.oryCun2_ensv101/juncTableBeds/JuncCounts.sorted.bed.gz") %>%
+  filter(junc %in% SetsToCompare$junc)  %>%
+  pivot_longer(names_to = "ID", values_to = "value", -c(1:6)) %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",") %>%
+      dplyr::select(ID,Tissue_ForDevelopementalAnalysis, Ordinal_stage )
+  )
+
+Rabbit.PSI %>%
+  inner_join(
+    SetsToCompare %>%
+      dplyr::select(junc, Tissue_ForDevelopementalAnalysis=Tissue, IsQuantifiedByMazin, IsJuncQuantifiedByMazin, ProductivityLabel)
+  ) %>%
+  group_by(Tissue_ForDevelopementalAnalysis, junc, IsQuantifiedByMazin) %>%
+  summarise(maxValue = max(value, na.rm=T)) %>%
+  ungroup() %>%
+  ggplot(aes(x=maxValue, color=IsQuantifiedByMazin)) +
+  stat_ecdf() +
+  facet_wrap(~Tissue_ForDevelopementalAnalysis)
+
+Rabbit.JuncCounts %>%
+  inner_join(
+    SetsToCompare %>%
+      dplyr::select(junc, Tissue_ForDevelopementalAnalysis=Tissue, IsQuantifiedByMazin, IsJuncQuantifiedByMazin, ProductivityLabel)
+  ) %>%
+  group_by(Tissue_ForDevelopementalAnalysis, junc, IsQuantifiedByMazin) %>%
+  summarise(maxValue = max(value, na.rm=T)) %>%
+  ungroup() %>%
+  ggplot(aes(x=maxValue, color=IsQuantifiedByMazin)) +
+  stat_ecdf() +
+  geom_vline(xintercept = 10) +
+  scale_x_continuous(trans='log10') +
+  facet_wrap(~Tissue_ForDevelopementalAnalysis) +
+  labs(y="ecdf", x="Max number read across samples within tissue timecourse")
+
+```
+Ok from this perhaps a reasonable filter is to say "a junc must have 10 counts in at least one sample along the developmental time course to consider for downstream analysis".
+
+
+```{r}
+SignificantJuncs <- dat %>%
+  filter(q.splicing < 0.1)
+
+MaxJuncCountsPerTimecourse <- str_glue("../code/rna-seq/SplicingAnalysis/leafcutter/{unique(SignificantJuncs$OriginGenome)}/juncTableBeds/JuncCounts.sorted.bed.gz") %>%
+  setNames(str_replace(., "../code/rna-seq/SplicingAnalysis/leafcutter/(.+?)/juncTableBeds/JuncCounts.sorted.bed.gz", "\\1")) %>%
+  lapply(fread) %>%
+  lapply(function(x) filter(x, junc %in% SignificantJuncs$junc)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "ID", values_to = "value", -c(1:6))) %>%
+  lapply(function(x) inner_join(x, 
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",") %>%
+      dplyr::select(ID,Tissue_ForDevelopementalAnalysis, Ordinal_stage )
+  )) %>%
+  bind_rows(.id="OriginGenome") %>%
+  group_by(OriginGenome, junc, Tissue_ForDevelopementalAnalysis) %>%
+  summarise(maxJuncCount = max(value)) %>%
+  ungroup()
+
+dat %>%
+  filter(q.splicing < 0.1) %>%
+  
+  ## select one representative junc per cluster
+  # group_by(OriginGenome, Tissue, cluster) %>%
+  # mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  # ungroup() %>%
+  # arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %>%
+  # distinct(OriginGenome, Tissue, cluster, .keep_all=T) %>%
+  ##
+  
+  inner_join(
+    MaxJuncCountsPerTimecourse,
+    by=c("OriginGenome", "Tissue"="Tissue_ForDevelopementalAnalysis", "junc")
+  ) %>%
+  
+  mutate(IsMaxGreatherThanThreshold = if_else(maxJuncCount > 10, "Passes", "Doesn't pass")) %>%
+  group_by(Tissue, Species.short, Coding, IsMaxGreatherThanThreshold) %>%
+  summarise(SpearmanSummary = cor(corr.splicing, corr.expression, method='s', use="pairwise.complete.obs"),
+            N = n()) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=SpearmanSummary)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(IsMaxGreatherThanThreshold~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Spearman of expression vs splicing effect sizes (spearman over development stages).\nPasses means >10 reads in at least one sample in timecourse", 35), x="Species", fill=NULL)
+```
+Well that is different between those that pass the threshold and those that don't, but not in the expected way.
+
+Let's look at the scatterplot underlying one cell (eg Human brain)
+
+```{r}
+dat %>%
+  filter(q.splicing < 0.1) %>%
+  filter(Species.short == "Human" & Tissue == "Brain") %>%
+  inner_join(
+    MaxJuncCountsPerTimecourse,
+    by=c("OriginGenome", "Tissue"="Tissue_ForDevelopementalAnalysis", "junc")
+  ) %>%
+  mutate(IsMaxGreatherThanThreshold = if_else(maxJuncCount > 10, "Passes", "Doesn't pass")) %>%
+  ggplot(aes(x= corr.splicing, y=corr.expression)) +
+  geom_point(alpha=0.05) +
+  geom_smooth(method='lm', se=F) +
+  facet_grid(ProductivityLabel~IsMaxGreatherThanThreshold)
+```
+
+That didn't tell me anything particularly new. I wonder if using the within-tissue qqnormed splicing quantifications might help?
+
+```{r}
+qqnorm.splicing <- Sys.glob("../code/MazinLeafcutterAnalysis/Splicing_qqNormed/*/DevAS.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/Splicing_qqNormed/(.+?)/DevAS.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id = "OriginGenome")
+
+dat %>%
+    
+  inner_join(
+    qqnorm.splicing,
+    by=c("OriginGenome", "Tissue"="Tissue_ForDevelopementalAnalysis", "junc")
+  ) %>%
+  
+  group_by(Tissue, OriginGenome) %>%
+  mutate(spearman_q = qvalue(spearman_p)$qvalues) %>%
+  ungroup() %>%
+  filter(spearman_q < 0.1) %>%
+  
+  ## select one representative junc per cluster
+  # group_by(OriginGenome, Tissue, cluster) %>%
+  # mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  # ungroup() %>%
+  # arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %>%
+  # distinct(OriginGenome, Tissue, cluster, .keep_all=T) %>%
+  ##
+  
+  inner_join(
+    MaxJuncCountsPerTimecourse,
+    by=c("OriginGenome", "Tissue"="Tissue_ForDevelopementalAnalysis", "junc")
+  ) %>%
+
+  
+  mutate(IsMaxGreatherThanThreshold = if_else(maxJuncCount > 10, "Passes", "Doesn't pass")) %>%
+  group_by(Tissue, Species.short, Coding, IsMaxGreatherThanThreshold) %>%
+  summarise(SpearmanSummary = cor(spearman_estimate, corr.expression, method='s', use="pairwise.complete.obs"),
+            N = n()) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=SpearmanSummary)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(IsMaxGreatherThanThreshold~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Spearman of expression vs splicing effect sizes (spearman over development stages, PSI is qqnormed).\nPasses means >10 reads in at least one sample in timecourse", 35), x="Species", fill=NULL)
+```
+Ok, that didn't make a difference. I suppose the next thing to do is to check out of the events that "Pass", which ones are quantified in Mazin, since those "work", versus those that aren't quantified in Mazin.
+
+Let's look in two ways: looking at junc counts or PSI over time course, and also look at junc position in relation to gene.
+
+Let's first subset the juncs that are defined in Mazin, but do not have the a spearman (because of empty data or 0's) in a particular tissue which may or may not also have a spearman from leafcutter... just looking at unproductive events here.
+
+
+```{r}
+
+
+SetsToCompare %>%
+  inner_join(
+    MaxJuncCountsPerTimecourse %>%
+      dplyr::rename(Tissue=Tissue_ForDevelopementalAnalysis)
+  ) %>%
+  filter(maxJuncCount > 10) %>%
+  filter(IsJuncQuantifiedByMazin) %>%
+  ggplot(aes(x=corr.splicing, y=corr.expression, color=IsQuantifiedByMazin)) +
+  geom_point() +
+  geom_smooth(method='lm', se=F) +
+  facet_wrap(~Tissue) +
+  labs(caption="Defined in Mazin")
+
+SetsToCompare %>%
+  inner_join(
+    MaxJuncCountsPerTimecourse %>%
+      dplyr::rename(Tissue=Tissue_ForDevelopementalAnalysis)
+  ) %>%
+  filter(maxJuncCount > 10) %>%
+  filter(IsJuncQuantifiedByMazin) %>%
+  ggplot(aes(x=corr.splicing, y=corr.expression, color=IsQuantifiedByMazin)) +
+  geom_point() +
+  geom_smooth(method='lm', se=F)
+
+SetsToCompare %>%
+  inner_join(
+    MaxJuncCountsPerTimecourse %>%
+      dplyr::rename(Tissue=Tissue_ForDevelopementalAnalysis)
+  ) %>%
+  filter(maxJuncCount > 10) %>%
+  # filter(IsJuncQuantifiedByMazin) %>%
+  ggplot(aes(x=corr.splicing, y=corr.expression, color=IsQuantifiedByMazin)) +
+  geom_point(alpha=0.05) +
+  geom_smooth(method='lm', se=F) +
+  facet_wrap(~IsJuncQuantifiedByMazin) +
+  labs(caption="Defined in Mazin")
+```
+
+Ok, so interestingly, within the juncs that Mazin quantifies, the in tissues where Mazin does not quantify them (or at least there are mostly 0's or NA's), are more positively correlated with expression. Let's look at the junc counts and PSI for these.. And I also notice such an abundance of corr.expression near 1. I suspect this might again be related to pseudocounts in expression, maybe i should change out this back for logcpm with no pseudocount.
+
+```{r}
+SetsToCompare %>%
+  inner_join(
+    MaxJuncCountsPerTimecourse %>%
+      dplyr::rename(Tissue=Tissue_ForDevelopementalAnalysis)
+  ) %>%
+  filter(maxJuncCount > 10) %>%
+  filter(IsJuncQuantifiedByMazin) %>%
+  inner_join(
+    Rabbit.JuncCounts %>%
+      dplyr::select(Tissue=Tissue_ForDevelopementalAnalysis, ID, junc, value, Ordinal_stage)
+  ) %>%
+  sample_n_of(12, junc) %>%
+  ggplot(aes(x=Ordinal_stage, y=value, color=Tissue)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(se=F, aes(linetype = IsQuantifiedByMazin)) +
+  facet_wrap(~junc, scales="free") +
+  labs(y="Junc counts")
+
+SetsToCompare %>%
+  inner_join(
+    MaxJuncCountsPerTimecourse %>%
+      dplyr::rename(Tissue=Tissue_ForDevelopementalAnalysis)
+  ) %>%
+  filter(maxJuncCount > 10) %>%
+  filter(IsJuncQuantifiedByMazin) %>%
+  inner_join(
+    Rabbit.PSI %>%
+      dplyr::select(Tissue=Tissue_ForDevelopementalAnalysis, ID, junc, value, Ordinal_stage)
+  ) %>%
+  sample_n_of(12, junc) %>%
+  ggplot(aes(x=Ordinal_stage, y=value, color=Tissue)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(se=F, aes(linetype = IsQuantifiedByMazin)) +
+  facet_wrap(~junc, scales="free") +
+  labs(y="leaf PSI")
+```
+Nothing obvious there. Maybe rather than selecting ones to highlight based on whether it is included in Mazin, I should go by whether leafcutter gets it 'wrong' but mazin gets it 'right'... But actually if you limit to ones that Mazin get's it right, leafcutter generally get's it right too, just not as right.
+
+Maybe we should consider a deltaPSI threshold. For now, Let's just use the dPSI between the median PSI of the first six samples in the timecourse versus the last six.
+
+
+```{r}
+JuncsToConsider <- dat %>%
+  filter(q.splicing < 0.1) %>%
+  distinct(junc, OriginGenome)
+
+
+
+PSI.devAS.AllSpecies <- str_glue("../code/rna-seq/SplicingAnalysis/leafcutter/{unique(JuncsToConsider$OriginGenome)}/juncTableBeds/PSI.sorted.bed.gz") %>%
+  as.character() %>%
+  setNames(str_replace(., "../code/rna-seq/SplicingAnalysis/leafcutter/(.+?)/juncTableBeds/PSI.sorted.bed.gz", "\\1")) %>%
+  lapply(fread) %>%
+  lapply(function(x) filter(x, x$junc %in% JuncsToConsider$junc)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "ID", values_to = "value", -c(1:6))) %>%
+  lapply(function(x) inner_join(x, 
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",") %>%
+      dplyr::select(ID,Tissue_ForDevelopementalAnalysis, Ordinal_stage )
+  )) %>%
+  bind_rows(.id="OriginGenome")
+
+```
+
+
+Now let's calculate dPSI, based on first and last... 6?... samples
+
+```{r}
+
+CordosoSamples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis, sep=",") %>%
+  dplyr::select(ID,Tissue_ForDevelopementalAnalysis, ID_Species, Ordinal_stage ) %>%
+  distinct(ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage) %>%
+  count(ID_Species,Tissue_ForDevelopementalAnalysis) %>%
+  ggplot(aes(x=Tissue_ForDevelopementalAnalysis, y=n)) +
+  geom_col() +
+  geom_text(aes(label=n), vjust=1, color="white") +
+  facet_wrap(~ID_Species) +
+  Rotate_x_labels
+
+```
+
+Well some species/tissues only have 9 timepoints. Maybe I'll just divide each timecourse into a front half and latter half and calculate median PSI in each
+
+```{r}
+
+
+dPSI.devAS.AllSpecies <- PSI.devAS.AllSpecies %>%
+  dplyr::select(junc, ID, value, OriginGenome, Tissue_ForDevelopementalAnalysis) %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",") %>%
+      dplyr::select(ID,Tissue_ForDevelopementalAnalysis, ID_Species, Ordinal_stage ) %>%
+      group_by(Tissue_ForDevelopementalAnalysis, ID_Species) %>%
+      mutate(StagePercentRank = percent_rank(Ordinal_stage)) %>%
+      ungroup() %>%
+      mutate(FrontOrBackHalf = if_else(StagePercentRank < 0.5, "Front", "Back")) %>%
+      dplyr::select(FrontOrBackHalf, Ordinal_stage, ID, Tissue_ForDevelopementalAnalysis),
+    by=c("ID", "Tissue_ForDevelopementalAnalysis")
+  ) %>%
+  group_by(OriginGenome, junc, FrontOrBackHalf, Tissue_ForDevelopementalAnalysis) %>%
+  summarise(medPSI = median(value)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = "FrontOrBackHalf", values_from = "medPSI") %>%
+  mutate(dPSI = Back - Front)
+
+head(dPSI.devAS.AllSpecies)
+
+```
+
+Ok now let's recreate the heatmap after faceting by whether they pass the dPSI>10 threshold
+
+```{r}
+dat %>%
+  filter(q.splicing < 0.1) %>%
+
+
+  ## select one representative junc per cluster
+  # group_by(OriginGenome, Tissue, cluster) %>%
+  # mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  # ungroup() %>%
+  # arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %>%
+  # distinct(OriginGenome, Tissue, cluster, .keep_all=T) %>%
+  ##
+  
+  inner_join(
+    MaxJuncCountsPerTimecourse,
+    by=c("OriginGenome", "Tissue"="Tissue_ForDevelopementalAnalysis", "junc")
+  ) %>%
+  mutate(IsMaxGreatherThanThreshold = if_else(maxJuncCount > 10, "Passes", "Doesn't pass")) %>%
+  inner_join(
+    dPSI.devAS.AllSpecies,
+    by=c("OriginGenome", "Tissue"="Tissue_ForDevelopementalAnalysis", "junc")
+  ) %>%
+  mutate(dPSI_Category = abs(dPSI) > 20) %>%
+  group_by(Tissue, Species.short, Coding, IsMaxGreatherThanThreshold, dPSI_Category) %>%
+  summarise(SpearmanSummary = cor(corr.splicing, corr.expression, method='s', use="pairwise.complete.obs"),
+            N = n()) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(dPSI_Category = if_else(dPSI_Category, "dPSI>20", "dPSI<20")) %>%
+  replace_na(list(dPSI_Category = "dPSI NA from NA's in PSI")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=SpearmanSummary)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(IsMaxGreatherThanThreshold~Coding~dPSI_Category) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Spearman of expression vs splicing effect sizes (spearman over development stages, PSI is qqnormed).\nPasses means >10 reads in at least one sample in timecourse", 35), x="Species", fill=NULL)
+```
+
+```{r}
+dat %>%
+  filter(q.splicing < 0.1) %>%
+
+
+  ## select one representative junc per cluster
+  # group_by(OriginGenome, Tissue, cluster) %>%
+  # mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  # ungroup() %>%
+  # arrange(OriginGenome, Tissue, cluster, Contains_Noncoding, desc(Coding), desc(abs(corr.splicing))) %>%
+  # distinct(OriginGenome, Tissue, cluster, .keep_all=T) %>%
+  ##
+  
+  inner_join(
+    dPSI.devAS.AllSpecies,
+    by=c("OriginGenome", "Tissue"="Tissue_ForDevelopementalAnalysis", "junc")
+  ) %>%
+  mutate(dPSI_Category = abs(dPSI) > 20) %>%
+  group_by(Tissue, Species.short, Coding, dPSI_Category) %>%
+  summarise(SpearmanSummary = cor(corr.splicing, corr.expression, method='s', use="pairwise.complete.obs"),
+            N = n()) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(dPSI_Category = if_else(dPSI_Category, "dPSI>20", "dPSI<20")) %>%
+  replace_na(list(dPSI_Category = "dPSI NA from NA's in PSI")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=SpearmanSummary)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Coding~dPSI_Category) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Spearman of expression vs splicing effect sizes (spearman over development stages, PSI is qqnormed).\nPasses means >10 reads in at least one sample in timecourse", 35), x="Species", fill=NULL)
+```
+
+Ok so that kind of helped. But still not particularly convincing results. I still ought to try to figure out the underlying issue of why all these low dPSI junc splicing spearmans are positively correlated with expression spearmans. I suspect it still has to do with some library size normalization. I think this issue might go away if I use Mazin's expression. Luckily for many species I can still match stable IDs across gene builds and thus can still easily join to the expression spearman calculated from Mazin's RPKM, without lifting over. Let's try that and see what happens....
+
+
+```{r}
+dat$OriginGenome %>% unique()
+
+
+EnsemblStableIDs <- dat %>%
+  filter(OriginGenome!="Rat_UCSC.rn7_RefSeqv108") %>%
+  mutate(StableID = str_remove(Gene_name, "\\..+")) %>%
+  distinct(StableID) %>% pull(StableID)
+
+CordosoSamples %>% 
+  distinct(Label_As_in_PreviousAnalysis, `Stage (detail)`,ID_Species) %>%
+  filter(Label_As_in_PreviousAnalysis!=`Stage (detail)` )
+
+RPKM.all <- Sys.glob("../code/kaessman_AS_dat/FromWebApp/*/RPKM.gz") %>%
+  setNames(str_replace(., "../code/kaessman_AS_dat/FromWebApp/(.+?)/RPKM.gz", "\\1")) %>%
+  lapply(fread, sep=' ') %>%
+  lapply(function(x) filter(x, Names %in% EnsemblStableIDs)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "sample",values_to = "RPKM",-Names)) %>%
+  bind_rows(.id="species")
+
+
+```
+
+Ok the RPKM files from Cordoso et al are actually named a bit differently than I have named samples. We need to figure this out to correctly order samples to calculate spearman... I've figured it, and the final correct code is used below
+
+```{r, eval=F}
+## Figuring it out here
+RPKM.all %>%
+  distinct(species, sample) %>%
+  mutate(ID_Species = str_to_title(species)) %>%
+  separate(sample, into=c("Tissue_ForDevelopementalAnalysis", "stage", "rep"), sep="\\.") %>%
+  distinct(ID_Species, stage, Tissue_ForDevelopementalAnalysis) %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(stage=`Label_As_in_PreviousAnalysis`, ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage) %>%
+      distinct(stage, ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis)
+  )
+
+len(RPKM.all)
+
+```
+
+Ok now we can add correct ordinal stages to the long Mazin RPKM table... This code block took a while and the the results might be useful in other notebooks. Let's just write out to new file
+
+```{r, eval=F}
+RPKM.all.WithOrdinalStages <- RPKM.all %>%
+  mutate(ID_Species = str_to_title(species)) %>%
+  separate(sample, into=c("Tissue_ForDevelopementalAnalysis", "stage", "rep"), convert=T, sep="\\.") %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(stage=`Label_As_in_PreviousAnalysis`, ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+      group_by(ID_Species, stage, Tissue_ForDevelopementalAnalysis) %>%
+      mutate(rep = row_number()) %>%
+      ungroup()
+  )
+
+
+write_tsv(RPKM.all.WithOrdinalStages, "../code/scratch/MazinRPKM.LongTable.Tidy.tsv.gz")
+```
+
+And now calculate spearman...
+
+```{r}
+RPKM.all.WithOrdinalStages <- fread("../code/scratch/MazinRPKM.LongTable.Tidy.tsv.gz")
+
+expression.cor.Mazin <- RPKM.all.WithOrdinalStages %>%
+  group_by(ID_Species, Tissue_ForDevelopementalAnalysis, Names) %>%
+  summarise(cor = cor(RPKM, Ordinal_stage, method='s')) %>%
+  ungroup()
+```
+
+Now let's try first comparing to our expression spearman cor..
+
+```{r}
+dat %>%
+  distinct(Gene_name, Species.short, Tissue, .keep_all=T) %>%
+  mutate(StableID = str_remove(Gene_name, "\\..+")) %>%
+  inner_join(
+    expression.cor.Mazin,
+    by=c("Species.short"="ID_Species", "StableID"="Names", "Tissue"="Tissue_ForDevelopementalAnalysis")
+  ) %>%
+  ggplot(aes(x=cor, y=corr.expression)) +
+  geom_point(alpha=0.01) +
+  # geom_hex(bins=50) +
+  # scale_fill_viridis_c() +
+  facet_grid(Species.short~Tissue)
+```
+
+Ok. clearly some odd things going on. Not sure why mouse is so much worse than other species, or why human and whatever oppossum are just messed up. Let's check why the human is just messsed up.
+
+```{r}
+expression.cor.Mazin %>%
+  filter(ID_Species == "Human") %>%
+  head()
+
+expression.cor.Mazin %>%
+  filter(ID_Species == "Human" & !is.na(cor)) %>%
+  head()
+
+RPKM.all.WithOrdinalStages %>%
+  filter(ID_Species == "Human") %>%
+  distinct(Tissue_ForDevelopementalAnalysis, Ordinal_stage)
+```
+
+Ok somehow the ordinal stage stuff got messed up. Well that doesn't matter too much since I'm just using this data for troubleshooting.  I'm guessing mouse is similarly messed up cause it is only somewhat messed up in the ordinal staging. Now let's remake the heatmap and see if using this expression data helps at all.
+
+First, let's use my expression spearman cor...
+
+
+```{r}
+
+dat %>%
+  filter(q.splicing < 0.1) %>%
+  # filter(P.expression < 0.1) %>%
+  filter(Species.short %in% c("Macaque", "Chicken", "Rabbit")) %>%
+  inner_join(
+    dPSI.devAS.AllSpecies,
+    by=c("OriginGenome", "Tissue"="Tissue_ForDevelopementalAnalysis", "junc")
+  ) %>%
+  mutate(dPSI_Category = abs(dPSI) > 20) %>%
+  group_by(Tissue, Species.short, Coding, dPSI_Category) %>%
+  summarise(SpearmanSummary = cor(corr.splicing, corr.expression, method='s', use="pairwise.complete.obs"),
+            N = n()) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(dPSI_Category = if_else(dPSI_Category, "dPSI>20", "dPSI<20")) %>%
+  replace_na(list(dPSI_Category = "dPSI NA from NA's in PSI")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=SpearmanSummary)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Coding~dPSI_Category) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Spearman of expression vs splicing effect sizes (spearman over development stages, PSI is qqnormed).\nPasses means >10 reads in at least one sample in timecourse", 35), x="Species", fill=NULL)
+```
+
+And now use Mazin's.
+
+
+```{r}
+dat %>%
+  filter(q.splicing < 0.1) %>%
+  filter(Species.short %in% c("Macaque", "Chicken", "Rabbit")) %>%
+  mutate(StableID = str_remove(Gene_name, "\\..+")) %>%
+  inner_join(
+    dPSI.devAS.AllSpecies,
+    by=c("OriginGenome", "Tissue"="Tissue_ForDevelopementalAnalysis", "junc")
+  ) %>%
+  inner_join(
+    expression.cor.Mazin,
+    by=c("Species.short"="ID_Species", "StableID"="Names", "Tissue"="Tissue_ForDevelopementalAnalysis")
+  ) %>%
+  mutate(dPSI_Category = abs(dPSI) > 20) %>%
+  group_by(Tissue, Species.short, Coding, dPSI_Category) %>%
+  summarise(SpearmanSummary = cor(corr.splicing, cor, method='s', use="pairwise.complete.obs"),
+            N = n()) %>%
+  ungroup() %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(dPSI_Category = if_else(dPSI_Category, "dPSI>20", "dPSI<20")) %>%
+  replace_na(list(dPSI_Category = "dPSI NA from NA's in PSI")) %>%
+  ggplot(aes(x=Species.short, y=Tissue, fill=SpearmanSummary)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Coding~dPSI_Category) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Spearman of expression vs splicing effect sizes (spearman over development stages, PSI is qqnormed).\nPasses means >10 reads in at least one sample in timecourse... Mazin for expression", 35), x="Species", fill=NULL)
+```
+Ok that didn't fix anything. and actually the slightly smaller sample sizes here make me a tad more skeptical that the Productive vs unproductive difference isn't just chance.
+
+
+I think I really need to get to the bottom of this positive correlation, especially for lowly expressed juncs. How does library size change over the timecourse?
+
+```{r}
+LibrarySizes <- CordosoSamples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  mutate(fn = str_glue("../code/rna-seq/idxstats/{ID}.idxstats.txt")) %>%
+  pull(fn) %>%
+  as.character() %>%
+  setNames(str_replace(., "../code/rna-seq/idxstats/(.+?).idxstats.txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="ID") %>%
+  group_by(ID) %>%
+  summarise(TotalReads = sum(V3)) %>%
+  ungroup()
+
+CordosoSamples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  dplyr::select(ID, ID_Species, Ordinal_stage, Label_As_in_PreviousAnalysis, Tissue_ForDevelopementalAnalysis) %>%
+  inner_join(LibrarySizes) %>%
+  group_by(ID_Species,Ordinal_stage,Tissue_ForDevelopementalAnalysis) %>%
+  summarise(MedReads = median(TotalReads)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Ordinal_stage, color=Tissue_ForDevelopementalAnalysis, y=MedReads)) +
+  geom_line() +
+  facet_wrap(~ID_Species, scales="free") +
+  labs(color=NULL, y="NumMappedReads") +
+  theme(legend.position='bottom')
+
+
+```
+Ok so total mapped reads doesn't obvious correlate across developmental stages. What about for reads mapped to gene features, and what about the 'effective library size' by TMM normalization?
+
+```{r}
+GeneCounts.example <- fread("../code/rna-seq/featureCounts/Chicken_UCSC.galGal6_ensv101/AllSamplesUnstrandedCounting.Counts.txt", skip=1)
+
+GeneCounts.example %>%
+  dplyr::rename_at(vars(contains("Aligned")), ~str_replace(.x, "rna-seq/Alignments/STAR_Align/(.+?)/Aligned.sortedByCoord.out.bam", "\\1")) %>%
+  dplyr::select(-c(2:6)) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors(method='TMMwsp')
+
+FeatCountsTableToLibSizes <- function(df){
+  count.table <- df %>%
+    dplyr::rename_at(vars(contains("Aligned")), ~str_replace(.x, "rna-seq/Alignments/STAR_Align/(.+?)/Aligned.sortedByCoord.out.bam", "\\1")) %>%
+    dplyr::select(-c(2:6)) %>%
+    column_to_rownames("Geneid") %>%
+    DGEList() %>%
+    calcNormFactors(method='TMMwsp')
+  return(count.table$samples)
+}
+
+LibrarySizes.FromFeatureCounts <- str_glue("../code/rna-seq/featureCounts/{unique(dat$OriginGenome)}/AllSamplesUnstrandedCounting.Counts.txt") %>%
+  as.character() %>%
+  setNames(str_replace(., "../code/rna-seq/featureCounts/(.+?)/AllSamplesUnstrandedCounting.Counts.txt", "\\1")) %>%
+  lapply(fread, skip=1) %>%
+  lapply(FeatCountsTableToLibSizes) %>%
+  bind_rows(.id="OriginGenome") %>%
+  rownames_to_column("ID")
+
+CordosoSamples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  dplyr::select(ID, ID_Species, Ordinal_stage, Label_As_in_PreviousAnalysis, Tissue_ForDevelopementalAnalysis) %>%
+  inner_join(LibrarySizes.FromFeatureCounts) %>%
+  group_by(ID_Species,Ordinal_stage,Tissue_ForDevelopementalAnalysis) %>%
+  summarise(MedReads = median(lib.size)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Ordinal_stage, color=Tissue_ForDevelopementalAnalysis, y=MedReads)) +
+  geom_line() +
+  facet_wrap(~ID_Species, scales="free") +
+  labs(color=NULL, y="Num FeatureCounts\nMappedReads") +
+  theme(legend.position='bottom')
+
+CordosoSamples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  dplyr::select(ID, ID_Species, Ordinal_stage, Label_As_in_PreviousAnalysis, Tissue_ForDevelopementalAnalysis) %>%
+  inner_join(LibrarySizes.FromFeatureCounts) %>%
+  group_by(ID_Species,Ordinal_stage,Tissue_ForDevelopementalAnalysis) %>%
+  summarise(MedReads = median(norm.factors)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Ordinal_stage, color=Tissue_ForDevelopementalAnalysis, y=MedReads)) +
+  geom_line() +
+  facet_wrap(~ID_Species, scales="free") +
+  labs(color=NULL, y="NormFactors") +
+  theme(legend.position='bottom')
+```
+Okay, so some tissues generally do have changes in effective library sizes (ie after norm factor correction). But not all tissues, so I'm not sure why in all tissues there could be that unexpected positive correlation between expression spearman and splicing spearman.
+
+Maybe I should just switch to using leafcutter differential splicing.

@@ -1,0 +1,3207 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2024-10-16" />
+
+<title>2024-10-16_FinalFigs</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">2024_ComparativeSplicing</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">2024-10-16_FinalFigs</h1>
+<h4 class="date">2024-10-16</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#intro" id="toc-intro">Intro</a>
+<ul>
+<li><a
+href="#supplement-histogram-with-number-of-productive-tx-per-gene"
+id="toc-supplement-histogram-with-number-of-productive-tx-per-gene">supplement:
+histogram with number of productive tx per gene</a></li>
+<li><a href="#main-histogram-with-number-of-tx-per-gene"
+id="toc-main-histogram-with-number-of-tx-per-gene">main: histogram with
+number of tx per gene</a></li>
+<li><a href="#supplement-fraction-unproductive-junction-reads"
+id="toc-supplement-fraction-unproductive-junction-reads">supplement:
+fraction unproductive junction reads</a></li>
+<li><a href="#main-beta-beta-scatter-and-heatmap"
+id="toc-main-beta-beta-scatter-and-heatmap">main: beta beta scatter and
+heatmap</a></li>
+</ul></li>
+</ul>
+</div>
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-11-12
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>2024_comparativesplicing/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed19900924code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(19900924)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed19900924code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(19900924)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/.Rhistory
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/ChainFiles/
+    Ignored:    code/CordosoMoreira_Fastq/
+    Ignored:    code/Downloads/
+    Ignored:    code/GenomeFiles/
+    Ignored:    code/LiftoverJuncs/
+    Ignored:    code/Log.out
+    Ignored:    code/MazinLeafcutterAnalysis/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/config/OldConfigs/2040822_Cordoso_Moreira_SampleList.tsv
+    Ignored:    code/conservation/
+    Ignored:    code/featureCounts/
+    Ignored:    code/kaessmanAnalysis/
+    Ignored:    code/kaessman_AS_dat/
+    Ignored:    code/logs/
+    Ignored:    code/rna-seq/
+    Ignored:    code/rules/.MazinLeafcutterAnalysis.smk.swp
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/.vscode/
+    Ignored:    code/snakemake.log
+    Ignored:    data/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/.ipynb_checkpoints/
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_AllSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_SampleStagesFixed.Rmd
+    Untracked:  analysis/2024-08-24_BioMartLookupGenes.Rmd
+    Untracked:  analysis/2024-08-29_ExploreJuncLiftovers.Rmd
+    Untracked:  analysis/2024-08-29_OrganizeCrossSpeciesTables.Rmd
+    Untracked:  analysis/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd
+    Untracked:  analysis/2024-09-09_Organize_ConserveddevASJuncs.Rmd
+    Untracked:  analysis/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd
+    Untracked:  analysis/2024-09-23_FixMouseEnsemblBed12ToGtf.Rmd
+    Untracked:  analysis/2024-09-30_ContinousExpressionSplicingModel.Rmd
+    Untracked:  analysis/2024-09-30_ContinousTimeSplicingModel.Rmd
+    Untracked:  analysis/2024-10-03_ExplorePuzzling_UP_vs_Expression_Effects.Rmd
+    Untracked:  analysis/2024-10-14_MakeLeafcutterContrasts.Rmd
+    Untracked:  analysis/2024-10-15_HeatmapsWithLeafcutter_dPSI.Rmd
+    Untracked:  analysis/2024-10-16_FinalFigs.Rmd
+    Untracked:  analysis/20240815_LiftoverJuncsTest.ipynb
+    Untracked:  analysis/Untitled.ipynb
+    Untracked:  code/config/CordosoGenomes_Extra_Gtfs.tsv
+    Untracked:  code/config/CordosoTimeSeriesContrasts.tsv
+    Untracked:  code/config/CordosoTissueContrasts.tsv
+    Untracked:  code/config/GTEx_juncFileList.tsv
+    Untracked:  code/envs/crossmap.yml
+    Untracked:  code/envs/py27.yml
+    Untracked:  code/rules/MazinLeafcutterAnalysis.smk
+    Untracked:  code/scripts/ConcatenatePdfs.py
+    Untracked:  code/scripts/FeatureCounts_to_Mat.R
+    Untracked:  code/scripts/PrepAllJuncsFor_JunctionClassifier.R
+    Untracked:  code/scripts/QQNorm_PSITable_ByTissue.R
+    Untracked:  code/scripts/SpearmanCor_Mazin_LeafcutterPSI.R
+    Untracked:  code/scripts/SpearmanCor_Mazin_log2RPKM.R
+    Untracked:  code/scripts/SummariseJuncFilesByProductivityCounts.R
+    Untracked:  code/scripts/Untitled.ipynb
+    Untracked:  code/scripts/leafcutter_to_PSI_GTEX.R
+    Untracked:  code/scripts/tidy_leafcutter_ds_results.R
+    Untracked:  data/RefGenomeSources.txt
+    Untracked:  data/Stages_AsIn_CordosoMoreira.tsv
+    Untracked:  data/Stages_AsIn_CordosoMoreira_Recoded.txt
+    Untracked:  output/Conserved.devAS.leafcutter.tsv.gz
+    Untracked:  output/Ensembl.GeneHumanHomologs.tsv.gz
+    Untracked:  output/Ensembl.TranscriptInfo.tsv.gz
+    Untracked:  output/GTEx_DS_DE_FromChao_CordosoTissuePairs.tsv.gz
+
+Unstaged changes:
+    Modified:   analysis/2024-07-16_Download_CordosoMoreira_Fastq.Rmd
+    Modified:   analysis/index.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/config/ChainFiles.tsv
+    Modified:   code/config/Cordoso_Moreira_SampleList.tsv
+    Modified:   code/config/STAR_Genome_List.tsv
+    Modified:   code/config/samples.tsv
+    Modified:   code/envs/bedparse.yml
+    Modified:   code/module_workflows/snakemake-workflow_rna-seq
+    Modified:   code/rules/LiftoverJuncs.smk
+    Modified:   code/rules/common.smk
+    Modified:   code/scripts/daiuc_leafcutter2
+    Modified:   code/scripts/leafcutter2
+    Modified:   output/QC/ReadCountsPerSamples.tsv
+
+Staged changes:
+    Modified:   .gitmodules
+    New:        code/scripts/daiuc_leafcutter2
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>this notebook is to make final figures for comparative splicing
+analysis in Chao’s paper</p>
+<pre class="r"><code>library(tidyverse)
+library(data.table)
+library(ggrepel)
+library(qvalue)
+library(ggbreak)
+library(cowplot)
+library(ggnewscale)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))</code></pre>
+<pre class="r"><code>JunctionProductivity &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.AllObserved._junction_classifications.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).AllObserved._junction_classifications.txt&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Species_AnnotationSource = recode(Species.short, &quot;Human&quot;=&quot;Human, Gencode v46&quot;, &quot;Macaque&quot;=&quot;Macaque, Ensembl v101&quot;, &quot;Mouse&quot;=&quot;Mouse, Gencode v46&quot;, &quot;Rat&quot;=&quot;Rat, RefSeq updated 2021-03-31&quot;,&quot;Rabbit&quot;=&quot;Rabbit, Ensembl v101&quot;, &quot;Opossum&quot;=&quot;Opossum, Ensembl v97&quot;, &quot;Chicken&quot;=&quot;Chicken, Ensembl v101&quot;)) %&gt;%
+  mutate(Species_AnnotationSource = factor(Species_AnnotationSource, levels=c(&quot;Human&quot;=&quot;Human, Gencode v46&quot;, &quot;Macaque&quot;=&quot;Macaque, Ensembl v101&quot;, &quot;Mouse&quot;=&quot;Mouse, Gencode v46&quot;, &quot;Rat&quot;=&quot;Rat, RefSeq updated 2021-03-31&quot;,&quot;Rabbit&quot;=&quot;Rabbit, Ensembl v101&quot;, &quot;Opossum&quot;=&quot;Opossum, Ensembl v97&quot;, &quot;Chicken&quot;=&quot;Chicken, Ensembl v101&quot;))) %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+
+
+Junc.regtools.annotations &lt;- Sys.glob(&quot;../code/rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/*.uniq.annotated.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/(.+?).uniq.annotated.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  mutate(end = end - 1) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{chrom}:{start}-{end}&quot;))
+
+
+JunctionProductivity.AndAnnotated &lt;- JunctionProductivity %&gt;%
+  inner_join(
+    Junc.regtools.annotations %&gt;%
+      dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+    by=c(&quot;Intron_coord&quot;, &quot;OriginGenome&quot;)
+  ) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  ))
+
+Alt.Annotations.ttypes &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/*/*.TranscriptTypes.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/(.+?)/(.+?).TranscriptTypes.tsv.gz&quot;, &quot;\\1;\\2&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id = &quot;Genome_AnnotSource&quot;) %&gt;%
+  separate(Genome_AnnotSource, into=c(&quot;AnnotationSource&quot;, &quot;OriginGenome&quot;), sep=&quot;;&quot;) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;)))</code></pre>
+<p>How many junctions identified in each species</p>
+<pre class="r"><code>JunctionProductivity.AndAnnotated %&gt;%
+  count(OriginGenome)</code></pre>
+<pre><code>                             OriginGenome       n
+1:           Chicken_UCSC.galGal6_ensv101 1076672
+2: Human_UCSC.hg38_GencodeComprehensive46 1753459
+3:          Macaque_UCSC.rheMac10_ensv101 1417631
+4: Mouse_UCSC.mm39_GencodeComprehensive46 1200027
+5:       Opossum_UCSC.monDom5_ensvUnknown 1046327
+6:            Rabbit_UCSC.oryCun2_ensv101 1264959
+7:                Rat_UCSC.rn7_RefSeqv108 1360658</code></pre>
+<pre class="r"><code>JunctionProductivity.AndAnnotated %&gt;%
+  filter(score &gt;= 100) %&gt;%
+  count(OriginGenome)</code></pre>
+<pre><code>                             OriginGenome      n
+1:           Chicken_UCSC.galGal6_ensv101 212004
+2: Human_UCSC.hg38_GencodeComprehensive46 283331
+3:          Macaque_UCSC.rheMac10_ensv101 244477
+4: Mouse_UCSC.mm39_GencodeComprehensive46 246145
+5:       Opossum_UCSC.monDom5_ensvUnknown 224211
+6:            Rabbit_UCSC.oryCun2_ensv101 226264
+7:                Rat_UCSC.rn7_RefSeqv108 261104</code></pre>
+<p>Histograms of number of protein coding and noncoding transcripts (in
+protein coding genes).</p>
+<pre class="r"><code>Alt.Annotations.ttypes %&gt;%
+  filter(gtype == &quot;protein_coding&quot;) %&gt;%
+  mutate(IsProteinCoding = ttype==&quot;protein_coding&quot;) %&gt;%
+  dplyr::rename(Species = Species.short) %&gt;%
+  group_by(Species, gname, AnnotationSource) %&gt;%
+  summarise(NumCodingTranscripts = sum(IsProteinCoding),
+         NumNoncodingTranscripts = sum(!IsProteinCoding)) %&gt;%
+  ungroup() %&gt;%
+  mutate(TotalNumTranscripts = NumCodingTranscripts + NumNoncodingTranscripts) %&gt;%
+  mutate(TotalNumTranscripts.Group = if_else(TotalNumTranscripts&gt;10, as.integer(10), TotalNumTranscripts)) %&gt;%
+  group_by(Species, TotalNumTranscripts.Group, AnnotationSource) %&gt;%
+  summarise(Frac_Noncoding = sum(NumNoncodingTranscripts)/sum(TotalNumTranscripts), NumGenes = n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(BarHeightNoncoding = Frac_Noncoding*NumGenes) %&gt;%
+  mutate(BarHeightCoding = NumGenes - BarHeightNoncoding) %&gt;%
+  dplyr::select(Species, TotalNumTranscripts.Group, AnnotationSource, BarHeightCoding, BarHeightNoncoding) %&gt;%
+  pivot_longer(names_to = &quot;Group&quot;, values_to = &quot;BarHeight&quot;, c(&quot;BarHeightCoding&quot;, &quot;BarHeightNoncoding&quot;)) %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  ggplot(aes(x=TotalNumTranscripts.Group, y=BarHeight, fill=Group)) +
+    geom_col() +
+    facet_grid(AnnotationSource~Species) +
+    theme(legend.position=&#39;bottom&#39;) +
+    scale_x_discrete(labels=c(1:9, &quot;&gt;10&quot;)) +
+    scale_fill_manual(values=c(&quot;BarHeightCoding&quot;=&quot;gray&quot;, &quot;BarHeightNoncoding&quot;=&quot;red&quot;), labels=c(&quot;BarHeightCoding&quot;=&quot;Productive&quot;, &quot;BarHeightNoncoding&quot;=&quot;Unproductive&quot;)) +
+    Rotate_x_labels +
+    labs(caption=str_wrap(&quot;RefSeq &amp; Ensembl are most recent Ensembl/RefSeq-sourced gtfs on UCSC website. Gencode from Gencode.\nMouse Ensembl is malformatted, with transcript_ids for gene_ids, hence weird plot&quot;, 35), y=&quot;Num genes&quot;, x=&quot;Num transcripts per gene&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Note there is a problem with mouse because transcripts don’t have a
+parent gene in the ensembl from UCSC. We can fix that</p>
+<pre class="r"><code>Mouse.ensembl.ttypes &lt;- read_tsv(&quot;../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/Ensembl/Mouse_UCSC.mm39_GencodeComprehensive46.FixedOut.bed&quot;, col_names = F) %&gt;%
+  dplyr::select(gname = X14, tname=X13, gtype = X16, ttype = X15) %&gt;%
+  mutate(AnnotationSource = &quot;Ensembl&quot;) %&gt;%
+  mutate(OriginGenome = &quot;Mouse_UCSC.mm39_GencodeComprehensive46&quot;) %&gt;%
+  mutate(Species.short = &quot;Mouse&quot;)
+
+NumTranscripts.Supp.P.dat &lt;- Alt.Annotations.ttypes %&gt;%
+  filter(!(AnnotationSource==&quot;Ensembl&quot; &amp; OriginGenome == &quot;Mouse_UCSC.mm39_GencodeComprehensive46&quot;)) %&gt;%
+  bind_rows(Mouse.ensembl.ttypes) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  filter(gtype == &quot;protein_coding&quot;) %&gt;%
+  mutate(IsProteinCoding = ttype==&quot;protein_coding&quot;) %&gt;%
+  dplyr::rename(Species = Species.short)
+
+SummaryAnnotations &lt;- inner_join(
+  NumTranscripts.Supp.P.dat %&gt;%
+    count(IsProteinCoding, Species, AnnotationSource) %&gt;%
+    mutate(IsProteinCoding = if_else(IsProteinCoding, &quot;NumCoding&quot;, &quot;NumNoncoding&quot;)) %&gt;%
+    pivot_wider(names_from = IsProteinCoding, values_from = n, values_fill=0),
+  NumTranscripts.Supp.P.dat %&gt;%
+    distinct(gname, Species, AnnotationSource) %&gt;%
+    count(Species, AnnotationSource)
+) %&gt;%
+  mutate(Total = NumCoding + NumNoncoding) %&gt;%
+  mutate( summary = str_glue(&quot;{NumCoding} +\n{NumNoncoding} =\n{Total} txs\n among\n{n} genes&quot;)) %&gt;%
+  right_join(
+      expand(., Species, AnnotationSource)) %&gt;%
+  mutate(FacetLargeText = if_else(is.na(summary), &quot;NA&quot;, NA_character_)) %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;)))</code></pre>
+<div id="supplement-histogram-with-number-of-productive-tx-per-gene"
+class="section level3">
+<h3>supplement: histogram with number of productive tx per gene</h3>
+<pre class="r"><code>NumTranscripts.Supp.P.dat %&gt;%
+  group_by(Species, gname, AnnotationSource) %&gt;%
+  summarise(NumCodingTranscripts = sum(IsProteinCoding),
+         NumNoncodingTranscripts = sum(!IsProteinCoding)) %&gt;%
+  ungroup() %&gt;%
+  mutate(TotalNumTranscripts = NumCodingTranscripts + NumNoncodingTranscripts) %&gt;%
+  mutate(TotalNumTranscripts.Group = if_else(TotalNumTranscripts&gt;10, as.integer(10), TotalNumTranscripts)) %&gt;%
+  group_by(Species, TotalNumTranscripts.Group, AnnotationSource) %&gt;%
+  summarise(Frac_Noncoding = sum(NumNoncodingTranscripts)/sum(TotalNumTranscripts), NumGenes = n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(BarHeightNoncoding = Frac_Noncoding*NumGenes) %&gt;%
+  mutate(BarHeightCoding = NumGenes - BarHeightNoncoding) %&gt;%
+  dplyr::select(Species, TotalNumTranscripts.Group, AnnotationSource, BarHeightCoding, BarHeightNoncoding) %&gt;%
+  pivot_longer(names_to = &quot;Group&quot;, values_to = &quot;BarHeight&quot;, c(&quot;BarHeightCoding&quot;, &quot;BarHeightNoncoding&quot;)) %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  ggplot(aes(x=TotalNumTranscripts.Group, y=BarHeight)) +
+    geom_col(aes(fill=Group)) +
+    scale_x_continuous(breaks=c(1:10), labels=c(1, &quot;&quot;, &quot;&quot;, &quot;&quot;, 5, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&gt;10&quot;)) +
+    geom_text(data = SummaryAnnotations, aes(label = summary), size=3.5, vjust=1, hjust=-0.1, x=-Inf, y=Inf) +
+    geom_text(data = SummaryAnnotations, aes(label = FacetLargeText), alpha=0.05,size=13, vjust=0, hjust=-0.1, x=-Inf, y=10E3) +
+    facet_grid(AnnotationSource~Species) +
+    theme(legend.position=&#39;bottom&#39;) +
+    scale_y_continuous(breaks=c(0, 10E3, 20E3), labels=c(0, &quot;10K&quot;, &quot;20K&quot;)) +
+    scale_fill_manual(values=c(&quot;BarHeightCoding&quot;=&quot;#377eb8&quot;, &quot;BarHeightNoncoding&quot;=&quot;#e41a1c&quot;), labels=c(&quot;BarHeightCoding&quot;=&quot;Productive&quot;, &quot;BarHeightNoncoding&quot;=&quot;Unproductive&quot;)) +
+    labs(y=&quot;# Genes&quot;, x=&quot;# Annotated transcripts per gene&quot;, fill=&quot;Annotated transcript type&quot;) +
+  coord_cartesian(ylim=c(0, 20E3))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/NumUnproductiveTranscriptsPerGene.AllGtfs.pdf&quot;, height=120, width=200, units=&quot;mm&quot;)</code></pre>
+</div>
+<div id="main-histogram-with-number-of-tx-per-gene"
+class="section level3">
+<h3>main: histogram with number of tx per gene</h3>
+<p>same as above, but using just the ‘main’ gtf for each species</p>
+<pre class="r"><code>NumTranscripts.Supp.P.dat %&gt;%
+  group_by(Species, gname, AnnotationSource) %&gt;%
+  summarise(NumCodingTranscripts = sum(IsProteinCoding),
+         NumNoncodingTranscripts = sum(!IsProteinCoding)) %&gt;%
+  ungroup() %&gt;%
+  mutate(TotalNumTranscripts = NumCodingTranscripts + NumNoncodingTranscripts) %&gt;%
+  mutate(TotalNumTranscripts.Group = if_else(TotalNumTranscripts&gt;10, as.integer(10), TotalNumTranscripts)) %&gt;%
+  group_by(Species, TotalNumTranscripts.Group, AnnotationSource) %&gt;%
+  summarise(Frac_Noncoding = sum(NumNoncodingTranscripts)/sum(TotalNumTranscripts), NumGenes = n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(BarHeightNoncoding = Frac_Noncoding*NumGenes) %&gt;%
+  mutate(BarHeightCoding = NumGenes - BarHeightNoncoding) %&gt;%
+  dplyr::select(Species, TotalNumTranscripts.Group, AnnotationSource, BarHeightCoding, BarHeightNoncoding) %&gt;%
+  pivot_longer(names_to = &quot;Group&quot;, values_to = &quot;BarHeight&quot;, c(&quot;BarHeightCoding&quot;, &quot;BarHeightNoncoding&quot;)) %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  mutate(Species_AnnotationSource = paste(Species, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  # filter(Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+  ggplot(aes(x=TotalNumTranscripts.Group, y=BarHeight)) +
+    geom_col(aes(fill=Group)) +
+    scale_x_continuous(breaks=c(1:10), labels=c(1, &quot;&quot;, &quot;&quot;, &quot;&quot;, 5, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&gt;10&quot;)) +
+    # geom_text(data = . %&gt;% 
+    #             distinct(Species, AnnotationSource) %&gt;%
+    #             inner_join(SummaryAnnotations) %&gt;%
+    #             mutate( summary = str_glue(&quot;{NumCoding} + {NumNoncoding}\n= {Total} txs among\n{n} genes&quot;)),
+    #           aes(label = summary), size=5, vjust=1, hjust=0, x=2, y=Inf) +
+    facet_wrap(~Species, nrow=1) +
+    theme(legend.position=&#39;bottom&#39;) +
+    scale_y_continuous(breaks=c(0, 10E3, 20E3), labels=c(0, &quot;10K&quot;, &quot;20K&quot;)) +
+    scale_fill_manual(values=c(&quot;BarHeightCoding&quot;=&quot;#377eb8&quot;, &quot;BarHeightNoncoding&quot;=&quot;#e41a1c&quot;), labels=c(&quot;BarHeightCoding&quot;=&quot;Productive&quot;, &quot;BarHeightNoncoding&quot;=&quot;Unproductive&quot;)) +
+    labs(y=&quot;# Genes&quot;, x=&quot;# Annotated transcripts per gene&quot;, fill=&quot;Annotated transcript type&quot;) +
+  coord_cartesian(ylim=c(0, 20E3)) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/NumUnproductiveTranscriptsPerGene.MainGtfs.pdf&quot;, height=100, width=180, units=&quot;mm&quot;)</code></pre>
+</div>
+<div id="supplement-fraction-unproductive-junction-reads"
+class="section level3">
+<h3>supplement: fraction unproductive junction reads</h3>
+<p>First versions will use the table that Chao pasted in slack to
+convert from bitwise flags to “NE”, “PR”, or “UP” which are labelled as
+“near utr”, “productive” or “unproductive”.</p>
+<pre class="r"><code>JunctionProductivity.AllGtfs &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/*/*.AllObserved._junction_classifications.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?)/(.+?).AllObserved._junction_classifications.txt&quot;, &quot;\\1;\\2&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id = &quot;Genome_AnnotSource&quot;) %&gt;%
+  separate(Genome_AnnotSource, into=c(&quot;AnnotationSource&quot;, &quot;OriginGenome&quot;), sep=&quot;;&quot;) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+  inner_join(
+    Junc.regtools.annotations %&gt;%
+      dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+    by=c(&quot;Intron_coord&quot;, &quot;OriginGenome&quot;)
+  ) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  ))
+
+JunctionProductivity.AllGtfs.P.dat &lt;- JunctionProductivity.AllGtfs %&gt;%
+  group_by(OriginGenome,AnnotationSource, Annot, ProductivityLabel) %&gt;%
+  summarise(n = sum(score)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Group = case_when(
+    ProductivityLabel == &quot;PR&quot; &amp; Annot ~ &quot;Productive, annotated&quot;,
+    ProductivityLabel == &quot;PR&quot; &amp; !Annot ~ &quot;Productive, unannotated&quot;,
+    ProductivityLabel == &quot;UP&quot; &amp; Annot ~ &quot;Unproductive, annotated&quot;,
+    ProductivityLabel == &quot;UP&quot; &amp; !Annot ~ &quot;Unproductive, unannotated&quot;,
+    ProductivityLabel == &quot;NE&quot; &amp; Annot ~ &quot;Near UTR, annotated&quot;,
+    ProductivityLabel == &quot;NE&quot; &amp; !Annot ~ &quot;Near UTR, unannotated&quot;,
+  )) %&gt;%
+  mutate(Group = factor(Group, levels=rev(c(
+    &quot;Unproductive, unannotated&quot;, &quot;Unproductive, annotated&quot;,&quot;Near UTR, unannotated&quot;, &quot;Near UTR, annotated&quot;,&quot;Productive, unannotated&quot;,&quot;Productive, annotated&quot;
+  )))) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %&gt;%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+    mutate(FacetLargeText = if_else(is.na(ProductivityLabel), &quot;NA&quot;, NA_character_)) %&gt;%
+  group_by(AnnotationSource, Species.short) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup()
+
+
+
+
+ggplot(JunctionProductivity.AllGtfs.P.dat, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent junction reads&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  facet_wrap(~Species.short, scales=&quot;free_x&quot;, nrow = 1) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentJunctionReadsByClassification.AllGtfs.pdf&quot;, height=100, width=180, units=&quot;mm&quot;)
+
+JunctionProductivity.AllGtfs.P.dat %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  # filter(Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent junction reads&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentJunctionReadsByClassification.MainGtfs.pdf&quot;, height=80, width=75,, units=&quot;mm&quot;)</code></pre>
+<p>Second versions just are “productive” if AlgortihmCoding | GencodePC,
+and “unproductive” otherwise.</p>
+<pre class="r"><code>JunctionProductivity.AllGtfs.P.dat &lt;- JunctionProductivity.AllGtfs %&gt;%
+  group_by(OriginGenome,AnnotationSource, Annot, Coding) %&gt;%
+  summarise(n = sum(score)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Group = case_when(
+    Coding &amp; Annot ~ &quot;Productive, annotated&quot;,
+    Coding &amp; !Annot ~ &quot;Productive, unannotated&quot;,
+    !Coding &amp; Annot ~ &quot;Unproductive, annotated&quot;,
+    !Coding &amp; !Annot ~ &quot;Unproductive, unannotated&quot;
+  )) %&gt;%
+  mutate(Group = factor(Group, levels=rev(c(
+    &quot;Unproductive, unannotated&quot;, &quot;Unproductive, annotated&quot;,&quot;Near UTR, unannotated&quot;, &quot;Near UTR, annotated&quot;,&quot;Productive, unannotated&quot;,&quot;Productive, annotated&quot;
+  )))) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %&gt;%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+    mutate(FacetLargeText = if_else(is.na(Group), &quot;NA&quot;, NA_character_)) %&gt;%
+  group_by(AnnotationSource, Species.short) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup()
+
+ggplot(JunctionProductivity.AllGtfs.P.dat, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent junction reads&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  facet_wrap(~Species.short, scales=&quot;free_x&quot;, nrow = 1) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentJunctionReadsBySimplerClassification.AllGtfs.pdf&quot;, height=100, width=180, units=&quot;mm&quot;)
+
+
+JunctionProductivity.AllGtfs.P.dat %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  # filter(Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent junction reads&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentJunctionReadsBySimplerClassification.MainGtfs.pdf&quot;, height=80, width=75, units=&quot;mm&quot;)</code></pre>
+<p>Third version is based on bitwise flag, and filters out NE
+junctions…</p>
+<pre class="r"><code>JunctionProductivity.AllGtfs.P.dat &lt;- JunctionProductivity.AllGtfs %&gt;%
+  filter(!ProductivityLabel==&quot;NE&quot;) %&gt;%
+  mutate(Coding = if_else(ProductivityLabel == &quot;PR&quot;, T, F)) %&gt;%
+  group_by(OriginGenome,AnnotationSource, Annot, Coding) %&gt;%
+  summarise(n = sum(score)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Group = case_when(
+    Coding &amp; Annot ~ &quot;Productive, annotated&quot;,
+    Coding &amp; !Annot ~ &quot;Productive, unannotated&quot;,
+    !Coding &amp; Annot ~ &quot;Unproductive, annotated&quot;,
+    !Coding &amp; !Annot ~ &quot;Unproductive, unannotated&quot;
+  )) %&gt;%
+  mutate(Group = factor(Group, levels=rev(c(
+    &quot;Unproductive, unannotated&quot;, &quot;Unproductive, annotated&quot;,&quot;Near UTR, unannotated&quot;, &quot;Near UTR, annotated&quot;,&quot;Productive, unannotated&quot;,&quot;Productive, annotated&quot;
+  )))) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %&gt;%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+    mutate(FacetLargeText = if_else(is.na(Group), &quot;NA&quot;, NA_character_)) %&gt;%
+  group_by(AnnotationSource, Species.short) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup()
+
+ggplot(JunctionProductivity.AllGtfs.P.dat, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent junction reads&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  facet_wrap(~Species.short, scales=&quot;free_x&quot;, nrow = 1) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentJunctionReadsBySimplerClassification.FilterOutNEs.AllGtfs.pdf&quot;, height=100, width=180, units=&quot;mm&quot;)
+
+
+JunctionProductivity.AllGtfs.P.dat %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  # filter(Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+  ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent junction reads&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentJunctionReadsBySimplerClassification.FilterOutNEs.MainGtfs.pdf&quot;, height=80, width=75, units=&quot;mm&quot;)</code></pre>
+<p>And now plot fraction of unique juncs in each category (with at least
+100 junc read counts across whole dataset)</p>
+<pre class="r"><code>Count.UniqueJuncs.P.dat &lt;- JunctionProductivity.AllGtfs %&gt;%
+  filter(score &gt; 100) %&gt;%
+  mutate(Group = case_when(
+    Coding &amp; Annot ~ &quot;Productive, annotated&quot;,
+    Coding &amp; !Annot ~ &quot;Productive, unannotated&quot;,
+    !Coding &amp; Annot ~ &quot;Unproductive, annotated&quot;,
+    !Coding &amp; !Annot ~ &quot;Unproductive, unannotated&quot;
+  )) %&gt;%
+  mutate(Group = factor(Group, levels=rev(c(
+    &quot;Unproductive, unannotated&quot;, &quot;Unproductive, annotated&quot;,&quot;Near UTR, unannotated&quot;, &quot;Near UTR, annotated&quot;,&quot;Productive, unannotated&quot;,&quot;Productive, annotated&quot;
+  )))) %&gt;%
+  count(Group, AnnotationSource, OriginGenome) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %&gt;%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+    mutate(FacetLargeText = if_else(is.na(Group), &quot;NA&quot;, NA_character_)) %&gt;%
+  group_by(AnnotationSource, Species.short) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup()
+
+ggplot(Count.UniqueJuncs.P.dat, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent unique junctions&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  # scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  # scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  facet_wrap(~Species.short, scales=&quot;free_x&quot;, nrow = 1) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentUniqueJunctionBySimplerClassification.AllGtfs.pdf&quot;, height=100, width=180, units=&quot;mm&quot;)
+
+
+Count.UniqueJuncs.P.dat %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  # filter(Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent unique junctions&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  # scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  # scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentUniqueJunctionBySimplerClassification.MainGtfs.pdf&quot;, height=80, width=75, units=&quot;mm&quot;)</code></pre>
+<p>And again, but with the UTR classification</p>
+<pre class="r"><code>Count.UniqueJuncs.P.dat &lt;- JunctionProductivity.AllGtfs %&gt;%
+  filter(score &gt; 100) %&gt;%
+  mutate(Group = case_when(
+    ProductivityLabel == &quot;PR&quot; &amp; Annot ~ &quot;Productive, annotated&quot;,
+    ProductivityLabel == &quot;PR&quot; &amp; !Annot ~ &quot;Productive, unannotated&quot;,
+    ProductivityLabel == &quot;UP&quot; &amp; Annot ~ &quot;Unproductive, annotated&quot;,
+    ProductivityLabel == &quot;UP&quot; &amp; !Annot ~ &quot;Unproductive, unannotated&quot;,
+    ProductivityLabel == &quot;NE&quot; &amp; Annot ~ &quot;Near UTR, annotated&quot;,
+    ProductivityLabel == &quot;NE&quot; &amp; !Annot ~ &quot;Near UTR, unannotated&quot;,
+  )) %&gt;%
+  mutate(Group = factor(Group, levels=rev(c(
+    &quot;Unproductive, unannotated&quot;, &quot;Unproductive, annotated&quot;,&quot;Near UTR, unannotated&quot;, &quot;Near UTR, annotated&quot;,&quot;Productive, unannotated&quot;,&quot;Productive, annotated&quot;
+  )))) %&gt;%
+  count(Group, AnnotationSource, OriginGenome) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %&gt;%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+    mutate(FacetLargeText = if_else(is.na(Group), &quot;NA&quot;, NA_character_)) %&gt;%
+  group_by(AnnotationSource, Species.short) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup()
+
+ggplot(Count.UniqueJuncs.P.dat, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent unique junctions&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  # scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  # scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  facet_wrap(~Species.short, scales=&quot;free_x&quot;, nrow = 1) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentUniqueJunctionByClassification.AllGtfs.pdf&quot;, height=100, width=180, units=&quot;mm&quot;)
+
+
+Count.UniqueJuncs.P.dat %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  # filter(Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent unique junctions&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  # scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  # scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentUniqueJunctionByClassification.MainGtfs.pdf&quot;, height=80, width=75, units=&quot;mm&quot;)</code></pre>
+<p>And a third way, where NEs are just ignored…</p>
+<pre class="r"><code>Count.UniqueJuncs.P.dat &lt;- JunctionProductivity.AllGtfs %&gt;%
+  filter(!ProductivityLabel==&quot;NE&quot;) %&gt;%
+  mutate(Coding = if_else(ProductivityLabel == &quot;PR&quot;, T, F)) %&gt;%
+  filter(score &gt; 100) %&gt;%
+  mutate(Group = case_when(
+    Coding &amp; Annot ~ &quot;Productive, annotated&quot;,
+    Coding &amp; !Annot ~ &quot;Productive, unannotated&quot;,
+    !Coding &amp; Annot ~ &quot;Unproductive, annotated&quot;,
+    !Coding &amp; !Annot ~ &quot;Unproductive, unannotated&quot;
+  )) %&gt;%
+  mutate(Group = factor(Group, levels=rev(c(
+    &quot;Unproductive, unannotated&quot;, &quot;Unproductive, annotated&quot;,&quot;Near UTR, unannotated&quot;, &quot;Near UTR, annotated&quot;,&quot;Productive, unannotated&quot;,&quot;Productive, annotated&quot;
+  )))) %&gt;%
+  count(Group, AnnotationSource, OriginGenome) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %&gt;%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+    mutate(FacetLargeText = if_else(is.na(Group), &quot;NA&quot;, NA_character_)) %&gt;%
+  group_by(AnnotationSource, Species.short) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup()
+
+ggplot(Count.UniqueJuncs.P.dat, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent unique junctions&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  # scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  # scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  facet_wrap(~Species.short, scales=&quot;free_x&quot;, nrow = 1) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentUniqueJunctionBySimplerClassification.NEsIgnored.AllGtfs.pdf&quot;, height=100, width=180, units=&quot;mm&quot;)
+
+
+Count.UniqueJuncs.P.dat %&gt;%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c(&quot;Gencode&quot;, &quot;Ensembl&quot;, &quot;RefSeq&quot;))) %&gt;%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %&gt;%
+  filter(Species_AnnotationSource %in% c(&quot;Human Gencode&quot;, &quot;Mouse Gencode&quot;, &quot;Rat RefSeq&quot;, &quot;Chicken Ensembl&quot;, &quot;Opossum Ensembl&quot;, &quot;Macaque Ensembl&quot;, &quot;Rabbit Ensembl&quot;)) %&gt;%
+  # filter(Species %in% c(&quot;Human&quot;, &quot;Mouse&quot;, &quot;Opossum&quot;, &quot;Macaque&quot;)) %&gt;%
+ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position = &quot;stack&quot; ) +
+  scale_fill_manual(values = c(
+    &quot;Unproductive, unannotated&quot;=&quot;#fb9a99&quot;, &quot;Unproductive, annotated&quot;=&quot;#e31a1c&quot;,&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;,&quot;Productive, unannotated&quot;=&quot;#a6cee3&quot;,&quot;Productive, annotated&quot;=&quot;#1f78b4&quot;
+  )) +
+  labs(y=&quot;Percent unique junctions&quot;, x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  # scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  # scale_y_break(c(10, 95)) +
+  theme(legend.position=&#39;none&#39;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/PercentUniqueJunctionBySimplerClassification.NEsIgnored.MainGtfs.pdf&quot;, height=80, width=75, units=&quot;mm&quot;)</code></pre>
+</div>
+<div id="main-beta-beta-scatter-and-heatmap" class="section level3">
+<h3>main: beta beta scatter and heatmap</h3>
+<pre class="r"><code>dat &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/First10_vs_Second10.*.joined.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/First10_vs_Second10.(.+?).joined.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;Contrast&quot;) %&gt;%
+  separate(Contrast, into=c(&quot;Tissue&quot;, &quot;Species&quot;), sep=&quot;\\.&quot;) %&gt;%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  ))
+
+dat &lt;- dat %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+
+betabetascatter.P.dat &lt;- dat %&gt;%
+  # filter(!UTR) %&gt;%
+  
+  # Use bitwise flags
+  filter(!ProductivityLabel==&quot;NE&quot;) %&gt;%
+  mutate(Coding = if_else(ProductivityLabel == &quot;PR&quot;, T, F)) %&gt;%
+  
+  filter(!is.na(Coding)) %&gt;%
+  filter(p.adjust &lt; 0.05) %&gt;%
+  # filter(abs(logef)&gt;0.5) %&gt;%
+  filter(abs(deltapsi) &gt; 0.05) %&gt;%
+  group_by(Species, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(Species, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(deltapsi))) %&gt;%
+  distinct(Species, Tissue, cluster, .keep_all=T)
+
+betabetascatter.P.dat %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  group_by(Tissue, Species, Coding) %&gt;%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n(),
+            p  = cor.test(deltapsi, logFC, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;)$p.value) %&gt;%
+  ungroup() %&gt;%
+  mutate(Plab = case_when(
+    p &gt; 0.05 ~ &quot;&quot;,
+    p &lt; 0.05 ~ &quot;*&quot;,
+    p &lt; 0.005 ~ &quot;**&quot;,
+    p &lt; 0.0005 ~ &quot;***&quot;
+  )) %&gt;%
+  mutate(Plab = format.pval(p, digits=1)) %&gt;%
+  mutate(label = str_glue(&quot;n={n}\nP={Plab}&quot;)) %&gt;%
+  mutate(Species = factor(Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0, low=&quot;#003c30&quot;, high=&quot;#543005&quot;, mid=&quot;#f5f5f5&quot;) +
+  geom_text(aes(label=label), size=1) +
+  facet_wrap(~Coding, nrow=2) +
+  Rotate_x_labels +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  labs(fill=&quot;spearman\nrho&quot;, x=NULL, y=NULL)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/SplicingVsExpression_Heatmap.MainGtfs.pdf&quot;, height=95, width=110, units=&quot;mm&quot;)</code></pre>
+<p>Another version with no labels in cells:</p>
+<pre class="r"><code>betabetascatter.P.dat %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  group_by(Tissue, Species, Coding) %&gt;%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n(),
+            p  = cor.test(deltapsi, logFC, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;)$p.value) %&gt;%
+  ungroup() %&gt;%
+  mutate(Plab = case_when(
+    p &gt; 0.05 ~ &quot;&quot;,
+    p &lt; 0.05 ~ &quot;*&quot;,
+    p &lt; 0.005 ~ &quot;**&quot;,
+    p &lt; 0.0005 ~ &quot;***&quot;
+  )) %&gt;%
+  mutate(Plab = format.pval(p, digits=1)) %&gt;%
+  mutate(label = str_glue(&quot;n={n}\nP={Plab}&quot;)) %&gt;%
+  mutate(Species = factor(Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0, low=&quot;#003c30&quot;, high=&quot;#543005&quot;, mid=&quot;#f5f5f5&quot;) +
+  facet_wrap(~Coding, nrow=2) +
+  Rotate_x_labels +
+  theme() +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  labs(fill=&quot;spearman\nrho&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/SplicingVsExpression_Heatmap.NoLabels.MainGtfs.pdf&quot;, height=100, width=120, units=&quot;mm&quot;)</code></pre>
+<p>And focus on a single cell, for illustrative scatter plot</p>
+<pre class="r"><code>pca.prod &lt;- 
+  betabetascatter.P.dat %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  filter(Species == &quot;Chicken&quot; &amp; Tissue == &quot;Brain&quot;) %&gt;%
+  filter(Coding == &quot;Productive&quot;) %&gt;%
+  prcomp(~deltapsi+logFC, data=.)
+slp.prod &lt;- with(pca.prod, rotation[2,1] / rotation[1,1])
+int.prod &lt;- with(pca.prod, center[2] - slp.prod*center[1])
+pca.unprod &lt;- 
+  betabetascatter.P.dat %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  filter(Species == &quot;Chicken&quot; &amp; Tissue == &quot;Brain&quot;) %&gt;%
+  filter(Coding == &quot;Unproductive&quot;) %&gt;%
+  prcomp(~deltapsi+logFC, data=.)
+slp.unprod &lt;- with(pca.unprod, rotation[2,1] / rotation[1,1])
+int.unprod &lt;- with(pca.unprod, center[2] - slp.unprod*center[1])
+
+deming.lines &lt;- data.frame(Coding = c(&quot;Productive&quot;, &quot;Unproductive&quot;), slp = c(slp.prod, slp.unprod), int=c(int.prod, int.unprod))
+
+
+betabetascatter.P.dat %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  filter(Species == &quot;Chicken&quot; &amp; Tissue == &quot;Brain&quot;) %&gt;%
+  filter(!is.na(Coding)) %&gt;%
+
+  ggplot(aes(x=deltapsi, y=logFC, color=Coding)) +
+  geom_point(alpha=0.05) +
+  geom_hline(yintercept=0, linetype=&#39;dashed&#39;, alpha=0.5) +
+  geom_smooth(method=&#39;lm&#39;, se=F) +
+  # geom_abline(data = deming.lines, aes(slope=slp, intercept = int)) +
+  geom_text( data = . %&gt;%
+            group_by(Coding) %&gt;%
+            summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n(), p  = cor.test(deltapsi, logFC, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;)$p.value) %&gt;%
+            ungroup() %&gt;%
+            mutate(Plab = format.pval(p, digits=2)) %&gt;%
+            mutate(label = str_glue(&quot; n={n}\n spearman rho={round(spearman.of_dPSI_vs_logFC, 2)}\n P={Plab}&quot;)),
+            aes(label=label),
+            x=-0.8, y=Inf, vjust=1.1, hjust=0, color=&#39;black&#39;
+                           ) +
+  scale_color_manual(values=c(&quot;Productive&quot;=&quot;#1f78b4&quot;, &quot;Unproductive&quot;=&quot;#e31a1c&quot;)) +
+  facet_wrap(~Coding, nrow=2) +
+  coord_cartesian(ylim=c(-3,3)) +
+  theme(legend.position=&#39;none&#39;) +
+  labs(x=&quot;Differential splicing\n(Delta PSI)&quot;, y=&quot;Differential gene\nexpression (log2FC)&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/SplicingVsExpression_ScatterChickenBrain.pdf&quot;, height=100, width=60, units=&quot;mm&quot;)</code></pre>
+<p>Ok, now let’s pick some conserved events to highlight (eg DNAJC5).
+First we need to liftover to human coords and match juncs. We should
+actually do a psuedo liftover by matching clusters.</p>
+<pre class="r"><code>Liftovers.AsFlanks &lt;- Sys.glob(&quot;../code/LiftoverJuncs/AsFlanks/*.Lifted.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/LiftoverJuncs/AsFlanks/(.+?).Lifted.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;end&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickStop&quot;, &quot;color&quot;, &quot;nBlocks&quot;, &quot;blockSizes&quot;, &quot;blockStarts&quot;)) %&gt;%
+  bind_rows(.id = &quot;OriginGenome&quot;)
+
+juncs.and.clusters &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.Clustered.juncList.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).Clustered.juncList.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id = &quot;OriginGenome&quot;) %&gt;%
+  filter(str_detect(chrom, &quot;clu_NA&quot;, negate = T)) %&gt;%
+  separate(chrom, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;cluster&quot;), sep=&quot;:&quot;, convert=T) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{chrom}:{start}-{stop}&quot;)) %&gt;%
+  mutate(strand = str_extract(cluster, &quot;[-+]$&quot;)) %&gt;%
+  mutate(name = str_glue(&quot;{chrom}_{start}_{stop}_{strand}&quot;))
+
+
+Cluster2ClusterMap &lt;- Liftovers.AsFlanks %&gt;%
+  mutate(start = start +1, end=end-1) %&gt;%
+  dplyr::select(OriginGenome, name, JuncCount = score, Hg38_chrom=chrom, Hg38_start=start, Hg38_end=end, Hg38_strand=strand) %&gt;%
+  inner_join(juncs.and.clusters, by=c(&quot;OriginGenome&quot;, &quot;name&quot;)) %&gt;%
+  inner_join(juncs.and.clusters %&gt;%
+               filter(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+               dplyr::select(Hg38_chrom=chrom, Hg38_start=start, Hg38_end=stop, Hg38_strand=strand, Hg38Name = name, Hg38Cluster = cluster),
+             by=c(&quot;Hg38_chrom&quot;, &quot;Hg38_start&quot;, &quot;Hg38_end&quot;, &quot;Hg38_strand&quot;)) %&gt;%
+  dplyr::rename(OriginName = name) %&gt;%
+  mutate(Species = str_replace(OriginGenome, &quot;^(.+?)_.+$&quot;, &quot;\\1&quot;))
+
+Cluster2ClusterMap %&gt;%
+  distinct(Species, cluster, Hg38Cluster) %&gt;%
+  count(Species, cluster) %&gt;%
+  ggplot(aes(x=n, color=Species)) +
+  stat_ecdf() +
+  labs(x=&quot;Num human clusters for\neach OriginGenome cluster&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And now join tables to human, keeping only those that are significant
+in human</p>
+<pre class="r"><code>dat.JoinedByHumanCoords &lt;- dat %&gt;%
+  dplyr::rename(q.splicing=p.adjust) %&gt;%
+  # filter(q.splicing &lt; 0.05) %&gt;%
+  filter(!Species==&quot;Human&quot;) %&gt;%
+  separate(cluster, into=c(&quot;chrom&quot;, &quot;cluster&quot;), sep=&quot;:&quot;) %&gt;%
+  mutate(OriginName = str_glue(&quot;{chrom}_{start}_{stop-1}_{Strand}&quot;)) %&gt;%
+  inner_join(
+      Cluster2ClusterMap %&gt;%
+        dplyr::select(Species, OriginName, cluster, Hg38Name, Hg38Cluster),
+        by=c(&quot;Species&quot;, &quot;OriginName&quot;, &quot;cluster&quot;)
+  ) %&gt;%
+  inner_join(
+    dat %&gt;%
+      dplyr::rename(q.splicing=p.adjust) %&gt;%
+      filter(q.splicing &lt; 0.05) %&gt;%
+      filter(Species==&quot;Human&quot;) %&gt;%
+      separate(cluster, into=c(&quot;chrom&quot;, &quot;cluster&quot;), sep=&quot;:&quot;) %&gt;%
+      mutate(name = str_glue(&quot;{chrom}_{start}_{stop-1}_{Strand}&quot;)) %&gt;%
+      dplyr::rename(Hg38Cluster=cluster),
+    by=c(&quot;Hg38Cluster&quot;, &quot;Tissue&quot;),
+    suffix = c(&quot;.OtherSpecies&quot;, &quot;.Human&quot;)
+  ) %&gt;%
+  mutate(IsExactLiftover = Hg38Name == name) %&gt;%
+  mutate(Species.OtherSpecies= factor(Species.OtherSpecies, levels=c(&quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;)))
+  
+
+
+
+dat.JoinedByHumanCoords %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches b/n human&quot;
+  )) %&gt;%
+  filter(q.splicing.OtherSpecies &lt; 0.05) %&gt;%
+  filter(abs(deltapsi.Human ) &gt; 0.01) %&gt;%
+  mutate(Group = factor(Group, levels=c(&quot;Unproductive&quot;, &quot;Productive&quot;, &quot;Switches b/n human&quot;))) %&gt;%
+  arrange(Species.OtherSpecies, cluster, desc(IsExactLiftover), Group, desc(abs(deltapsi.OtherSpecies))) %&gt;%
+  distinct(Species.OtherSpecies, cluster, OriginName, .keep_all=T) %&gt;%
+  mutate(IsMatchingSigns = sign(deltapsi.Human)==sign(deltapsi.OtherSpecies)) %&gt;%
+  count(IsMatchingSigns, Species.OtherSpecies, IsExactLiftover, Group) %&gt;%
+  mutate(Liftover = if_else(IsExactLiftover, &quot;Exact junc liftover&quot;, &quot;Non-exact&quot;)) %&gt;%
+  ggplot(aes(x=Species.OtherSpecies, y=n, fill=IsMatchingSigns)) +
+  geom_col(position=&#39;stack&#39;) +
+  facet_grid(Liftover~Group, scales=&quot;free&quot;) +
+  Rotate_x_labels +
+  labs(x=&quot;Species&quot;, y=&quot;Num devAS juncs\n(one representative per cluster)&quot;, fill=&quot;DeltaPSI sign\nmatches cross species?&quot;, caption=str_wrap(&quot;Single representative juncs per cluster chosen by ordered critera (1) Exact liftover (2) Productivity group (3) Greatest coef&quot;,30))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.JoinedByHumanCoords %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches b/n human&quot;
+  )) %&gt;%
+  filter(q.splicing.OtherSpecies &lt; 0.05) %&gt;%
+  filter(abs(deltapsi.Human ) &gt; 0.01) %&gt;%
+  mutate(Group = factor(Group, levels=c(&quot;Unproductive&quot;, &quot;Productive&quot;, &quot;Switches b/n human&quot;))) %&gt;%
+  arrange(Species.OtherSpecies, cluster, desc(IsExactLiftover), Group, desc(abs(deltapsi.OtherSpecies))) %&gt;%
+  distinct(Species.OtherSpecies, cluster, OriginName, .keep_all=T) %&gt;%
+  mutate(IsMatchingSigns = sign(deltapsi.Human)==sign(deltapsi.OtherSpecies)) %&gt;%
+  count(IsMatchingSigns, Species.OtherSpecies, IsExactLiftover, Group) %&gt;%
+  mutate(Liftover = if_else(IsExactLiftover, &quot;Exact junc liftover&quot;, &quot;Non-exact&quot;)) %&gt;%
+  ggplot(aes(x=Species.OtherSpecies, y=n, fill=IsMatchingSigns)) +
+  geom_col(position=&#39;fill&#39;) +
+  geom_hline(yintercept = 0.5) +
+  facet_grid(Liftover~Group, scales=&quot;free&quot;) +
+  Rotate_x_labels +
+  labs(x=&quot;Species&quot;, y=&quot;Num devAS juncs\n(one representative per cluster)&quot;, fill=&quot;DeltaPSI sign\nmatches cross species?&quot;, caption=str_wrap(&quot;Single representative juncs per cluster chosen by ordered critera (1) Exact liftover (2) Productivity group (3) Greatest coef&quot;,30))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-18-2.png" width="672" style="display: block; margin: auto;" />
+Let’s just stick to the exact liftovers.</p>
+<pre class="r"><code>dat.JoinedByHumanCoords %&gt;%
+  filter(p.OtherSpecies &lt; 0.05) %&gt;%
+  filter(abs(deltapsi.Human ) &gt; 0.01) %&gt;%
+  filter(IsExactLiftover) %&gt;%
+  filter(sign(deltapsi.OtherSpecies) == sign(deltapsi.Human)) %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches b/n human&quot;
+  )) %&gt;%
+  mutate(Group = factor(Group, levels=c(&quot;Unproductive&quot;, &quot;Productive&quot;, &quot;Switches b/n human&quot;))) %&gt;%
+  group_by(Species.OtherSpecies, Tissue, cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding.OtherSpecies)) %&gt;%
+  ungroup() %&gt;%
+  arrange(Species.OtherSpecies, Tissue, cluster, Contains_Noncoding, Coding.OtherSpecies, desc(abs(deltapsi.OtherSpecies))) %&gt;%
+  distinct(Species.OtherSpecies, Tissue, cluster, .keep_all=T) %&gt;%
+  group_by(Tissue, Species.OtherSpecies, Group) %&gt;%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi.OtherSpecies, logFC.OtherSpecies, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;), n=n(),
+            p  = cor.test(deltapsi.OtherSpecies, logFC.OtherSpecies, method=&#39;s&#39;, use=&quot;pairwise.complete.obs&quot;)$p.value) %&gt;%
+  ungroup() %&gt;%
+  mutate(Plab = case_when(
+    p &gt; 0.05 ~ &quot;&quot;,
+    p &lt; 0.05 ~ &quot;*&quot;,
+    p &lt; 0.005 ~ &quot;**&quot;,
+    p &lt; 0.0005 ~ &quot;***&quot;
+  )) %&gt;%
+  mutate(Plab = format.pval(p, digits=1)) %&gt;%
+  mutate(label = str_glue(&quot;n={n}\nP={Plab}&quot;)) %&gt;%
+  mutate(Species = factor(Species.OtherSpecies, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0, low=&quot;#003c30&quot;, high=&quot;#543005&quot;, mid=&quot;#f5f5f5&quot;) +
+  geom_text(aes(label=label), size=2) +
+  facet_wrap(~Group, nrow=2) +
+  Rotate_x_labels +
+  theme() +
+  labs(fill=&quot;spearman\nrho&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" />
+Ok, now let’s just get a list of the unproductive ‘conserved’ juncs…</p>
+<pre class="r"><code>Gene_names &lt;- fread(&quot;../output/Ensembl.TranscriptInfo.tsv.gz&quot;)
+
+PotentialJuncsToHighlight &lt;- dat.JoinedByHumanCoords %&gt;%
+  filter(p.OtherSpecies &lt; 0.05) %&gt;%
+  filter(abs(deltapsi.Human ) &gt; 0.01) %&gt;%
+  filter(abs(deltapsi.OtherSpecies ) &gt; 0.01) %&gt;%
+  filter(IsExactLiftover) %&gt;%
+  filter(sign(deltapsi.OtherSpecies) == sign(deltapsi.Human)) %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches b/n human&quot;
+  )) %&gt;%
+  filter(Group == &quot;Unproductive&quot;) %&gt;%
+  filter(!sign(deltapsi.Human)==sign(logFC.Human)) %&gt;%
+  filter(!sign(deltapsi.OtherSpecies)==sign(logFC.OtherSpecies)) %&gt;%
+  mutate(sign_dpsi = sign(deltapsi.Human)) %&gt;%
+  dplyr::select(Tissue, sign_dpsi, Species.OtherSpecies, name, Gene_name.Human, Intron_coord.OtherSpecies, Intron_coord.Human) %&gt;%
+  inner_join(
+    Gene_names %&gt;%
+      filter(Species == &quot;Human&quot;) %&gt;%
+      dplyr::select(Gene_name.Human=ensembl_gene_id_version, external_gene_name) %&gt;%
+      distinct()
+  ) %&gt;%
+  arrange(Intron_coord.Human, Tissue, Species.OtherSpecies) %&gt;%
+  mutate(Species.Tissue = paste(Species.OtherSpecies, Tissue)) %&gt;%
+  group_by(Intron_coord.Human, Gene_name.Human,  external_gene_name, sign_dpsi ) %&gt;%
+  summarise(Species.Tissues = paste0(Species.Tissue,collapse = &#39;, &#39;), NumberConservedSpeciesTissuePairs=n()) %&gt;%
+  ungroup() %&gt;%
+  arrange(desc(NumberConservedSpeciesTissuePairs)) %&gt;%
+  filter(NumberConservedSpeciesTissuePairs &gt; 3) %&gt;%
+  filter(!str_detect(external_gene_name, &quot;PCDH&quot;)) %&gt;%
+  dplyr::select(-Gene_name.Human)
+
+PotentialJuncsToHighlight</code></pre>
+<pre><code># A tibble: 52 × 5
+   Intron_coord.Hum… external_gene_n… sign_dpsi Species.Tissues NumberConserved…
+   &lt;chr&gt;             &lt;chr&gt;                &lt;dbl&gt; &lt;chr&gt;                      &lt;int&gt;
+ 1 chr20:35632923-3… RBM12                    1 Macaque Brain,…               10
+ 2 chr5:55468149-55… PLPP1                   -1 Macaque Brain,…               10
+ 3 chr16:2768261-27… SRRM2                    1 Mouse Brain, R…                9
+ 4 chr19:38840559-3… HNRNPL                   1 Opossum Brain,…                9
+ 5 chr2:152694622-1… PRPF40A                  1 Mouse Brain, R…                9
+ 6 chr2:170842648-1… GAD1                    -1 Macaque Brain,…                9
+ 7 chr2:170842654-1… GAD1                    -1 Macaque Brain,…                9
+ 8 chr19:38841682-3… HNRNPL                   1 Opossum Brain,…                8
+ 9 chr16:24954730-2… ARHGAP17                 1 Rabbit Brain, …                7
+10 chr2:152714629-1… PRPF40A                  1 Macaque Brain,…                7
+# … with 42 more rows</code></pre>
+<p>Some ones to look into more:</p>
+<ul>
+<li>chr2:170842648-170844044, GAD1</li>
+<li>chr2:170842654-170844044, GAD1</li>
+<li>chr2:152694622-152714549, PRPF40A</li>
+<li>chr2:152714629-152715994, PRPF40A</li>
+<li>chr12:51780271-51786541, SCN8A,</li>
+<li>chr4:186592752-186595140, FAT1</li>
+<li>chr22:43826113-43827513, SULT4A1</li>
+<li>chr22:43827640-43829059, SULT4A1</li>
+<li>chr5:177248079-177248180, NSD1</li>
+<li>chr7:26191128-26192494, HNRNPA2B1</li>
+<li>chr20:63931182-63931464, DNAJC5</li>
+</ul>
+<p>Which of these juncs have succesful liftover juncs in which
+species</p>
+<pre class="r"><code>Liftovers.AsFlanks %&gt;%
+  inner_join(
+    PotentialJuncsToHighlight %&gt;%
+      separate(Intron_coord.Human, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;end&quot;), sep=&quot;[-:]&quot;, convert=T, remove=F) %&gt;%
+      mutate(end = end + 1, start=start-1)
+  ) %&gt;%
+  mutate(Species = str_replace(OriginGenome, &quot;^(.+?)_.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Intron=str_glue(&quot;{external_gene_name}:{Intron_coord.Human}&quot;)) %&gt;%
+  distinct(Intron, Species) %&gt;%
+  arrange(Intron) %&gt;%
+  mutate(Species= factor(Species, levels=c(&quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(x=Intron, y=Species)) +
+  geom_tile(fill=1) +
+  scale_y_discrete(expand=c(0,0)) +
+  theme(axis.text.x = element_text(size = 5)) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-21-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># ggsave(&quot;../code/scratch/JuncsToHighlight_LiftoverStatus.pdf&quot;, height=6, width=12)</code></pre>
+<p>After looking at that, I’ll focus more on:</p>
+<ul>
+<li>chr2:170842654-170844044, GAD1</li>
+<li>chr2:152694622-152714549, PRPF40A</li>
+<li>chr2:152714629-152715994, PRPF40A</li>
+<li>chr12:51780271-51786541, SCN8A</li>
+<li>chr4:186592752-186595140, FAT1</li>
+<li>chr22:43826113-43827513, SULT4A1</li>
+<li>chr22:43827640-43829059, SULT4A1</li>
+<li>chr5:177248079-177248180, NSD1</li>
+<li>chr7:26191128-26192494, HNRNPA2B1</li>
+<li>chr20:63931182-63931464, DNAJC5</li>
+<li>chr17:76735158-76735771, SRSF2</li>
+</ul>
+<p>Let’s look at the splicing and expression data</p>
+<p>Let’s do this more systematically. I will write out bed file of these
+juncs of interest for each species , then use that for genome browsing
+and also to subset juncs from tabix tables.</p>
+<pre class="r"><code>Genes_of_most_interest &lt;- c(&quot;GAD1&quot;, &quot;PRPF40A&quot;, &quot;SCN8A&quot;, &quot;FAT1&quot;, &quot;SULT4A1&quot;, &quot;NSD1&quot;, &quot;HNRNPA2B1&quot;, &quot;DNAJC5&quot;, &quot;SRSF2&quot;)
+
+dir.create(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/&quot;, showWarnings = FALSE)
+
+ConservedJuncs.beds &lt;- 
+  bind_rows(
+    Liftovers.AsFlanks %&gt;%
+      inner_join(
+        PotentialJuncsToHighlight %&gt;%
+          separate(Intron_coord.Human, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;end&quot;), sep=&quot;[-:]&quot;, convert=T, remove=F) %&gt;%
+          mutate(end = end + 1, start=start-1) %&gt;%
+          filter(external_gene_name %in% c(&quot;SRSF2&quot;, &quot;DNAJC5&quot;, &quot;HRNPA2B1&quot;, &quot;NSD1&quot;, &quot;SULT4A1&quot;, &quot;FAT1&quot;, &quot;SCN8A&quot;, &quot;PRPF40A&quot;, &quot;GAD1&quot;))
+      ) %&gt;%
+      mutate(Species = str_replace(OriginGenome, &quot;^(.+?)_.+$&quot;, &quot;\\1&quot;)) %&gt;%
+      mutate(Intron=str_glue(&quot;{external_gene_name}:{Intron_coord.Human}&quot;)) %&gt;%
+      distinct(Intron, Species, .keep_all=T) %&gt;%
+      dplyr::select(name, OriginGenome, Intron) %&gt;%
+      separate(name, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;strand&quot;), convert=T, sep=&quot;_&quot;) %&gt;%
+      mutate(score = &quot;.&quot;) %&gt;%
+      dplyr::select(OriginGenome, chrom, start, stop,Intron, score, strand) %&gt;%
+      arrange(OriginGenome, chrom, start, stop),
+    PotentialJuncsToHighlight %&gt;%
+      inner_join(
+        JunctionProductivity %&gt;%
+          filter(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;),
+        by=c(&quot;Intron_coord.Human&quot;=&quot;Intron_coord&quot;)
+      ) %&gt;%
+      separate(Intron_coord.Human, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;), sep=&quot;[-:]&quot;, convert=T, remove=F) %&gt;%
+      mutate(Intron=str_glue(&quot;{external_gene_name}:{Intron_coord.Human}&quot;)) %&gt;%
+      mutate(score = &quot;.&quot;) %&gt;%
+      dplyr::select(OriginGenome, chrom, start, stop, Intron, score, strand=Strand)
+  ) %&gt;%
+  mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{stop}&quot;))
+
+
+
+ConservedJuncs.beds %&gt;%
+  group_by(OriginGenome) %&gt;%
+  distinct() %&gt;%
+  dplyr::select(-OriginGenome, -JuncCoord) %&gt;%
+  group_walk(~ write_tsv(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/&quot;,.y$OriginGenome, &quot;.bed&quot;), col_names =F))
+
+GetJuncsOfInterest &lt;- function(fn){
+  OriginGenome &lt;- str_replace(fn, &quot;../code/rna-seq/SplicingAnalysis/leafcutter/(.+?)/juncTableBeds/(.+?).sorted.bed.gz&quot;, &quot;\\1&quot;)
+  cmd &lt;- str_glue(&quot;tabix -h  -R ../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/{OriginGenome}.bed {fn}&quot;)
+  fread(cmd) %&gt;%
+    mutate(end = as.numeric(end) - 1) %&gt;%
+    dplyr::rename(&quot;chrom&quot;=&quot;#Chrom&quot;) %&gt;%
+    # return()
+    mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{end}&quot;)) %&gt;%
+    filter(JuncCoord %in% ConservedJuncs.beds$JuncCoord) %&gt;%
+    dplyr::select(-c(1:6)) %&gt;%
+    pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;PSI&quot;, -JuncCoord) %&gt;%
+    mutate(Species = OriginGenome) %&gt;%
+    return()
+}
+
+df &lt;- GetJuncsOfInterest(&quot;../code/rna-seq/SplicingAnalysis/leafcutter/Human_UCSC.hg38_GencodeComprehensive46/juncTableBeds/PSI_ByMax.sorted.bed.gz&quot;)
+
+Contrasts &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ContrastGroupFiles/First10_vs_Second10.*.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ContrastGroupFiles/First10_vs_Second10.(.+?).txt&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;ID&quot;, &quot;Group&quot;)) %&gt;%
+  bind_rows(.id=&quot;Species.Tissue&quot;) %&gt;%
+  separate(Species.Tissue, into=c(&quot;Tissue&quot;, &quot;Species.short&quot;), sep=&quot;\\.&quot;)
+
+df %&gt;%
+  inner_join(Contrasts) %&gt;%
+  inner_join(ConservedJuncs.beds) %&gt;%
+  mutate(gene_name = str_replace(Intron, &quot;^(.+?):.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  filter(gene_name %in% Genes_of_most_interest) %&gt;%
+  ggplot(aes(x=Tissue,color=Group, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(alpha=0.1) +
+  facet_wrap(~Intron, scales=&quot;free&quot;) +
+  Rotate_x_labels +
+  theme(strip.text = element_text(size = 5))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-22-1.png" width="960" style="display: block; margin: auto;" />
+I think the next step is to pick just one tissue for each event to
+highlight.</p>
+<pre class="r"><code>PotentialJuncsToHighlight %&gt;%
+  filter(external_gene_name %in% Genes_of_most_interest)</code></pre>
+<pre><code># A tibble: 14 × 5
+   Intron_coord.Hum… external_gene_n… sign_dpsi Species.Tissues NumberConserved…
+   &lt;chr&gt;             &lt;chr&gt;                &lt;dbl&gt; &lt;chr&gt;                      &lt;int&gt;
+ 1 chr2:152694622-1… PRPF40A                  1 Mouse Brain, R…                9
+ 2 chr2:170842648-1… GAD1                    -1 Macaque Brain,…                9
+ 3 chr2:170842654-1… GAD1                    -1 Macaque Brain,…                9
+ 4 chr2:152714629-1… PRPF40A                  1 Macaque Brain,…                7
+ 5 chr17:76735158-7… SRSF2                    1 Rat Brain, Rat…                6
+ 6 chr20:63931182-6… DNAJC5                  -1 Mouse Brain, R…                6
+ 7 chr7:26191128-26… HNRNPA2B1                1 Rabbit Brain, …                6
+ 8 chr12:51780271-5… SCN8A                   -1 Macaque Brain,…                4
+ 9 chr20:63931022-6… DNAJC5                  -1 Mouse Brain, R…                4
+10 chr22:43826113-4… SULT4A1                 -1 Rabbit Brain, …                4
+11 chr22:43827640-4… SULT4A1                 -1 Rabbit Brain, …                4
+12 chr4:186592752-1… FAT1                     1 Rat Brain, Rab…                4
+13 chr5:177248079-1… NSD1                     1 Rabbit Ovary, …                4
+14 chr7:26190460-26… HNRNPA2B1                1 Rat Cerebellum…                4</code></pre>
+<p>I think I should look at the PSI boxplots for all species before
+making that decision</p>
+<pre class="r"><code>PSI &lt;- str_glue(&quot;../code/rna-seq/SplicingAnalysis/leafcutter/{unique(ConservedJuncs.beds$OriginGenome)}/juncTableBeds/PSI_ByMax.sorted.bed.gz&quot;) %&gt;%
+  lapply(GetJuncsOfInterest) %&gt;%
+  bind_rows()
+
+PSI %&gt;%
+  inner_join(Contrasts) %&gt;%
+  inner_join(ConservedJuncs.beds %&gt;%
+               dplyr::select(JuncCoord, Intron)) %&gt;%
+  mutate(gene_name = str_replace(Intron, &quot;^(.+?):.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  filter(gene_name %in% Genes_of_most_interest) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(x=Tissue,color=Group, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(alpha=0.1) +
+  facet_grid(Species.short~Intron, scales=&quot;free&quot;) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text = element_text(size = 3))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-24-1.png" width="1536" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/JuncsToHighlight_HumanBoxplots.pdf&quot;, height=12, width=16)</code></pre>
+<p>Based on these, I’ll focus on DNAJC5 in liver, NSD1 in testis, SCN8A
+in brain, SRSF2 in cerebellum, SULT4A1 in brain</p>
+<pre class="r"><code>PSI %&gt;%
+  inner_join(Contrasts) %&gt;%
+  inner_join(ConservedJuncs.beds %&gt;%
+               dplyr::select(JuncCoord, Intron)) %&gt;%
+  separate(Intron, into=c(&quot;gene_name&quot;, &quot;HumanChrom&quot;, &quot;HumanCoord&quot;), sep=&quot;:&quot;) %&gt;%
+  mutate(gene.tissue = paste(gene_name, Tissue, sep=&quot; &quot;)) %&gt;%
+  filter(gene.tissue %in% c(&quot;DNAJC5 Liver&quot;, &quot;NSD1 Testis&quot;, &quot;SCN8A Brain&quot;, &quot;SRSF2 Cerebellum&quot;, &quot;SULT4A1 Brain&quot;)) %&gt;%
+  mutate(FacetTitle = str_glue(&quot;{gene_name}\n{HumanChrom}:{HumanCoord}\n{Tissue}&quot;)) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(x=Species.short,color=Group, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(alpha=0.1) +
+  facet_wrap(~FacetTitle, scales=&quot;free&quot;) +
+  scale_color_manual(values=c(&quot;Early&quot;=&quot;#1b9e77&quot;, &quot;Late&quot;=&quot;#7570b3&quot;), labels=c(&quot;Early&quot;=&quot;Early embryo&quot;, &quot;Late&quot;=&quot;Adult&quot;)) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text = element_text(size = 5)) +
+  labs(x=NULL, color=NULL, y=&quot;Splicing (PSI)&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" />
+Let’s also make the analogous plots for host gene expression</p>
+<pre class="r"><code>GenesToPlotBoxPlots.df &lt;- PSI %&gt;%
+  inner_join(Contrasts) %&gt;%
+  inner_join(ConservedJuncs.beds %&gt;%
+               dplyr::select(JuncCoord, Intron)) %&gt;%
+  separate(Intron, into=c(&quot;gene_name&quot;, &quot;HumanChrom&quot;, &quot;HumanCoord&quot;), sep=&quot;:&quot;) %&gt;%
+  mutate(gene.tissue = paste(gene_name, Tissue, sep=&quot; &quot;)) %&gt;%
+  filter(gene.tissue %in% c(&quot;DNAJC5 Liver&quot;, &quot;NSD1 Testis&quot;, &quot;SCN8A Brain&quot;, &quot;SRSF2 Cerebellum&quot;, &quot;SULT4A1 Brain&quot;))  %&gt;%
+  distinct(JuncCoord, Species.short, Species, gene_name, HumanCoord) %&gt;%
+  inner_join(
+    JunctionProductivity.AndAnnotated,
+    by=c(&quot;Species&quot;=&quot;OriginGenome&quot;, &quot;JuncCoord&quot;=&quot;Intron_coord&quot;, &quot;Species.short&quot;)
+  )
+
+RPKM &lt;- str_glue(&quot;../code/MazinLeafcutterAnalysis/Expression/{unique(GenesToPlotBoxPlots.df$Species)}.log2rpkm.tsv.gz&quot;) %&gt;%
+  as.character() %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/Expression/(.+?).log2rpkm.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  lapply(function(x) filter(x, Geneid %in% GenesToPlotBoxPlots.df$Gene_name)) %&gt;%
+  lapply(function(x) pivot_longer(x, names_to = &quot;ID&quot;,values_to = &quot;log2RPKM&quot;,-Geneid)) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  inner_join(Contrasts)
+
+
+Boxplot.dat &lt;- PSI %&gt;%
+  inner_join(Contrasts) %&gt;%
+  inner_join(ConservedJuncs.beds %&gt;%
+               dplyr::select(JuncCoord, Intron)) %&gt;%
+  separate(Intron, into=c(&quot;gene_name&quot;, &quot;HumanChrom&quot;, &quot;HumanCoord&quot;), sep=&quot;:&quot;) %&gt;%
+  mutate(gene.tissue = paste(gene_name, Tissue, sep=&quot; &quot;)) %&gt;%
+  filter(gene.tissue %in% c(&quot;DNAJC5 Liver&quot;, &quot;NSD1 Testis&quot;, &quot;SCN8A Brain&quot;, &quot;SRSF2 Cerebellum&quot;, &quot;SULT4A1 Brain&quot;))  %&gt;%
+  filter(HumanCoord %in% c(&quot;63931182-63931464&quot;, &quot;43826113-43827513&quot;, &quot;51780271-51786541&quot;, &quot;76735158-76735771&quot;, &quot;177248079-177248180&quot;)) %&gt;%
+  inner_join(
+    GenesToPlotBoxPlots.df %&gt;%
+      dplyr::select(JuncCoord, Species.short, Gene_name)
+  ) %&gt;%
+  inner_join(
+    RPKM %&gt;%
+      dplyr::select(Species=OriginGenome, Gene_name=Geneid, ID, log2RPKM)
+  ) %&gt;%
+  distinct() %&gt;%
+  dplyr::select(gene.tissue, HumanCoord, HumanChrom, PSI, log2RPKM, Group, ID, Species.short, JuncCoord, Species, Tissue, Gene_name) %&gt;%
+  pivot_longer(names_to = &quot;Metric&quot;, values_to = &quot;value&quot;, c(&quot;PSI&quot;, &quot;log2RPKM&quot;)) %&gt;%
+  mutate(Metric = recode(Metric, &quot;PSI&quot;=&quot;Splicing,\nPSI&quot;, &quot;log2RPKM&quot;=&quot;Expression,\nlog2RPKM&quot;)) %&gt;%
+  mutate(Metric = factor(Metric, levels=c(&quot;Splicing,\nPSI&quot;, &quot;Expression,\nlog2RPKM&quot;))) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;)))
+  
+Boxplot.dat %&gt;%
+  filter(gene.tissue == &quot;SULT4A1 Brain&quot;) %&gt;%
+  ggplot(aes(x=Species.short, y=value, color=Group)) +
+    geom_boxplot(outlier.shape=NA) +
+    geom_point(position = position_jitterdodge(jitter.width=0.15), alpha=0.5) +
+    geom_text( data =  . %&gt;%
+                 group_by(Metric, Species.short) %&gt;%
+                 summarize(results = wilcox.test(value ~ Group)$p.value) %&gt;%
+                 ungroup() %&gt;%
+                 mutate(label = str_glue(&quot;P=\n{format.pval(results, 1)}&quot;)),
+               aes(label=label), y=Inf, color=&#39;black&#39;, vjust=1.1, size=2) +
+    facet_wrap(~Metric, scales=&quot;free_y&quot;, nrow=2, strip.position=&quot;left&quot;) +
+    scale_color_manual(values=c(&quot;Early&quot;=&quot;#1b9e77&quot;, &quot;Late&quot;=&quot;#7570b3&quot;), labels=c(&quot;Early&quot;=&quot;Early embryo&quot;, &quot;Late&quot;=&quot;Adult&quot;)) +
+    theme_bw() +
+    theme( strip.placement = &quot;outside&quot;, legend.position=&#39;bottom&#39;, strip.background=element_blank(), panel.spacing = unit(2, &quot;lines&quot;)) +
+    Rotate_x_labels +
+    labs(x=NULL, color=NULL, y=NULL)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/ExampleConservedJunc_Boxplot_SULT4A1_Brain.pdf&quot;, height=120, width=60, units=&quot;mm&quot;)</code></pre>
+<p>Ok, now that’s one example.</p>
+<p>Let’s save the other examples.</p>
+<p>Let’s also pygenometracks plot the gene structures. For this it might
+be more reasonable to use the junction classifications from just
+clustered introns, rather than all observed introns.</p>
+<pre class="r"><code>JunctionProductivity.onlyClustered &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.Clustered._junction_classifications.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).Clustered._junction_classifications.txt&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  mutate(Species.short = str_replace(OriginGenome, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Species_AnnotationSource = recode(Species.short, &quot;Human&quot;=&quot;Human, Gencode v46&quot;, &quot;Macaque&quot;=&quot;Macaque, Ensembl v101&quot;, &quot;Mouse&quot;=&quot;Mouse, Gencode v46&quot;, &quot;Rat&quot;=&quot;Rat, RefSeq updated 2021-03-31&quot;,&quot;Rabbit&quot;=&quot;Rabbit, Ensembl v101&quot;, &quot;Opossum&quot;=&quot;Opossum, Ensembl v97&quot;, &quot;Chicken&quot;=&quot;Chicken, Ensembl v101&quot;)) %&gt;%
+  mutate(Species_AnnotationSource = factor(Species_AnnotationSource, levels=c(&quot;Human&quot;=&quot;Human, Gencode v46&quot;, &quot;Macaque&quot;=&quot;Macaque, Ensembl v101&quot;, &quot;Mouse&quot;=&quot;Mouse, Gencode v46&quot;, &quot;Rat&quot;=&quot;Rat, RefSeq updated 2021-03-31&quot;,&quot;Rabbit&quot;=&quot;Rabbit, Ensembl v101&quot;, &quot;Opossum&quot;=&quot;Opossum, Ensembl v97&quot;, &quot;Chicken&quot;=&quot;Chicken, Ensembl v101&quot;))) %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+
+
+
+JunctionProductivity.AndAnnotated.onlyClustered &lt;- JunctionProductivity.onlyClustered %&gt;%
+  inner_join(
+    Junc.regtools.annotations %&gt;%
+      dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+    by=c(&quot;Intron_coord&quot;, &quot;OriginGenome&quot;)
+  ) %&gt;%
+  mutate(Species.short = factor(Species.short, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  ))
+
+Juncs.To.Plot &lt;- Boxplot.dat %&gt;%
+  mutate(gene = str_replace(gene.tissue, &quot;^(.+?) .+&quot;, &quot;\\1&quot;)) %&gt;%
+  distinct(JuncCoord, Species, gene) %&gt;%
+  inner_join(
+    juncs.and.clusters,
+    by=c(&quot;JuncCoord&quot;=&quot;Intron_coord&quot;, &quot;Species&quot;=&quot;OriginGenome&quot;)
+  ) %&gt;%
+  inner_join(
+    juncs.and.clusters %&gt;%
+      dplyr::select(Species=OriginGenome, cluster, Intron_coord),
+    by=c(&quot;Species&quot;, &quot;cluster&quot;)
+  ) %&gt;%
+  dplyr::rename(OriginGenome=Species) %&gt;%
+  inner_join(
+    JunctionProductivity.AndAnnotated.onlyClustered %&gt;%
+      dplyr::select(OriginGenome, Gene_name, Intron_coord, AlgorithmCoding, Annot, Coding, UTR, ProductivityLabel)
+  )
+
+# Write out juncs as links files, separated by coding or not
+# may want to later change to PR, UP, or NE
+Juncs.To.Plot %&gt;%
+  # filter(!UTR) %&gt;%
+  # mutate(Coding = ProductivityLabel) %&gt;%
+  # mutate(Coding = AlgorithmCoding) %&gt;%
+  dplyr::select(Intron_coord, Coding, Annot, OriginGenome) %&gt;%
+  separate(Intron_coord, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;), sep=&quot;[:-]&quot;) %&gt;%
+  mutate(chrom2 = chrom, start2=start, stop2=stop, score=1) %&gt;%
+  dplyr::select(chrom, start, start2, chrom2, stop, stop2, score, OriginGenome, Coding, Annot) %&gt;%
+  group_by(Coding, Annot, OriginGenome) %&gt;%
+  group_walk(~ write_tsv(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/ClusterLinks&quot;,.y$OriginGenome, &quot;.&quot;, .y$Coding, &quot;.&quot;, .y$Annot, &quot;.links&quot;), col_names =F))
+
+
+Juncs.To.Plot %&gt;%
+  filter(JuncCoord == Intron_coord) %&gt;%
+  group_by(OriginGenome) %&gt;%
+  dplyr::select(chrom, start, stop) %&gt;%
+  group_walk(~ write_tsv(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/BedRegionsToHighlight.&quot;,.y$OriginGenome, &quot;.bed&quot;), col_names =F))</code></pre>
+<p>Also get one single gene structure to plot for each species</p>
+<pre class="r"><code>genes_bed12 &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ReformatedGTFs/*.bed&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ReformatedGTFs/(.+?).bed&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;)
+
+genes_bed12 %&gt;%
+  inner_join(
+    Juncs.To.Plot %&gt;%
+      dplyr::select(Gene_name, OriginGenome) %&gt;%
+      distinct(),
+    by=c(&quot;V13&quot;=&quot;Gene_name&quot;, &quot;OriginGenome&quot;)
+  ) %&gt;%
+  filter(V16 == &quot;protein_coding&quot;) %&gt;%
+  mutate(Len = V3 - V2) %&gt;%
+  arrange(OriginGenome, desc(Len), desc(V10), desc(V21)) %&gt;%
+  # distinct(OriginGenome, gene, .keep_all=T) %&gt;%
+  distinct(OriginGenome, V13, .keep_all=T) %&gt;%
+  dplyr::select(OriginGenome, V1:V12) %&gt;%
+  group_by(OriginGenome) %&gt;%
+  group_walk(~ write_tsv(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/HostGenes.&quot;,.y$OriginGenome, &quot;.bed&quot;), col_names =F))</code></pre>
+<p>And now write inis for pygenometracks</p>
+<pre class="r"><code>#&quot;Near UTR, unannotated&quot;=&quot;#d9d9d9&quot;, &quot;Near UTR, annotated&quot;=&quot;#969696&quot;
+
+Juncs.To.Plot %&gt;%
+  # filter(!UTR) %&gt;%
+  
+  # mutate(Coding = ProductivityLabel) %&gt;%
+  # mutate(Coding = AlgorithmCoding) %&gt;%
+  
+  dplyr::select(Intron_coord, Coding, Annot, OriginGenome) %&gt;%
+  distinct(OriginGenome, Coding, Annot) %&gt;%
+  mutate(JuncColor = case_when(
+    
+    # # Using bitwise flag conversion
+    # Coding == &quot;PR&quot; &amp; Annot ~ &quot;#1f78b4&quot;,
+    # Coding == &quot;UP&quot; &amp; Annot ~ &quot;#e31a1c&quot;,
+    # Coding == &quot;PR&quot; &amp; !Annot ~ &quot;#a6cee3&quot;,
+    # Coding == &quot;UP&quot; &amp; !Annot ~ &quot;#fb9a99&quot;,
+    # Coding == &quot;NE&quot; &amp; Annot ~ &quot;#969696&quot;,
+    # Coding == &quot;NE&quot; &amp; !Annot ~ &quot;#d9d9d9&quot;
+    
+    # using coding and annot
+    Coding  &amp; Annot ~ &quot;#1f78b4&quot;,
+    !Coding &amp; Annot ~ &quot;#e31a1c&quot;,
+    Coding  &amp; !Annot ~ &quot;#a6cee3&quot;,
+    !Coding &amp; !Annot ~ &quot;#fb9a99&quot;
+  )) %&gt;%
+  mutate(JuncTracks = str_glue(
+&quot;
+[{Coding}_{Annot}]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/ClusterLinks{OriginGenome}.{Coding}.{Annot}.links
+height = 1
+overlay_previous = yes
+links_type = arcs
+color = {JuncColor}
+# alpha = 1
+# if line_width is not given, the score is used to set the line width
+# using the following formula (0.5 * square root(score)
+line_width = 1.5
+# options for line_style are &#39;solid&#39;, &#39;dashed&#39;, &#39;dotted&#39;, and &#39;dashdot&#39;
+line_style = solid
+file_type = links
+&quot;
+  )) %&gt;%
+  group_by(OriginGenome) %&gt;%
+  summarise(JuncTracksCollapsed = paste0(JuncTracks,collapse = &#39;\n\n&#39;)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Ini = str_glue(
+&quot;
+[spacer]
+height = 1
+
+{JuncTracksCollapsed}
+    
+[Genes]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/HostGenes.{OriginGenome}.bed
+height = 1
+color = darkblue
+labels = false
+fontsize = 10
+#style = UCSC
+style = flybase
+#style = tssarrow
+# if you use UCSC style, you can set the relative distance between 2 arrows on introns
+# default is 2
+#arrow_interval = 2
+# if you use tssarrow style, you can choose the length of the arrow in bp
+# (default is 4% of the plotted region)
+#arrow_length = 5000
+# if you use flybase or tssarrow style, you can choose the color of non-coding intervals:
+color_utr = darkblue
+height_utr = 0.5
+file_type = bed
+    
+
+[JuncOfInterest]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/BedRegionsToHighlight.{OriginGenome}.bed
+type = vhighlight
+&quot;)) %&gt;%
+  mutate(Ini= if_else(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;, paste(&quot;[PhyloP]
+file = ../../20211209_JingxinRNAseq/code/PhyloP/SourceTrack/PhyloP.hg38.bw
+height = 1
+color = #666666
+min_value = 0
+#max_value = auto
+number_of_bins = 700
+nans_to_zeros = true
+summary_method = mean
+show_data_range = true
+file_type = bigwig
+&quot;, Ini, sep=&quot;\n&quot;), as.character(Ini))) %&gt;%
+  dplyr::select(OriginGenome, Ini) %&gt;%
+  group_by(OriginGenome) %&gt;%
+  group_walk(~ write.table(.x, paste0(&quot;../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/Tracks.&quot;,.y$OriginGenome, &quot;.ini&quot;),quote=F, sep=&quot;\t&quot;, row.names=F, col.names = F))
+
+Juncs.To.Plot %&gt;%
+  filter(Intron_coord == JuncCoord) %&gt;%
+  distinct() %&gt;%
+  dplyr::select(chrom, start, stop, gene, strand, OriginGenome) %&gt;%
+  mutate(Orientation = if_else(strand == &quot;+&quot;, &quot;&quot;, &quot;--decreasingXAxis&quot;)) %&gt;%
+  mutate(Cmd = str_glue(&quot;pyGenomeTracks --tracks ../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight2/Tracks.{OriginGenome}.ini --region {chrom}:{start-1000}-{stop+1000} {Orientation} --width 20 --outFileName ../code/scratch/{gene}_{OriginGenome}.pdf&quot;)) %&gt;%
+  arrange(gene, OriginGenome) %&gt;%
+  dplyr::select(Cmd) %&gt;%
+  write_tsv(&quot;../code/scratch/MakePlots.sh&quot;, col_names = F)
+
+Juncs.To.Plot %&gt;%
+  filter(JuncCoord == Intron_coord) %&gt;%
+  distinct() %&gt;%
+  filter(OriginGenome == &quot;Human_UCSC.hg38_GencodeComprehensive46&quot;) %&gt;%
+  mutate(start = start - 1000, stop = stop + 1000) %&gt;%
+  dplyr::select(chrom, start, stop) %&gt;%
+  write_tsv(&quot;../code/scratch/Human.PlotRegions.bed&quot;, col_names = F)</code></pre>
+<p>Ok, in illustrater i concated these gene structures together. Now
+finally let’s save the boxplots for all 5 of these example genes…</p>
+<pre class="r"><code>Boxplot.dat$gene.tissue %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;SULT4A1 Brain&quot;    &quot;SCN8A Brain&quot;      &quot;DNAJC5 Liver&quot;     &quot;SRSF2 Cerebellum&quot;
+[5] &quot;NSD1 Testis&quot;     </code></pre>
+<pre class="r"><code>Boxplot.dat %&gt;%
+  filter(gene.tissue == &quot;SULT4A1 Brain&quot;) %&gt;%
+  ggplot(aes(x=Species.short, y=value, color=Group)) +
+    geom_boxplot(outlier.shape=NA) +
+    geom_point(position = position_jitterdodge(jitter.width=0.15), alpha=0.5) +
+    geom_text( data =  . %&gt;%
+                 group_by(Metric, Species.short) %&gt;%
+                 summarize(results = wilcox.test(value ~ Group)$p.value) %&gt;%
+                 ungroup() %&gt;%
+                 mutate(label = str_glue(&quot;P=\n{format.pval(results, 1)}&quot;)),
+               aes(label=label), y=Inf, color=&#39;black&#39;, vjust=1.1, size=2) +
+    facet_wrap(~Metric, scales=&quot;free_y&quot;, nrow=2, strip.position=&quot;left&quot;) +
+    scale_color_manual(values=c(&quot;Early&quot;=&quot;#1b9e77&quot;, &quot;Late&quot;=&quot;#7570b3&quot;), labels=c(&quot;Early&quot;=&quot;Early embryo brain&quot;, &quot;Late&quot;=&quot;Adult brain&quot;)) +
+    theme_bw() +
+    theme( strip.placement = &quot;outside&quot;, legend.position=&#39;bottom&#39;, strip.background=element_blank(), panel.spacing = unit(2, &quot;lines&quot;)) +
+    Rotate_x_labels +
+    labs(x=NULL, color=NULL, y=NULL)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/ExampleConservedJunc_Boxplot_SULT4A1_Brain.pdf&quot;, height=120, width=60, units=&quot;mm&quot;)
+
+Boxplot.dat %&gt;%
+  filter(gene.tissue == &quot;SCN8A Brain&quot;) %&gt;%
+  ggplot(aes(x=Species.short, y=value, color=Group)) +
+    geom_boxplot(outlier.shape=NA) +
+    geom_point(position = position_jitterdodge(jitter.width=0.15), alpha=0.5) +
+    geom_text( data =  . %&gt;%
+                 group_by(Metric, Species.short) %&gt;%
+                 summarize(results = wilcox.test(value ~ Group)$p.value) %&gt;%
+                 ungroup() %&gt;%
+                 mutate(label = str_glue(&quot;P=\n{format.pval(results, 1)}&quot;)),
+               aes(label=label), y=Inf, color=&#39;black&#39;, vjust=1.1, size=2) +
+    facet_wrap(~Metric, scales=&quot;free_y&quot;, nrow=2, strip.position=&quot;left&quot;) +
+    scale_color_manual(values=c(&quot;Early&quot;=&quot;#1b9e77&quot;, &quot;Late&quot;=&quot;#7570b3&quot;), labels=c(&quot;Early&quot;=&quot;Early embryo brain&quot;, &quot;Late&quot;=&quot;Adult brain&quot;)) +
+    theme_bw() +
+    theme( strip.placement = &quot;outside&quot;, legend.position=&#39;bottom&#39;, strip.background=element_blank(), panel.spacing = unit(2, &quot;lines&quot;)) +
+    Rotate_x_labels +
+    labs(x=NULL, color=NULL, y=NULL)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-30-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/ExampleConservedJunc_Boxplot_SCN8A_Brain.pdf&quot;, height=120, width=60, units=&quot;mm&quot;)
+
+Boxplot.dat %&gt;%
+  filter(gene.tissue == &quot;DNAJC5 Liver&quot;) %&gt;%
+  ggplot(aes(x=Species.short, y=value, color=Group)) +
+    geom_boxplot(outlier.shape=NA) +
+    geom_point(position = position_jitterdodge(jitter.width=0.15), alpha=0.5) +
+    geom_text( data =  . %&gt;%
+                 group_by(Metric, Species.short) %&gt;%
+                 summarize(results = wilcox.test(value ~ Group)$p.value) %&gt;%
+                 ungroup() %&gt;%
+                 mutate(label = str_glue(&quot;P=\n{format.pval(results, 1)}&quot;)),
+               aes(label=label), y=Inf, color=&#39;black&#39;, vjust=1.1, size=2) +
+    facet_wrap(~Metric, scales=&quot;free_y&quot;, nrow=2, strip.position=&quot;left&quot;) +
+    scale_color_manual(values=c(&quot;Early&quot;=&quot;#1b9e77&quot;, &quot;Late&quot;=&quot;#7570b3&quot;), labels=c(&quot;Early&quot;=&quot;Early embryo liver&quot;, &quot;Late&quot;=&quot;Adult liver&quot;)) +
+    theme_bw() +
+    theme( strip.placement = &quot;outside&quot;, legend.position=&#39;bottom&#39;, strip.background=element_blank(), panel.spacing = unit(2, &quot;lines&quot;)) +
+    Rotate_x_labels +
+    labs(x=NULL, color=NULL, y=NULL)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-30-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/ExampleConservedJunc_Boxplot_DNAJC5_Liver.pdf&quot;, height=120, width=60, units=&quot;mm&quot;)
+
+Boxplot.dat %&gt;%
+  filter(gene.tissue == &quot;SRSF2 Cerebellum&quot;) %&gt;%
+  ggplot(aes(x=Species.short, y=value, color=Group)) +
+    geom_boxplot(outlier.shape=NA) +
+    geom_point(position = position_jitterdodge(jitter.width=0.15), alpha=0.5) +
+    geom_text( data =  . %&gt;%
+                 group_by(Metric, Species.short) %&gt;%
+                 summarize(results = wilcox.test(value ~ Group)$p.value) %&gt;%
+                 ungroup() %&gt;%
+                 mutate(label = str_glue(&quot;P=\n{format.pval(results, 1)}&quot;)),
+               aes(label=label), y=Inf, color=&#39;black&#39;, vjust=1.1, size=2) +
+    facet_wrap(~Metric, scales=&quot;free_y&quot;, nrow=2, strip.position=&quot;left&quot;) +
+    scale_color_manual(values=c(&quot;Early&quot;=&quot;#1b9e77&quot;, &quot;Late&quot;=&quot;#7570b3&quot;), labels=c(&quot;Early&quot;=&quot;Early embryo cerebellum&quot;, &quot;Late&quot;=&quot;Adult cerebellum&quot;)) +
+    theme_bw() +
+    theme( strip.placement = &quot;outside&quot;, legend.position=&#39;bottom&#39;, strip.background=element_blank(), panel.spacing = unit(2, &quot;lines&quot;)) +
+    Rotate_x_labels +
+    labs(x=NULL, color=NULL, y=NULL)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-30-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/ExampleConservedJunc_Boxplot_SRSF2_Cerebellum.pdf&quot;, height=120, width=60, units=&quot;mm&quot;)
+
+Boxplot.dat %&gt;%
+  filter(gene.tissue == &quot;NSD1 Testis&quot;) %&gt;%
+  ggplot(aes(x=Species.short, y=value, color=Group)) +
+    geom_boxplot(outlier.shape=NA) +
+    geom_point(position = position_jitterdodge(jitter.width=0.15), alpha=0.5) +
+    geom_text( data =  . %&gt;%
+                 group_by(Metric, Species.short) %&gt;%
+                 summarize(results = wilcox.test(value ~ Group)$p.value) %&gt;%
+                 ungroup() %&gt;%
+                 mutate(label = str_glue(&quot;P=\n{format.pval(results, 1)}&quot;)),
+               aes(label=label), y=Inf, color=&#39;black&#39;, vjust=1.1, size=2) +
+    facet_wrap(~Metric, scales=&quot;free_y&quot;, nrow=2, strip.position=&quot;left&quot;) +
+    scale_color_manual(values=c(&quot;Early&quot;=&quot;#1b9e77&quot;, &quot;Late&quot;=&quot;#7570b3&quot;), labels=c(&quot;Early&quot;=&quot;Early embryo testis&quot;, &quot;Late&quot;=&quot;Adult testis&quot;)) +
+    theme_bw() +
+    theme( strip.placement = &quot;outside&quot;, legend.position=&#39;bottom&#39;, strip.background=element_blank(), panel.spacing = unit(2, &quot;lines&quot;)) +
+    Rotate_x_labels +
+    labs(x=NULL, color=NULL, y=NULL)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-30-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/ExampleConservedJunc_Boxplot_NSD1_Testis.pdf&quot;, height=120, width=60, units=&quot;mm&quot;)</code></pre>
+<p>Let’s plot the Mazin experiment design, to illustrate how we made the
+contrasts</p>
+<pre class="r"><code>samples &lt;- read_tsv(&quot;../code/config/Cordoso_Moreira_SampleList.tsv&quot;)
+Stages &lt;- read_tsv(&quot;../data/Stages_AsIn_CordosoMoreira_Recoded.txt&quot;)
+
+samples %&gt;%
+  filter(`Used library?` %in% c(&quot;yes&quot;, &quot;Yes&quot;)) %&gt;%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %&gt;%
+  count(Ordinal_stage, ID_Species, Tissue_ForDevelopementalAnalysis) %&gt;%
+  inner_join(
+    Stages %&gt;%
+      dplyr::select(Ordinal_stage, Marker, ID_Species=Species)
+  ) %&gt;%
+  ggplot(aes(x=Ordinal_stage, y=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(aes(size=n)) +
+  # geom_line() +
+  geom_vline(data = . %&gt;%
+               filter(!is.na(Marker)) %&gt;%
+               distinct(Marker, Ordinal_stage, ID_Species),
+             aes(color=Marker, xintercept=Ordinal_stage)
+               ) +
+  facet_wrap(~ID_Species, scales=&quot;free&quot;) +
+  theme(legend.position=&#39;bottom&#39;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Chicken.Expression &lt;- read_tsv(&quot;../code/MazinLeafcutterAnalysis/Expression/Chicken_UCSC.galGal6_ensv101.log2rpkm.tsv.gz&quot;)
+
+Chicken.Brain.DE.DS &lt;- read_tsv(&quot;../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/First10_vs_Second10.Brain.Chicken.joined.tsv.gz&quot;)
+
+Chicken.Expression.Brain.pca &lt;- Chicken.Expression %&gt;%
+  dplyr::select(Geneid, contains(&quot;Brain&quot;)) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;log2rpkm&quot;, -Geneid) %&gt;%
+  inner_join(
+    Chicken.Brain.DE.DS %&gt;%
+      filter(!is.na(logCPM)) %&gt;%
+      dplyr::select(Gene_name, logFC:FDR) %&gt;%
+      distinct(),
+    by=c(&quot;Geneid&quot;=&quot;Gene_name&quot;)
+  ) %&gt;%
+  dplyr::select(Geneid, ID, log2rpkm) %&gt;%
+  pivot_wider(names_from = &quot;ID&quot;, values_from = &quot;log2rpkm&quot;) %&gt;%
+  column_to_rownames(&quot;Geneid&quot;) %&gt;%
+  t() %&gt;%
+  scale() %&gt;%
+  prcomp()
+
+summary(Chicken.Expression.Brain.pca)</code></pre>
+<pre><code>Importance of components:
+                           PC1     PC2      PC3      PC4     PC5     PC6
+Standard deviation     56.6618 31.9933 26.50101 22.18649 18.5080 16.7981
+Proportion of Variance  0.4096  0.1306  0.08959  0.06279  0.0437  0.0360
+Cumulative Proportion   0.4096  0.5401  0.62973  0.69252  0.7362  0.7722
+                            PC7      PC8      PC9     PC10    PC11    PC12
+Standard deviation     15.54604 14.34950 12.30910 11.03523 9.83074 9.17154
+Proportion of Variance  0.03083  0.02627  0.01933  0.01553 0.01233 0.01073
+Cumulative Proportion   0.80305  0.82931  0.84864  0.86418 0.87650 0.88724
+                          PC13    PC14    PC15    PC16    PC17   PC18    PC19
+Standard deviation     8.77694 8.52383 7.79090 7.59984 7.23633 6.9741 6.75648
+Proportion of Variance 0.00983 0.00927 0.00774 0.00737 0.00668 0.0062 0.00582
+Cumulative Proportion  0.89706 0.90633 0.91407 0.92144 0.92812 0.9343 0.94015
+                          PC20    PC21    PC22    PC23    PC24    PC25    PC26
+Standard deviation     6.57477 6.34141 6.24091 6.08683 5.97699 5.57285 5.50891
+Proportion of Variance 0.00551 0.00513 0.00497 0.00473 0.00456 0.00396 0.00387
+Cumulative Proportion  0.94566 0.95079 0.95576 0.96049 0.96505 0.96901 0.97288
+                          PC27    PC28    PC29    PC30    PC31    PC32    PC33
+Standard deviation     5.37955 5.24186 5.13014 5.08191 4.80178 4.78052 4.55787
+Proportion of Variance 0.00369 0.00351 0.00336 0.00329 0.00294 0.00292 0.00265
+Cumulative Proportion  0.97657 0.98008 0.98343 0.98673 0.98967 0.99259 0.99524
+                          PC34    PC35      PC36
+Standard deviation     4.38133 4.26096 2.516e-14
+Proportion of Variance 0.00245 0.00232 0.000e+00
+Cumulative Proportion  0.99768 1.00000 1.000e+00</code></pre>
+<pre class="r"><code>Chicken.Expression.Brain.pca$x %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;ID&quot;) %&gt;%
+  inner_join(
+    samples %&gt;%
+      filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;))
+  ) %&gt;%
+  mutate(StagePercentile = percent_rank(Ordinal_stage)) %&gt;%
+  ggplot(aes(x=PC1, y=PC2)) +
+  geom_point(data = . %&gt;%
+               inner_join(Contrasts),
+             aes(color = Group),
+             size=5) +
+  scale_color_manual(values=c(&quot;Early&quot;=&quot;#66c2a5&quot;, &quot;Late&quot;=&quot;#8da0cb&quot;), labels=c(&quot;Early embryo, n=10&quot;, &quot;Adult, n=10&quot;)) +
+  labs(color=&quot;Simplified group for DE&quot;) +
+  new_scale_color() +
+  geom_point(aes(color=StagePercentile)) +
+  scale_color_viridis_c(limits=c(0,1), breaks=c(0,0.2286,0.457,0.8,1), labels=c(&quot;e10 embryo&quot;, &quot;e14 embryo (onset oogenesis meiosis)&quot;, &quot;birth&quot;,&quot;70 days post birth (onset spermatogenesis)&quot;,&quot;155 days post birth&quot;), option=&quot;A&quot;) +
+  labs(x=&quot;PC1; 40% var explained&quot;, y=&quot;PC2; 13% var explained&quot;, color=&quot;Developmental stage&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-31-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/Example_DE_PCA_ChickenBrain.pdf&quot;, height=4, width=7)
+
+
+Chicken.Brain.DE.DS %&gt;%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  )) %&gt;%
+  filter(!ProductivityLabel == &quot;NE&quot;) %&gt;%
+  mutate(Coding = if_else(ProductivityLabel==&quot;PR&quot;, T, F)) %&gt;%
+  group_by(cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  arrange(cluster, Contains_Noncoding, Coding, desc(abs(deltapsi))) %&gt;%
+  distinct( cluster, .keep_all=T) %&gt;%
+  mutate(Productivite = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Sig = if_else(p.adjust &lt; 0.05 &amp; abs(deltapsi) &gt; 0.05, &quot;Sig&quot;, &quot;NS&quot;)) %&gt;%
+  mutate(Color = case_when(
+    (Productivite == &quot;Productive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;5%, deltaPSI&gt;5%, Productive&quot;,
+    (Productivite == &quot;Unproductive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;5%, deltaPSI&gt;5%, Unproductive&quot;,
+    TRUE ~ &quot;Not significant or dPSI&gt;5%&quot;
+  )) %&gt;%
+  ggplot(aes(x=deltapsi, y=-log10(p.adjust), color=Color)) +
+  geom_point(alpha=1) +
+  scale_color_manual(values=c(&quot;Not significant or dPSI&gt;5%&quot;=&quot;gray&quot;, &quot;FDR&lt;5%, deltaPSI&gt;5%, Productive&quot;=&quot;#377eb8&quot;, &quot;FDR&lt;5%, deltaPSI&gt;5%, Unproductive&quot;=&quot;#e41a1c&quot;)) +
+  labs(x=&quot;Splicing Delta PSI&quot;, y=&quot;-log10(FDR)&quot;, color=NULL) +
+  theme(legend.position=&#39;bottom&#39;, legend.direction = &#39;vertical&#39;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-31-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/Example_DE_SplicingVolcano_ChickenBrain.pdf&quot;, height=4, width=4)
+
+
+
+Chicken.Brain.DE.DS %&gt;%
+      filter(!is.na(logCPM)) %&gt;%
+      dplyr::select(Gene_name, logFC:FDR) %&gt;%
+      distinct() %&gt;%
+  ggplot(aes(x=logFC, y=-log10(FDR))) +
+  geom_point() +
+  coord_cartesian(xlim=c(-5,5)) +
+  labs(x=&quot;Expression log2FC&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-31-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/Example_DE_ExpressionVolcano_ChickenBrain.pdf&quot;, height=4, width=4)</code></pre>
+<p>Repeat for human brain</p>
+<pre class="r"><code>Human.Expression &lt;- read_tsv(&quot;../code/MazinLeafcutterAnalysis/Expression/Human_UCSC.hg38_GencodeComprehensive46.log2rpkm.tsv.gz&quot;)
+
+Human.Brain.DE.DS &lt;- read_tsv(&quot;../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/First10_vs_Second10.Brain.Human.joined.tsv.gz&quot;)
+
+HumanBrainSamples &lt;- samples %&gt;%
+  filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;)) %&gt;%
+  filter(ID_Species == &quot;Human&quot;) %&gt;%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis == &quot;Brain&quot;) %&gt;%
+  pull(ID)
+
+
+Human.Expression.Brain.pca &lt;- Human.Expression %&gt;%
+  dplyr::select(Geneid, all_of(HumanBrainSamples)) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;log2rpkm&quot;, -Geneid) %&gt;%
+  inner_join(
+    Human.Brain.DE.DS %&gt;%
+      filter(!is.na(logCPM)) %&gt;%
+      dplyr::select(Gene_name, logFC:FDR) %&gt;%
+      distinct(),
+    by=c(&quot;Geneid&quot;=&quot;Gene_name&quot;)
+  ) %&gt;%
+  dplyr::select(Geneid, ID, log2rpkm) %&gt;%
+  pivot_wider(names_from = &quot;ID&quot;, values_from = &quot;log2rpkm&quot;) %&gt;%
+  column_to_rownames(&quot;Geneid&quot;) %&gt;%
+  t() %&gt;%
+  scale() %&gt;%
+  prcomp()
+
+summary(Human.Expression.Brain.pca)</code></pre>
+<pre><code>Importance of components:
+                           PC1     PC2     PC3      PC4      PC5      PC6
+Standard deviation     59.8805 37.1272 32.1498 25.01106 22.78712 17.60718
+Proportion of Variance  0.3779  0.1453  0.1089  0.06592  0.05472  0.03267
+Cumulative Proportion   0.3779  0.5231  0.6321  0.69799  0.75272  0.78539
+                            PC7      PC8      PC9     PC10     PC11    PC12
+Standard deviation     16.01435 14.66030 14.11165 12.35541 10.11937 9.74452
+Proportion of Variance  0.02703  0.02265  0.02099  0.01609  0.01079 0.01001
+Cumulative Proportion   0.81241  0.83506  0.85605  0.87214  0.88293 0.89294
+                          PC13    PC14    PC15    PC16    PC17    PC18    PC19
+Standard deviation     8.85530 8.54499 7.83524 7.33390 7.31093 7.06640 6.70802
+Proportion of Variance 0.00826 0.00769 0.00647 0.00567 0.00563 0.00526 0.00474
+Cumulative Proportion  0.90120 0.90889 0.91536 0.92103 0.92667 0.93193 0.93667
+                          PC20    PC21    PC22   PC23    PC24    PC25    PC26
+Standard deviation     6.46950 5.95709 5.86697 5.6842 5.52150 5.36689 5.14028
+Proportion of Variance 0.00441 0.00374 0.00363 0.0034 0.00321 0.00304 0.00278
+Cumulative Proportion  0.94108 0.94482 0.94845 0.9518 0.95507 0.95810 0.96089
+                          PC27    PC28    PC29    PC30    PC31    PC32    PC33
+Standard deviation     4.90367 4.85293 4.72529 4.50100 4.40151 4.27844 4.23070
+Proportion of Variance 0.00253 0.00248 0.00235 0.00213 0.00204 0.00193 0.00189
+Cumulative Proportion  0.96342 0.96590 0.96825 0.97039 0.97243 0.97436 0.97625
+                          PC34    PC35    PC36    PC37    PC38    PC39    PC40
+Standard deviation     4.12633 4.07161 3.97709 3.94586 3.82624 3.80662 3.62577
+Proportion of Variance 0.00179 0.00175 0.00167 0.00164 0.00154 0.00153 0.00139
+Cumulative Proportion  0.97804 0.97979 0.98145 0.98310 0.98464 0.98617 0.98755
+                         PC41    PC42    PC43    PC44    PC45    PC46    PC47
+Standard deviation     3.5057 3.43398 3.36724 3.32718 3.28429 3.16466 3.11494
+Proportion of Variance 0.0013 0.00124 0.00119 0.00117 0.00114 0.00106 0.00102
+Cumulative Proportion  0.9889 0.99009 0.99128 0.99245 0.99359 0.99464 0.99567
+                          PC48   PC49    PC50    PC51    PC52      PC53
+Standard deviation     3.01274 2.9246 2.86678 2.81794 2.71013 2.659e-14
+Proportion of Variance 0.00096 0.0009 0.00087 0.00084 0.00077 0.000e+00
+Cumulative Proportion  0.99662 0.9975 0.99839 0.99923 1.00000 1.000e+00</code></pre>
+<pre class="r"><code>data.frame(ID = HumanBrainSamples, Tissue=&quot;Brain&quot;) %&gt;%
+  inner_join(Contrasts)</code></pre>
+<pre><code>                          ID Tissue Species.short Group
+1  Human_Forebrain_CS20_3571  Brain         Human Early
+2      Human_Brain_CS23_2080  Brain         Human Early
+3     Human_Brain_16ypb_5532  Brain         Human  Late
+4     Human_Brain_58ypb_5514  Brain         Human  Late
+5     Human_Brain_50ypb_5517  Brain         Human  Late
+6     Human_Brain_53ypb_5557  Brain         Human  Late
+7     Human_Brain_29ypb_5531  Brain         Human  Late
+8     Human_Brain_29ypb_5908  Brain         Human  Late
+9  Human_Forebrain_CS13_3587  Brain         Human Early
+10   Human_Forebrain_4w_5624  Brain         Human Early
+11   Human_Forebrain_4w_6096  Brain         Human Early
+12   Human_Forebrain_5w_5628  Brain         Human Early
+13 Human_Forebrain_CS22_2034  Brain         Human Early
+14    Human_Brain_58ypb_5524  Brain         Human  Late
+15    Human_Brain_39ypb_5533  Brain         Human  Late
+16    Human_Brain_39ypb_5574  Brain         Human  Late
+17 Human_Forebrain_CS21_2026  Brain         Human Early
+18 Human_Forebrain_CS21_3636  Brain         Human Early
+19    Human_Brain_28ypb_6048  Brain         Human  Late</code></pre>
+<pre class="r"><code>Contrasts %&gt;%
+  filter(Species.short == &quot;Human&quot; &amp; Tissue == &quot;Brain&quot;)</code></pre>
+<pre><code>    Tissue Species.short                        ID Group
+ 1:  Brain         Human Human_Forebrain_CS20_3571 Early
+ 2:  Brain         Human     Human_Brain_CS23_2080 Early
+ 3:  Brain         Human Human_Forebrain_CS13_3587 Early
+ 4:  Brain         Human   Human_Forebrain_4w_5624 Early
+ 5:  Brain         Human   Human_Forebrain_4w_6096 Early
+ 6:  Brain         Human   Human_Forebrain_5w_5628 Early
+ 7:  Brain         Human Human_Forebrain_CS22_2034 Early
+ 8:  Brain         Human Human_Forebrain_CS21_2026 Early
+ 9:  Brain         Human Human_Forebrain_CS21_3636 Early
+10:  Brain         Human    Human_Brain_16ypb_5532  Late
+11:  Brain         Human    Human_Brain_58ypb_5514  Late
+12:  Brain         Human    Human_Brain_50ypb_5517  Late
+13:  Brain         Human    Human_Brain_53ypb_5557  Late
+14:  Brain         Human    Human_Brain_29ypb_5531  Late
+15:  Brain         Human    Human_Brain_29ypb_5908  Late
+16:  Brain         Human    Human_Brain_58ypb_5524  Late
+17:  Brain         Human    Human_Brain_39ypb_5533  Late
+18:  Brain         Human    Human_Brain_39ypb_5574  Late
+19:  Brain         Human    Human_Brain_28ypb_6048  Late</code></pre>
+<pre class="r"><code>Human.Expression.Brain.pca$x %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;ID&quot;) %&gt;%
+  inner_join(
+    samples %&gt;%
+      filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;))
+  ) %&gt;%
+  dplyr::select(-Tissue) %&gt;%
+  mutate(StagePercentile = percent_rank(Ordinal_stage)) %&gt;%
+  ggplot(aes(x=PC1, y=PC2)) +
+  geom_point(data = . %&gt;%
+               inner_join(Contrasts),
+             aes(color = Group),
+             size=3) +
+  scale_color_manual(values=c(&quot;Early&quot;=&quot;#66c2a5&quot;, &quot;Late&quot;=&quot;#8da0cb&quot;), labels=c(&quot;Early embryo, n=10&quot;, &quot;Adult, n=10&quot;)) +
+  labs(color=&quot;Simplified group for DE&quot;) +
+  new_scale_color() +
+  geom_point(aes(color=Ordinal_stage)) +
+  scale_color_viridis_c(limits=c(1,25), breaks=c(1,7,15,19,25), labels=c(&quot;4 wks post-conception&quot;, &quot;10 wk post-conception (onset oogenesis meiosis)&quot;, &quot;birth&quot;,&quot;young teen (onset spermatogenesis)&quot;,&quot;senior&quot;), option=&quot;A&quot;) +
+  labs(x=&quot;PC1; 38% var explained&quot;, y=&quot;PC2; 15% var explained&quot;, color=&quot;Developmental stage&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/Example_DE_PCA_HumanBrain.pdf&quot;, height=4, width=7)</code></pre>
+<p>And some plots to illustrate how I find ‘conserved’ splice
+events…</p>
+<pre class="r"><code># Fish for examples to highlight
+dat.JoinedByHumanCoords %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches b/n human&quot;
+  )) %&gt;%
+  filter(q.splicing.OtherSpecies &lt; 0.05) %&gt;%
+  filter(abs(deltapsi.Human ) &gt; 0.01) %&gt;%
+  filter(IsExactLiftover) %&gt;%
+  filter(Species.OtherSpecies == &quot;Chicken&quot;) %&gt;%
+  filter(Tissue == &quot;Brain&quot;) %&gt;%
+  filter(Group == &quot;Unproductive&quot;) %&gt;%
+  filter(!sign(deltapsi.OtherSpecies) == sign(deltapsi.Human)) %&gt;%
+  head()</code></pre>
+<pre><code>   Tissue Species.OtherSpecies chrom.OtherSpecies     cluster
+1:  Brain              Chicken              chr10  clu_7447_+
+2:  Brain              Chicken              chr10  clu_7956_-
+3:  Brain              Chicken              chr14 clu_12209_+
+4:  Brain              Chicken              chr19 clu_17643_+
+5:  Brain              Chicken              chr25 clu_27293_-
+6:  Brain              Chicken              chr28 clu_29644_+
+   start.OtherSpecies stop.OtherSpecies logef.OtherSpecies Early.OtherSpecies
+1:           19394144          19401440         -7.4721720       0.0129398027
+2:           10634046          10634155         -0.4000452       0.1250973680
+3:            7230034           7247465         -2.0788746       0.0023037011
+4:            9247407           9248515          0.6048640       0.0036994537
+5:            2868750           2872635         -0.5658726       0.0015669127
+6:            3180985           3181582         -0.5291440       0.0007648291
+   Late.OtherSpecies deltapsi.OtherSpecies Intron_coord.OtherSpecies
+1:      1.167080e-06          -0.012938636   chr10:19394144-19401439
+2:      8.412272e-02          -0.040974651   chr10:10634046-10634154
+3:      1.509651e-04          -0.002152736     chr14:7230034-7247464
+4:      5.618300e-03           0.001918847     chr19:9247407-9248514
+5:      1.400738e-03          -0.000166175     chr25:2868750-2872634
+6:      3.008350e-03           0.002243520     chr28:3180985-3181581
+   status.OtherSpecies loglr.OtherSpecies df.OtherSpecies p.OtherSpecies
+1:             Success           11.93036               3   2.670965e-05
+2:             Success           10.37386               3   1.187709e-04
+3:             Success           16.73776              15   4.031981e-03
+4:             Success           25.27740              11   4.973767e-07
+5:             Success           20.39143               8   2.288814e-06
+6:             Success           17.61748               5   1.350621e-06
+   q.splicing.OtherSpecies Gene_name.OtherSpecies Strand.OtherSpecies
+1:            3.844853e-04   ENSGALG00000007930.7                   +
+2:            1.404890e-03   ENSGALG00000004960.6                   -
+3:            2.701692e-02   ENSGALG00000006068.6                   +
+4:            1.094123e-05   ENSGALG00000005668.6                   +
+5:            4.276034e-05   ENSGALG00000013537.7                   -
+6:            2.665191e-05   ENSGALG00000030918.3                   +
+   Annot.OtherSpecies AlgorithmCoding.OtherSpecies UTR.OtherSpecies
+1:              FALSE                        FALSE            FALSE
+2:              FALSE                        FALSE            FALSE
+3:              FALSE                        FALSE             TRUE
+4:              FALSE                        FALSE            FALSE
+5:              FALSE                        FALSE            FALSE
+6:              FALSE                        FALSE             TRUE
+   GencodePC.OtherSpecies logFC.OtherSpecies logCPM.OtherSpecies
+1:                  FALSE          0.2979349            5.733655
+2:                  FALSE         -0.8615903            6.022978
+3:                  FALSE         -0.5188024            7.688157
+4:                  FALSE         -0.5306516            8.638077
+5:                  FALSE         -0.4339937            8.366343
+6:                  FALSE         -0.5031142            9.980533
+   PValue.OtherSpecies FDR.OtherSpecies IntFlag.OtherSpecies
+1:        1.684101e-05     4.136927e-05                    0
+2:        4.921567e-15     2.964148e-14                    0
+3:        3.222461e-07     9.649142e-07                    1
+4:        8.243698e-06     2.107165e-05                    0
+5:        2.864435e-07     8.647022e-07                    0
+6:        5.125374e-06     1.344673e-05                    1
+   ProductivityLabel.OtherSpecies Coding.OtherSpecies                OriginName
+1:                             UP               FALSE chr10_19394144_19401439_+
+2:                             UP               FALSE chr10_10634046_10634154_-
+3:                             NE               FALSE   chr14_7230034_7247464_+
+4:                             UP               FALSE   chr19_9247407_9248514_+
+5:                             UP               FALSE   chr25_2868750_2872634_-
+6:                             NE               FALSE   chr28_3180985_3181581_+
+                     Hg38Name Hg38Cluster Species.Human chrom.Human start.Human
+1:  chr15_67563350_67585889_+ clu_23288_+         Human       chr15    67563350
+2:  chr15_48427773_48427881_- clu_24369_-         Human       chr15    48427773
+3:  chr16_24730300_24776932_+ clu_27736_+         Human       chr16    24730300
+4:  chr17_27307919_27309099_+ clu_31779_+         Human       chr17    27307919
+5: chr1_154159048_154169304_-  clu_2425_-         Human        chr1   154159048
+6:    chr19_1273715_1274306_+ clu_36854_+         Human       chr19     1273715
+   stop.Human logef.Human Early.Human Late.Human deltapsi.Human
+1:   67585890  1.34140504 0.007631703 0.05271546     0.04508375
+2:   48427882  1.07749543 0.168112308 0.37778058     0.20966827
+3:   24776933  2.08374069 0.022418309 0.03287519     0.01045688
+4:   27309100  0.03668208 0.039925092 0.01516265    -0.02476244
+5:  154169305  2.74755597 0.001532969 0.04968063     0.04814766
+6:    1274307 -0.14747129 0.085885581 0.03692243    -0.04896315
+         Intron_coord.Human status.Human loglr.Human df.Human      p.Human
+1:  chr15:67563350-67585889      Success    15.90413        4 2.093708e-06
+2:  chr15:48427773-48427881      Success    15.74068        2 1.458517e-07
+3:  chr16:24730300-24776932      Success    16.13314       10 3.615027e-04
+4:  chr17:27307919-27309099      Success    18.03677       13 5.779479e-04
+5: chr1:154159048-154169304      Success    47.57279        5 5.564428e-19
+6:    chr19:1273715-1274306      Success    22.98618       12 7.014779e-06
+   q.splicing.Human    Gene_name.Human Strand.Human Annot.Human
+1:     2.015111e-05 ENSG00000137764.20            +       FALSE
+2:     1.830632e-06 ENSG00000166147.16            -        TRUE
+3:     1.865629e-03 ENSG00000090905.19            +        TRUE
+4:     2.784342e-03 ENSG00000109046.15            +       FALSE
+5:     4.100296e-17 ENSG00000143549.22            -       FALSE
+6:     5.936618e-05 ENSG00000099622.14            +        TRUE
+   AlgorithmCoding.Human UTR.Human GencodePC.Human logFC.Human logCPM.Human
+1:                 FALSE      TRUE           FALSE  0.82221670     5.021031
+2:                 FALSE      TRUE           FALSE -1.69666183     5.804167
+3:                 FALSE      TRUE           FALSE -0.71401912     6.984051
+4:                 FALSE      TRUE           FALSE -1.49133822     8.664255
+5:                 FALSE     FALSE           FALSE  0.47015721     7.836145
+6:                 FALSE      TRUE           FALSE  0.08149582     8.589176
+   PValue.Human    FDR.Human IntFlag.Human ProductivityLabel.Human Coding.Human
+1: 1.819334e-12 6.969402e-12             1                      NE        FALSE
+2: 4.336406e-07 1.020192e-06             5                      NE        FALSE
+3: 1.163164e-05 2.369778e-05             5                      NE        FALSE
+4: 4.841611e-09 1.360859e-08             1                      NE        FALSE
+5: 1.423667e-03 2.302272e-03             0                      UP        FALSE
+6: 6.473057e-01 6.861468e-01             5                      NE        FALSE
+                         name IsExactLiftover        Group
+1:  chr15_67563350_67585889_+            TRUE Unproductive
+2:  chr15_48427773_48427881_-            TRUE Unproductive
+3:  chr16_24730300_24776932_+            TRUE Unproductive
+4:  chr17_27307919_27309099_+            TRUE Unproductive
+5: chr1_154159048_154169304_-            TRUE Unproductive
+6:    chr19_1273715_1274306_+            TRUE Unproductive</code></pre>
+<pre class="r"><code># Plot overview of results  
+dat.JoinedByHumanCoords %&gt;%
+  filter(IsExactLiftover == T) %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive&quot;,
+    TRUE ~ &quot;Switches&quot;
+  )) %&gt;%
+  filter(q.splicing.OtherSpecies &lt; 0.05) %&gt;%
+  filter(abs(deltapsi.Human ) &gt; 0.01) %&gt;%
+  mutate(Group = factor(Group, levels=c(&quot;Unproductive&quot;, &quot;Productive&quot;, &quot;Switches&quot;))) %&gt;%
+  arrange(Species.OtherSpecies, cluster, desc(IsExactLiftover), Group, desc(abs(deltapsi.OtherSpecies))) %&gt;%
+  distinct(Species.OtherSpecies, cluster, OriginName, .keep_all=T) %&gt;%
+  mutate(IsMatchingSigns = sign(deltapsi.Human)==sign(deltapsi.OtherSpecies)) %&gt;%
+  count(IsMatchingSigns, Species.OtherSpecies, IsExactLiftover, Group) %&gt;%
+  mutate(Liftover = if_else(IsExactLiftover, &quot;Exact junc liftover&quot;, &quot;Non-exact&quot;)) %&gt;%
+  ggplot(aes(x=Species.OtherSpecies, y=n, fill=IsMatchingSigns)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values=c(&quot;TRUE&quot;=&quot;black&quot;, &quot;FALSE&quot;=&quot;gray&quot;), labels=c(&quot;TRUE&quot;=&quot;Matching DeltaPSI sign&quot;, &quot;FALSE&quot;=&quot;Oppossite DeltaPSI sign&quot;)) +
+  facet_wrap(~Group) +
+  Rotate_x_labels +
+  labs(x=&quot;Species&quot;, y=&quot;Num AS juncs conserved w/ human\n(one representative per cluster)&quot;, fill=NULL) +
+  theme(legend.position=&#39;bottom&#39;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/NumConservedEvents.pdf&quot;, height=5, width=8)
+
+  
+# Another version just highlighting unproductive
+dat.JoinedByHumanCoords %&gt;%
+  filter(IsExactLiftover == T) %&gt;%
+  mutate(Group = case_when(
+    Coding.Human &amp; Coding.OtherSpecies ~ &quot;Productive&quot;,
+    !Coding.Human &amp; !Coding.OtherSpecies ~ &quot;Unproductive in human\nand species X&quot;,
+    TRUE ~ &quot;Switches&quot;
+  )) %&gt;%
+  filter(q.splicing.OtherSpecies &lt; 0.05) %&gt;%
+  filter(abs(deltapsi.Human ) &gt; 0.01) %&gt;%
+  mutate(Group = factor(Group, levels=c(&quot;Unproductive in human\nand species X&quot;, &quot;Productive&quot;, &quot;Switches&quot;))) %&gt;%
+  arrange(Species.OtherSpecies, cluster, desc(IsExactLiftover), Group, desc(abs(deltapsi.OtherSpecies))) %&gt;%
+  distinct(Species.OtherSpecies, cluster, OriginName, .keep_all=T) %&gt;%
+  mutate(IsMatchingSigns = sign(deltapsi.Human)==sign(deltapsi.OtherSpecies)) %&gt;%
+  count(IsMatchingSigns, Species.OtherSpecies, IsExactLiftover, Group) %&gt;%
+  mutate(Liftover = if_else(IsExactLiftover, &quot;Exact junc liftover&quot;, &quot;Non-exact&quot;)) %&gt;%
+  filter(!Group == &quot;Productive&quot;) %&gt;%
+  ggplot(aes(x=Species.OtherSpecies, y=n, fill=IsMatchingSigns)) +
+  geom_col(position=&#39;stack&#39;) +
+  scale_fill_manual(values=c(&quot;TRUE&quot;=&quot;black&quot;, &quot;FALSE&quot;=&quot;gray&quot;), labels=c(&quot;TRUE&quot;=&quot;Same Delta PSI sign&quot;, &quot;FALSE&quot;=&quot;Opposite Delta PSI sign&quot;)) +
+  facet_wrap(~Group) +
+  Rotate_x_labels +
+  labs(x=&quot;Species&quot;, y=&quot;*Number of conserved\ndevelopmentally regulated AS events&quot;, fill=NULL, caption=&quot;*Number of junctions that match a human junction (liftOver)\nand are differentially spliced in both human and species x in at least one tissue&quot;) +
+  theme(legend.position=&#39;bottom&#39;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-33-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/NumConservedEvents_JustUnproductive.pdf&quot;, height=5, width=8)</code></pre>
+<p>Three juncs to highlight:</p>
+<ol style="list-style-type: decimal">
+<li>chr1:190550543-190561452 (Chicken), chr11:83472777-83483252 (Human),
+DLG2, switches productivity</li>
+<li>chr10:10634046-10634154 (Chicken), chr15:48427773-48427881 (Human),
+FBN1, switches signs</li>
+<li>chr33:3213644-3217460 (Chicken), chr12:51780271-51786541 (Human),
+SCN8A, sign stays, is unproductive</li>
+</ol>
+<pre class="r"><code>Juncs.To.HighlightInVolcano.Human &lt;- Human.Brain.DE.DS %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+  separate(cluster, into=c(&quot;chrom&quot;, &quot;cluster&quot;), sep=&quot;:&quot;) %&gt;%
+  mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{stop-1}&quot;)) %&gt;%
+  filter(JuncCoord %in% c(&quot;chr11:83472777-83483252&quot;, &quot;chr15:48427773-48427881&quot;, &quot;chr12:51780271-51786541&quot;)) %&gt;%
+  mutate(Productivite = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Sig = if_else(p.adjust &lt; 0.1 &amp; abs(deltapsi) &gt; 0.01, &quot;Sig&quot;, &quot;NS&quot;)) %&gt;%
+  mutate(Color = case_when(
+    (Productivite == &quot;Productive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;,
+    (Productivite == &quot;Unproductive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;,
+    TRUE ~ &quot;Not significant or dPSI&gt;1%&quot;
+  )) %&gt;%
+  mutate(gene = recode(JuncCoord, &quot;chr11:83472777-83483252&quot;=&quot;DLG2&quot;, &quot;chr15:48427773-48427881&quot;=&quot;FBN1&quot;, &quot;chr12:51780271-51786541&quot;=&quot;SCN8A&quot;)) %&gt;%
+  mutate(label = str_glue(&quot;{gene}:{JuncCoord}&quot;))
+
+Human.Brain.DE.DS %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+  group_by(cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  separate(cluster, into=c(&quot;chrom&quot;, &quot;cluster&quot;), sep=&quot;:&quot;) %&gt;%
+  mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{stop-1}&quot;)) %&gt;%
+  arrange(cluster, Contains_Noncoding, Coding, desc(abs(deltapsi))) %&gt;%
+  distinct( cluster, .keep_all=T) %&gt;%
+  mutate(Productivite = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Sig = if_else(p.adjust &lt; 0.1 &amp; abs(deltapsi) &gt; 0.01, &quot;Sig&quot;, &quot;NS&quot;)) %&gt;%
+  mutate(Color = case_when(
+    (Productivite == &quot;Productive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;,
+    (Productivite == &quot;Unproductive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;,
+    TRUE ~ &quot;Not significant or dPSI&gt;1%&quot;
+  )) %&gt;%
+  ggplot(aes(x=deltapsi, y=-log10(p.adjust), color=Color)) +
+  geom_point(alpha=0.05) +
+  geom_point(data = Juncs.To.HighlightInVolcano.Human, alpha=1, size=3) +
+  geom_label_repel(data = Juncs.To.HighlightInVolcano.Human, aes(label =label), color=&#39;black&#39;, min.segment.length = 0, box.padding=3) +
+  scale_color_manual(values=c(&quot;Not significant or dPSI&gt;1%&quot;=&quot;gray&quot;, &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;=&quot;#377eb8&quot;, &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;=&quot;#e41a1c&quot;)) +
+  labs(x=&quot;Splicing Delta PSI&quot;, y=&quot;-log10(FDR)&quot;, color=NULL) +
+  theme(legend.position=&#39;bottom&#39;, legend.direction = &#39;vertical&#39;) +
+  coord_cartesian(ylim=c(0, 25))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/Example_DS_SplicingVolcano_HumanBrain_ExamplesHighlighted.pdf&quot;, height=4, width=5)</code></pre>
+<p>same for chicken</p>
+<pre class="r"><code>Juncs.To.HighlightInVolcano.Chicken &lt;- Chicken.Brain.DE.DS %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+  separate(cluster, into=c(&quot;chrom&quot;, &quot;cluster&quot;), sep=&quot;:&quot;) %&gt;%
+  mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{stop-1}&quot;)) %&gt;%
+  filter(JuncCoord %in% c(&quot;chr1:190550543-190561452&quot;, &quot;chr10:10634046-10634154&quot;, &quot;chr33:3213644-3217460&quot;)) %&gt;%
+  mutate(Productivite = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Sig = if_else(p.adjust &lt; 0.1 &amp; abs(deltapsi) &gt; 0.01, &quot;Sig&quot;, &quot;NS&quot;)) %&gt;%
+  mutate(Color = case_when(
+    (Productivite == &quot;Productive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;,
+    (Productivite == &quot;Unproductive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;,
+    TRUE ~ &quot;Not significant or dPSI&gt;1%&quot;
+  )) %&gt;%
+  mutate(gene = recode(JuncCoord, &quot;chr1:190550543-190561452&quot;=&quot;DLG2&quot;, &quot;chr10:10634046-10634154&quot;=&quot;FBN1&quot;, &quot;chr33:3213644-3217460&quot;=&quot;SCN8A&quot;)) %&gt;%
+  mutate(label = str_glue(&quot;{gene}:{JuncCoord}&quot;))
+
+Chicken.Brain.DE.DS %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+  group_by(cluster) %&gt;%
+  mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+  ungroup() %&gt;%
+  separate(cluster, into=c(&quot;chrom&quot;, &quot;cluster&quot;), sep=&quot;:&quot;) %&gt;%
+  mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{stop-1}&quot;)) %&gt;%
+  arrange(cluster, Contains_Noncoding, Coding, desc(abs(deltapsi))) %&gt;%
+  distinct( cluster, .keep_all=T) %&gt;%
+  mutate(Productivite = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Sig = if_else(p.adjust &lt; 0.1 &amp; abs(deltapsi) &gt; 0.01, &quot;Sig&quot;, &quot;NS&quot;)) %&gt;%
+  mutate(Color = case_when(
+    (Productivite == &quot;Productive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;,
+    (Productivite == &quot;Unproductive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;,
+    TRUE ~ &quot;Not significant or dPSI&gt;1%&quot;
+  )) %&gt;%
+  left_join(
+    Cluster2ClusterMap %&gt;%
+      filter(Species == &quot;Chicken&quot;) %&gt;%
+      mutate(LiftsToHuman = &quot;Matched with a human junction (LiftOver)&quot;) %&gt;%
+      dplyr::select(Intron_coord, LiftsToHuman )
+  ) %&gt;%
+  replace_na(list(LiftsToHuman=&quot;Not matched&quot;)) %&gt;%
+  ggplot(aes(x=deltapsi, y=-log10(p.adjust), color=Color)) +
+  geom_point(alpha=0.3, aes(shape=LiftsToHuman)) +
+  scale_shape_manual(values=c(&quot;Matched with a human junction (LiftOver)&quot;=16, &quot;Not matched&quot;=3)) +
+  geom_label_repel(data = Juncs.To.HighlightInVolcano.Chicken, aes(label =label), color=&#39;black&#39;, min.segment.length = 0, box.padding = 3) +
+  geom_point(data = Juncs.To.HighlightInVolcano.Chicken, alpha=1, size=4, shape=16) +
+  scale_color_manual(values=c(&quot;Not significant or dPSI&gt;1%&quot;=&quot;gray&quot;, &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;=&quot;#377eb8&quot;, &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;=&quot;#e41a1c&quot;)) +
+  labs(x=&quot;Splicing Delta PSI&quot;, y=&quot;-log10(FDR)&quot;, color=NULL, shape=NULL) +
+  theme(legend.position=&#39;bottom&#39;, legend.direction = &#39;vertical&#39;) +
+  coord_cartesian(ylim=c(0, 25)) +
+  guides(shape = guide_legend(override.aes = list(alpha = 1, color=&#39;black&#39;)))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/Example_DS_SplicingVolcano_ChickenBrain_ExamplesHighlighted.pdf&quot;, height=4, width=5)</code></pre>
+<p>Now let’s make version with both chicken and human in seperate
+facets, same plot</p>
+<pre class="r"><code>JuncsToHighlightCombined &lt;- 
+  bind_rows(
+    Juncs.To.HighlightInVolcano.Chicken %&gt;%
+      mutate(Species = &quot;Differential splicing,\nchicken brain development&quot;) %&gt;%
+      mutate(LiftsToHuman = &quot;Chicken junction that matches a human junction (LiftOver)&quot;),
+    Juncs.To.HighlightInVolcano.Human %&gt;%
+      mutate(Species = &quot;Differential splicing,\nhuman brain development&quot;) %&gt;%
+      mutate(LiftsToHuman = &quot;Human junction&quot;),
+  ) %&gt;%
+  mutate(Species = factor(Species, levels=c( &quot;Differential splicing,\nhuman brain development&quot;, &quot;Differential splicing,\nchicken brain development&quot;))) %&gt;%
+  mutate(LiftsToHuman = factor(LiftsToHuman, levels=c(&quot;Human junction&quot;, &quot;Chicken junction that matches a human junction (LiftOver)&quot;, &quot;Chicken junction, no match&quot;)))
+
+bind_rows(
+  Chicken.Brain.DE.DS %&gt;%
+    dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+    mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+    group_by(cluster) %&gt;%
+    mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+    ungroup() %&gt;%
+    separate(cluster, into=c(&quot;chrom&quot;, &quot;cluster&quot;), sep=&quot;:&quot;) %&gt;%
+    mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{stop-1}&quot;)) %&gt;%
+    arrange(cluster, Contains_Noncoding, Coding, desc(abs(deltapsi))) %&gt;%
+    distinct( cluster, .keep_all=T) %&gt;%
+    mutate(Productivite = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+    mutate(Sig = if_else(p.adjust &lt; 0.1 &amp; abs(deltapsi) &gt; 0.01, &quot;Sig&quot;, &quot;NS&quot;)) %&gt;%
+    mutate(Color = case_when(
+      (Productivite == &quot;Productive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;,
+      (Productivite == &quot;Unproductive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;,
+      TRUE ~ &quot;Not significant or dPSI&gt;1%&quot;
+    )) %&gt;%
+    left_join(
+      Cluster2ClusterMap %&gt;%
+        filter(Species == &quot;Chicken&quot;) %&gt;%
+        mutate(LiftsToHuman = &quot;Chicken junction that matches a human junction (LiftOver)&quot;) %&gt;%
+        dplyr::select(Intron_coord, LiftsToHuman )
+    ) %&gt;%
+    replace_na(list(LiftsToHuman=&quot;Chicken junction, no match&quot;)) %&gt;%
+    mutate(Species = &quot;Differential splicing,\nchicken brain development&quot;),
+  Human.Brain.DE.DS %&gt;%
+    dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+    mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+    group_by(cluster) %&gt;%
+    mutate(Contains_Noncoding = any(!Coding)) %&gt;%
+    ungroup() %&gt;%
+    separate(cluster, into=c(&quot;chrom&quot;, &quot;cluster&quot;), sep=&quot;:&quot;) %&gt;%
+    mutate(JuncCoord = str_glue(&quot;{chrom}:{start}-{stop-1}&quot;)) %&gt;%
+    arrange(cluster, Contains_Noncoding, Coding, desc(abs(deltapsi))) %&gt;%
+    distinct( cluster, .keep_all=T) %&gt;%
+    mutate(Productivite = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+    mutate(Sig = if_else(p.adjust &lt; 0.1 &amp; abs(deltapsi) &gt; 0.01, &quot;Sig&quot;, &quot;NS&quot;)) %&gt;%
+    mutate(Color = case_when(
+      (Productivite == &quot;Productive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;,
+      (Productivite == &quot;Unproductive&quot;) &amp; Sig == &quot;Sig&quot; ~ &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;,
+      TRUE ~ &quot;Not significant or dPSI&gt;1%&quot;
+    )) %&gt;%
+    mutate(Species = &quot;Differential splicing,\nhuman brain development&quot;) %&gt;%
+    mutate(LiftsToHuman = &quot;Human junction&quot;)
+
+) %&gt;%
+  mutate(Species = factor(Species, levels=c( &quot;Differential splicing,\nhuman brain development&quot;, &quot;Differential splicing,\nchicken brain development&quot;))) %&gt;%
+  mutate(LiftsToHuman = factor(LiftsToHuman, levels=c(&quot;Human junction&quot;, &quot;Chicken junction that matches a human junction (LiftOver)&quot;, &quot;Chicken junction, no match&quot;))) %&gt;%
+  ggplot(aes(x=deltapsi, y=-log10(p.adjust), color=Color)) +
+  geom_point(alpha=0.3, aes(shape=LiftsToHuman)) +
+  scale_shape_manual(values=c(&quot;Chicken junction that matches a human junction (LiftOver)&quot;=16, &quot;Chicken junction, no match&quot;=3, &quot;Human junction&quot;=15), labels=c(&quot;Chicken junction that matches a human junction (LiftOver)&quot;=&quot;Chicken junction\nthat matches a\nhuman junction (LiftOver)&quot;, &quot;Chicken junction, no match&quot;=&quot;Chicken junction,\nno matching human\njunction identified&quot;, &quot;Human junction&quot;=&quot;Human junction&quot;)) +
+  scale_color_manual(values=c(&quot;Not significant or dPSI&gt;1%&quot;=&quot;gray&quot;, &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;=&quot;#377eb8&quot;, &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;=&quot;#e41a1c&quot;), labels = c(&quot;Not significant or dPSI&gt;1%&quot;=&quot;Not significant or dPSI&gt;1%&quot;, &quot;FDR&lt;10%, deltaPSI&gt;1%, Productive&quot;=&quot;FDR&lt;10%, deltaPSI&gt;1%,\nProductive&quot;, &quot;FDR&lt;10%, deltaPSI&gt;1%, Unproductive&quot;=&quot;FDR&lt;10%, deltaPSI&gt;1%,\nUnproductive&quot;)) +
+  geom_label_repel(data = JuncsToHighlightCombined, aes(label =label), color=&#39;black&#39;, min.segment.length = 0, box.padding = 3, size=3, label.padding=0.1) +
+  geom_point(data = JuncsToHighlightCombined, color=&quot;black&quot;, alpha=1, size=2.5, aes(shape=LiftsToHuman)) +
+  geom_point(data = JuncsToHighlightCombined, alpha=1, size=2, aes(shape=LiftsToHuman)) +
+  facet_wrap(~Species, ncol=1) +
+  labs(x=&quot;Splicing Delta PSI&quot;, y=&quot;-log10(FDR)&quot;, color=&quot;Color key&quot;, shape=&quot;Shape key&quot;) +
+  theme(legend.position=&#39;right&#39;, legend.direction = &#39;vertical&#39;) +
+  coord_cartesian(ylim=c(0, 25)) +
+  theme(legend.spacing.y = unit(0.8, &#39;cm&#39;)) +
+  guides(shape = guide_legend(byrow=T, override.aes = list(alpha = 1, color=&#39;black&#39;)), color= guide_legend(byrow = TRUE))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/Example_DS_SplicingVolcano_ChickenAndHumanBrain_ExamplesHighlighted.pdf&quot;, height=130, width=160, units=&#39;mm&#39;)</code></pre>
+<p>And now check total amount unproductive in each sample…</p>
+<pre class="r"><code>TotalCountsByClassification.BySample &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/SummarisedClassificationsBySample/*.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/SummarisedClassificationsBySample/(.+?).tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;fn&quot;, &quot;Annot&quot;, &quot;Coding&quot;, &quot;UTR&quot;, &quot;GencodePC&quot;, &quot;TotalCounts&quot;)) %&gt;%
+  bind_rows(.id=&quot;Species&quot;) %&gt;%
+  mutate(ID = str_replace(fn, &quot;rna-seq/SplicingAnalysis/juncfiles/(.+?).junccounts.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  inner_join(
+    samples %&gt;%
+      filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;)) %&gt;%
+      separate_rows(Tissue_ForDevelopementalAnalysis)
+  )
+
+
+
+TotalCountsByClassification.BySample %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  filter(!UTR) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis, Coding) %&gt;%
+  summarise(TotalByCodingStatus = sum(TotalCounts)) %&gt;%
+  ungroup() %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %&gt;%
+  mutate(Percent = TotalByCodingStatus/ sum(TotalByCodingStatus) * 100) %&gt;%
+  ungroup() %&gt;%
+  filter(!Coding) %&gt;%
+  inner_join(
+      samples %&gt;%
+        filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;)) %&gt;%
+        separate_rows(Tissue_ForDevelopementalAnalysis)
+  ) %&gt;%
+  group_by(Tissue_ForDevelopementalAnalysis, ID_Species) %&gt;%
+  mutate(PercentRank_OrdinalStage = percent_rank(Ordinal_stage)) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=PercentRank_OrdinalStage, y=Percent, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.4) +
+  geom_smooth(method=&#39;lm&#39;) +
+  coord_cartesian(ylim=c(0,10)) +
+  facet_wrap(~Species) +
+  theme_bw()</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>TotalCountsByClassification.BySample %&gt;%
+  dplyr::rename(&quot;AlgorithmCoding&quot;=&quot;Coding&quot;) %&gt;%
+  mutate(Coding = AlgorithmCoding | GencodePC) %&gt;%
+  filter(!UTR) %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis, Coding) %&gt;%
+  summarise(TotalByCodingStatus = sum(TotalCounts)) %&gt;%
+  ungroup() %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %&gt;%
+  mutate(Percent = TotalByCodingStatus/ sum(TotalByCodingStatus) * 100) %&gt;%
+  ungroup() %&gt;%
+  filter(!Coding) %&gt;%
+  inner_join(
+      samples %&gt;%
+        filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;)) %&gt;%
+        separate_rows(Tissue_ForDevelopementalAnalysis)
+  ) %&gt;%
+  group_by(Tissue_ForDevelopementalAnalysis, ID_Species) %&gt;%
+  mutate(PercentRank_OrdinalStage = percent_rank(Ordinal_stage)) %&gt;%
+  ungroup() %&gt;%
+  inner_join(Stages %&gt;%
+               dplyr::select(Ordinal_stage, Species, Marker)) %&gt;%
+  ggplot(aes(x=PercentRank_OrdinalStage, y=Percent)) +
+  geom_vline( data = . %&gt;%
+                distinct(PercentRank_OrdinalStage, Tissue_ForDevelopementalAnalysis, Species, .keep_all=T) %&gt;%
+                filter(!is.na(Marker)),
+              aes(xintercept = PercentRank_OrdinalStage, color=Marker)) +
+  labs(color = &quot;Developmental landmark&quot;) +
+  # ggnewscale::new_scale_color() +
+  geom_point(alpha=0.4, color=&#39;black&#39;) +
+  coord_cartesian(ylim=c(0,6.5)) +
+  scale_x_continuous(breaks=c(0,1), labels=c(&quot;Early embryo&quot;, &quot;Adult&quot;)) +
+  facet_grid(Species~Tissue_ForDevelopementalAnalysis) +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y=&quot;Percent unproductive reads&quot;, x=&quot;Development&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-37-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>…same thing but use logic from chao’s table:</p>
+<pre class="r"><code>TotalCountsByClassification.BySample %&gt;%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  )) %&gt;%
+  filter(!ProductivityLabel==&quot;NE&quot;) %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis, ProductivityLabel) %&gt;%
+  summarise(TotalByCodingStatus = sum(TotalCounts)) %&gt;%
+  ungroup() %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %&gt;%
+  mutate(Percent = TotalByCodingStatus/ sum(TotalByCodingStatus) * 100) %&gt;%
+  ungroup() %&gt;%
+  filter(!ProductivityLabel==&quot;PR&quot;) %&gt;%
+  inner_join(
+      samples %&gt;%
+        filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;)) %&gt;%
+        separate_rows(Tissue_ForDevelopementalAnalysis)
+  ) %&gt;%
+  group_by(Tissue_ForDevelopementalAnalysis, ID_Species) %&gt;%
+  mutate(PercentRank_OrdinalStage = percent_rank(Ordinal_stage)) %&gt;%
+  ungroup() %&gt;%
+  inner_join(Stages %&gt;%
+               dplyr::select(Ordinal_stage, Species, Marker)) %&gt;%
+  mutate(Species = factor(Species, levels = c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(x=PercentRank_OrdinalStage, y=Percent)) +
+  geom_vline( data = . %&gt;%
+                distinct(PercentRank_OrdinalStage, Tissue_ForDevelopementalAnalysis, Species, .keep_all=T) %&gt;%
+                filter(!is.na(Marker)),
+              aes(xintercept = PercentRank_OrdinalStage, color=Marker)) +
+  labs(color = &quot;Developmental landmark&quot;) +
+  # ggnewscale::new_scale_color() +
+  geom_point(alpha=0.4, color=&#39;black&#39;) +
+  coord_cartesian(ylim=c(0,6.5)) +
+  scale_x_continuous(breaks=c(0,1), labels=c(&quot;Early embryo&quot;, &quot;Adult&quot;)) +
+  facet_grid(Species~Tissue_ForDevelopementalAnalysis) +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y=&quot;Percent unproductive reads&quot;, x=&quot;Development&quot;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/AllTissues_PercentUnproductive.pdf&quot;, height=150, width=220, units=&quot;mm&quot;)</code></pre>
+<p>And now focus on testis:</p>
+<pre class="r"><code>TotalCountsByClassification.BySample %&gt;%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  )) %&gt;%
+  filter(!ProductivityLabel==&quot;NE&quot;) %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis, ProductivityLabel) %&gt;%
+  summarise(TotalByCodingStatus = sum(TotalCounts)) %&gt;%
+  ungroup() %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %&gt;%
+  mutate(Percent = TotalByCodingStatus/ sum(TotalByCodingStatus) * 100) %&gt;%
+  ungroup() %&gt;%
+  filter(!ProductivityLabel==&quot;PR&quot;) %&gt;%
+  inner_join(
+      samples %&gt;%
+        filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;)) %&gt;%
+        separate_rows(Tissue_ForDevelopementalAnalysis)
+  ) %&gt;%
+  group_by(Tissue_ForDevelopementalAnalysis, ID_Species) %&gt;%
+  mutate(PercentRank_OrdinalStage = percent_rank(Ordinal_stage)) %&gt;%
+  ungroup() %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis == &quot;Testis&quot;) %&gt;%
+  inner_join(
+    Stages %&gt;%
+      dplyr::select(Ordinal_stage, Species, Marker) %&gt;%
+      filter(Marker == &quot;Onset meiosis spermatogenesis&quot;) %&gt;%
+      distinct() %&gt;%
+      dplyr::select(Species, OnsetSpermatogenesis=Ordinal_stage)
+  ) %&gt;%
+  mutate(BeforeOrAfterSpermatogenesis = case_when(
+    Ordinal_stage &gt; OnsetSpermatogenesis ~ &quot;After onset meiosis&quot;,
+    Ordinal_stage &lt; OnsetSpermatogenesis ~ &quot;Before onset meiosis&quot;,
+    Ordinal_stage ==  OnsetSpermatogenesis ~ &quot;After onset meiosis&quot;)) %&gt;%
+  filter(!BeforeOrAfterSpermatogenesis == &quot;Onset meiosis&quot;) %&gt;%
+  mutate(BeforeOrAfterSpermatogenesis = factor(BeforeOrAfterSpermatogenesis, levels=c(&quot;Before onset meiosis&quot;, &quot;After onset meiosis&quot;))) %&gt;%
+  mutate(Species = factor(Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(x=BeforeOrAfterSpermatogenesis, y=Percent, color=BeforeOrAfterSpermatogenesis)) +
+  geom_boxplot(outlier.shape = NA, alpha=0.5) +
+  geom_jitter(width=0.2) +
+  geom_text( data =  . %&gt;%
+               group_by(Species) %&gt;%
+               summarize(results = wilcox.test(Percent ~ BeforeOrAfterSpermatogenesis)$p.value) %&gt;%
+               ungroup() %&gt;%
+               mutate(label = str_glue(&quot;P=\n{format.pval(results, 1)}&quot;)),
+             aes(label=label), y=Inf, color=&#39;black&#39;, x=1, vjust=1.1, size=2) +
+  # ggnewscale::new_scale_color() +
+  facet_wrap(~Species, scales=&quot;free_y&quot;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(y=&quot;Percent unproductive reads, testis&quot;, color=NULL)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/Testis_BeforeVsAfter.pdf&quot;, height=120, width=200, units=&quot;mm&quot;)</code></pre>
+<p>Another more condensed version for main figre</p>
+<pre class="r"><code>TotalCountsByClassification.BySample %&gt;%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %&gt;%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ &quot;NE&quot;,
+    IntFlag %in% c(0,4) ~ &quot;UP&quot;,
+    TRUE ~ &quot;PR&quot;
+  )) %&gt;%
+  filter(!ProductivityLabel==&quot;NE&quot;) %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis, ProductivityLabel) %&gt;%
+  summarise(TotalByCodingStatus = sum(TotalCounts)) %&gt;%
+  ungroup() %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %&gt;%
+  mutate(Percent = TotalByCodingStatus/ sum(TotalByCodingStatus) * 100) %&gt;%
+  ungroup() %&gt;%
+  filter(!ProductivityLabel==&quot;PR&quot;) %&gt;%
+  inner_join(
+      samples %&gt;%
+        filter(`Used library?` %in% c(&quot;Yes&quot;, &quot;yes&quot;)) %&gt;%
+        separate_rows(Tissue_ForDevelopementalAnalysis)
+  ) %&gt;%
+  group_by(Tissue_ForDevelopementalAnalysis, ID_Species) %&gt;%
+  mutate(PercentRank_OrdinalStage = percent_rank(Ordinal_stage)) %&gt;%
+  ungroup() %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis == &quot;Testis&quot;) %&gt;%
+  inner_join(
+    Stages %&gt;%
+      dplyr::select(Ordinal_stage, Species, Marker) %&gt;%
+      filter(Marker == &quot;Onset meiosis spermatogenesis&quot;) %&gt;%
+      distinct() %&gt;%
+      dplyr::select(Species, OnsetSpermatogenesis=Ordinal_stage)
+  ) %&gt;%
+  mutate(BeforeOrAfterSpermatogenesis = case_when(
+    Ordinal_stage &gt; OnsetSpermatogenesis ~ &quot;After onset meiosis&quot;,
+    Ordinal_stage &lt; OnsetSpermatogenesis ~ &quot;Before onset meiosis&quot;,
+    Ordinal_stage ==  OnsetSpermatogenesis ~ &quot;After onset meiosis&quot;)) %&gt;%
+  filter(!BeforeOrAfterSpermatogenesis == &quot;Onset meiosis&quot;) %&gt;%
+  mutate(BeforeOrAfterSpermatogenesis = factor(BeforeOrAfterSpermatogenesis, levels=c(&quot;Before onset meiosis&quot;, &quot;After onset meiosis&quot;))) %&gt;%
+  mutate(Species = factor(Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;))) %&gt;%
+  ggplot(aes(x=Species, y=Percent, color=BeforeOrAfterSpermatogenesis)) +
+  geom_boxplot(outlier.shape = NA, alpha=0.5) +
+  geom_point(position=position_jitterdodge(jitter.width=0.2))+
+  geom_text( data =  . %&gt;%
+               group_by(Species) %&gt;%
+               summarize(results = wilcox.test(Percent ~ BeforeOrAfterSpermatogenesis)$p.value) %&gt;%
+               ungroup() %&gt;%
+               mutate(label = str_glue(&quot;P=\n{format.pval(results, 1)}&quot;)) %&gt;%
+               mutate(y = if_else(Species == &quot;Opossum&quot;, 2, Inf)),
+             aes(label=label, y=y), color=&#39;black&#39;, vjust=1.1, size=2.5) +
+  scale_color_manual(values=c(&quot;Before onset meiosis&quot;=&quot;#d95f02&quot;, &quot;After onset meiosis&quot;=&quot;#7570b3&quot;)) +
+  Rotate_x_labels +
+  labs(y=&quot;Percent unproductive reads, testis&quot;, color=NULL) +
+  theme(legend.position=&#39;bottom&#39;)</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;../code/scratch/FinalFigs/OriginalPlots/Testis_BeforeVsAfter_Smaller.pdf&quot;, height=100, width=80, units=&quot;mm&quot;)</code></pre>
+<p>Opossum is higher unproductive splicing generally. I suspect this
+reflects problem in annotations. Can I show more evidence for that…
+Let’s look at annotated coding isoforms, and their length distribution
+across species..</p>
+<pre class="r"><code>Transcripts.Bed.MainGtfs &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ReformatedGTFs/*.bed&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ReformatedGTFs/(.+?).bed&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  filter(V16 == &quot;protein_coding&quot;) %&gt;%
+  left_join(
+    Mouse.ensembl.ttypes %&gt;%
+      dplyr::select(gname, tname, gtype, OriginGenome) %&gt;%
+      distinct() %&gt;%
+      dplyr::rename(V4 = tname)
+  ) %&gt;%
+  mutate(CorrectedGeneName = if_else(OriginGenome == &quot;Mouse_UCSC.mm39_GencodeComprehensive46&quot;, gname, V13)) %&gt;%
+  mutate(Species = str_replace(OriginGenome, &quot;(^.+?)_.+&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(Species = factor(Species, levels=c(&quot;Human&quot;, &quot;Macaque&quot;, &quot;Mouse&quot;, &quot;Rat&quot;, &quot;Rabbit&quot;, &quot;Opossum&quot;, &quot;Chicken&quot;)))
+
+
+Transcripts.Bed.MainGtfs %&gt;%
+  group_by(CorrectedGeneName, Species) %&gt;%
+  summarise(LongestAnnotatedProteinCodingIsoform = max(V21)) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=LongestAnnotatedProteinCodingIsoform, color=Species)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,2000))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Transcripts.Bed.MainGtfs %&gt;%
+  group_by(CorrectedGeneName, Species) %&gt;%
+  summarise(ShortestAnnotatedProteinCodingIsoform = min(V21)) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=ShortestAnnotatedProteinCodingIsoform, color=Species)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,2000))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-41-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Transcripts.Bed.MainGtfs %&gt;%
+  count(CorrectedGeneName, Species) %&gt;%
+  ggplot(aes(x=n, color=Species)) +
+  stat_ecdf() +
+  labs(x=&quot;Number annotated productive tx per gene&quot;) +
+  coord_cartesian(xlim=c(0, 10))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-41-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>From these plots, while we see opossum clearly has less annotated
+productive transcripts per gene, it isn’t necessarily a clear that
+annotation quality is worse.</p>
+<p>Let’s look at fraction of NMDFinderB status for annotated
+‘protein_coding’ transcripts.</p>
+<pre class="r"><code>Transcripts.Bed.MainGtfs %&gt;%
+  count(V20, Species) %&gt;%
+  mutate(V20 = factor(V20, levels=rev(c(&quot;50_nt_rule&quot;, &quot;Long_exon&quot;, &quot;Start_proximal&quot;, &quot;Trigger_NMD&quot;, &quot;Last_exon&quot;)))) %&gt;%
+  ggplot(aes(x=Species, y=n, fill=V20)) +
+  geom_col(position=&#39;fill&#39;) +
+  scale_y_continuous(breaks=c(0, .05, .10, .95, 1.00), expand=c(0,0)) +
+  scale_y_break(c(.1, 0.95)) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok so far it’s not obvious that the annotated transcripts are more
+wrong in opossum. Maybe they are in the sense that the true splice site
+for the canonical isoform is sometimes not the annotated one, and these
+true productive splice sites sometimes get called as unproductive for
+some reason? Could it be that the STOP codons for productive isoforms in
+opossum are just poorly annotated? Or maybe there are multiple
+legitimate stop codons in all species, but since there is only one
+annotated in opossum, too many juncs are being classified as
+unproductive in opossum.</p>
+<pre class="r"><code>Transcripts.Bed.MainGtfs %&gt;%
+  mutate(STOP = if_else(V6 == &quot;+&quot;, V8, V7)) %&gt;%
+  distinct(Species, CorrectedGeneName, STOP) %&gt;%
+  count(CorrectedGeneName, Species) %&gt;%
+  ggplot(aes(x=n, color=Species)) +
+  stat_ecdf() +
+  labs(x=&quot;Number annotated productive STOPs per gene&quot;) +
+  coord_cartesian(xlim=c(0, 5))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-43-1.png" width="672" style="display: block; margin: auto;" />
+I guess we could make the same reasoning for STARTs, or START/STOP
+pairs.</p>
+<pre class="r"><code>Transcripts.Bed.MainGtfs %&gt;%
+  mutate(START = if_else(V6 == &quot;+&quot;, V7, V8)) %&gt;%
+  distinct(Species, CorrectedGeneName, START) %&gt;%
+  count(CorrectedGeneName, Species) %&gt;%
+  ggplot(aes(x=n, color=Species)) +
+  stat_ecdf() +
+  labs(x=&quot;Number annotated productive STARTs per gene&quot;) +
+  coord_cartesian(xlim=c(0, 5))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Transcripts.Bed.MainGtfs %&gt;%
+  mutate(STOP = if_else(V6 == &quot;+&quot;, V8, V7)) %&gt;%
+  mutate(START = if_else(V6 == &quot;+&quot;, V7, V8)) %&gt;%
+  distinct(Species, CorrectedGeneName, STOP, START) %&gt;%
+  count(CorrectedGeneName, Species) %&gt;%
+  ggplot(aes(x=n, color=Species)) +
+  stat_ecdf() +
+  labs(x=&quot;Number annotated productive STOP/START pairs per gene&quot;) +
+  coord_cartesian(xlim=c(0, 5))</code></pre>
+<p><img src="figure/2024-10-16_FinalFigs.Rmd/unnamed-chunk-44-2.png" width="672" style="display: block; margin: auto;" />
+Let’s help make a supplemental table to keep annotation sources
+straight:</p>
+<pre class="r"><code>annotation.sources &lt;- read_tsv(&quot;../code/config/CordosoGenomes_Extra_Gtfs.tsv&quot;) %&gt;%
+  left_join(read_tsv(&quot;../code/config/STAR_Genome_List.tsv&quot;)) %&gt;%
+  mutate(GencodeLink = case_when(
+    GenomeName %in% c(&quot;Human_UCSC.hg38_GencodeComprehensive46&quot;, &quot;Mouse_UCSC.mm39_GencodeComprehensive46&quot;) ~ GtfLink,
+    TRUE ~ NA_character_
+  )) %&gt;%
+  separate(Notes, into=c(&quot;Common name&quot;, &quot;Assembly name&quot;, &quot;Scientific name&quot;), sep=&quot;,&quot;)
+
+annotation.sources %&gt;%
+  mutate(EnsemblFromUCSC_InferredSource = recode(`Common name`, &quot;Human&quot;=&quot;Ensembl 110: Jul 2023&quot;, &quot;Macaque&quot;=&quot;Ensembl 101: Aug 2020&quot;, &quot;Mouse&quot;=&quot;Ensembl 110: Jul 2023&quot;, &quot;Rat&quot;=NA_character_,&quot;Rabbit&quot;=&quot;Ensembl 101: Aug 2020&quot;, &quot;Opossum&quot;=&quot;Enembl 97: July 2019&quot;, &quot;Chicken&quot;=&quot;Ensembl 101: Aug 2020&quot; )) %&gt;%
+  mutate(GencodeAnnotations = recode(`Common name`, &quot;Human&quot;=&quot;Gencode v46, primary regions, comprehensive annotation&quot;, &quot;Macaque&quot;=NA_character_, &quot;Mouse&quot;=&quot;Gencode v46, primary regions, comprehensive annotation&quot;, &quot;Rat&quot;=NA_character_,&quot;Rabbit&quot;=NA_character_, &quot;Opossum&quot;=NA_character_, &quot;Chicken&quot;=NA_character_ )) %&gt;%
+  mutate(RefSeqFromUCSC_GtfSourceColumn = recode(`Common name`, &quot;Human&quot;=&quot;ncbiRefSeq.2022-10-28&quot;, &quot;Macaque&quot;=&quot;ncbiRefSeq&quot;, &quot;Mouse&quot;=&quot;ncbiRefSeq.2024-02-14 &quot;, &quot;Rat&quot;=&quot;ncbiRefSeq&quot;,&quot;Rabbit&quot;=&quot;ncbiRefSeq.2020-03-30&quot;, &quot;Opossum&quot;=NA_character_, &quot;Chicken&quot;=&quot;ncbiRefSeq.2020-04-01&quot; )) %&gt;%
+  dplyr::select(`Common name`,`Scientific name`, `Assembly name`, FastaLink,  GencodeAnnotations,GencodeAnnotations_Link=GencodeLink,EnsemblFromUCSC_InferredSource,EnsemblAnnotations_Link=EnsemblGtf, RefSeqFromUCSC_GtfSourceColumn,RefSeqAnnotation_Link=RefSeqGtf) %&gt;%
+  arrange(`Common name`) %&gt;%
+  write_tsv(&quot;../data/RefGenomeSources.txt&quot;)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ggnewscale_0.4.8  cowplot_1.1.1     ggbreak_0.1.1     qvalue_2.28.0    
+ [5] ggrepel_0.9.1     data.table_1.14.2 forcats_0.5.1     stringr_1.4.0    
+ [9] dplyr_1.0.9       purrr_0.3.4       readr_2.1.2       tidyr_1.2.0      
+[13] tibble_3.1.7      ggplot2_3.3.6     tidyverse_1.3.1  
+
+loaded via a namespace (and not attached):
+ [1] nlme_3.1-157       fs_1.5.2           lubridate_1.8.0    bit64_4.0.5       
+ [5] httr_1.4.3         rprojroot_2.0.3    tools_4.2.0        backports_1.4.1   
+ [9] bslib_0.3.1        utf8_1.2.2         R6_2.5.1           mgcv_1.8-40       
+[13] DBI_1.1.2          colorspace_2.0-3   withr_2.5.0        tidyselect_1.1.2  
+[17] bit_4.0.4          compiler_4.2.0     git2r_0.30.1       textshaping_0.3.6 
+[21] cli_3.6.2          rvest_1.0.2        xml2_1.3.3         labeling_0.4.2    
+[25] sass_0.4.1         scales_1.3.0       systemfonts_1.0.4  digest_0.6.29     
+[29] yulab.utils_0.0.6  rmarkdown_2.14     R.utils_2.11.0     pkgconfig_2.0.3   
+[33] htmltools_0.5.2    dbplyr_2.1.1       fastmap_1.1.0      highr_0.9         
+[37] rlang_1.0.2        readxl_1.4.0       rstudioapi_0.13    gridGraphics_0.5-1
+[41] jquerylib_0.1.4    generics_0.1.2     farver_2.1.0       jsonlite_1.8.0    
+[45] vroom_1.5.7        R.oo_1.24.0        magrittr_2.0.3     ggplotify_0.1.0   
+[49] Matrix_1.5-3       patchwork_1.1.1    Rcpp_1.0.12        munsell_0.5.0     
+[53] fansi_1.0.3        lifecycle_1.0.1    R.methodsS3_1.8.1  stringi_1.7.6     
+[57] yaml_2.3.5         plyr_1.8.7         grid_4.2.0         parallel_4.2.0    
+[61] promises_1.2.0.1   crayon_1.5.1       lattice_0.20-45    haven_2.5.0       
+[65] splines_4.2.0      hms_1.1.1          knitr_1.39         pillar_1.7.0      
+[69] reshape2_1.4.4     reprex_2.0.1       glue_1.6.2         evaluate_0.15     
+[73] ggfun_0.0.9        modelr_0.1.8       vctrs_0.4.1        tzdb_0.3.0        
+[77] httpuv_1.6.5       cellranger_1.1.0   gtable_0.3.0       assertthat_0.2.1  
+[81] xfun_0.30          broom_0.8.0        later_1.3.0        viridisLite_0.4.0 
+[85] ragg_1.2.5         aplot_0.1.10       workflowr_1.7.0    ellipsis_0.3.2    </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

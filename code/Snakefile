@@ -5,8 +5,44 @@ configfile: "config/config.yaml"
 include: "rules/common.smk"
 include: "rules/Download.smk"
 include: "rules/GenomeAnnotations.smk"
-localrules: DownloadFastaAndGtf, Download_hg19_PhyloP, DownloadFastqFromLink
+localrules: DownloadFastaAndGtf, Download_hg19_PhyloP, DownloadFastqFromLink, Download_Chain_to_hg38, Download_Chain_from_hg38, DownloadHumanAndMouse_GencodeFa, GetExtra_GTF_From_link, GetExtra_GTF_From_link_RefSeq
 wildcard_constraints: GenomeName = "|".join(STAR_genomes.index)
+
+
+ruleorder: rna_seq_faidxGenome > faidxGenome
+ruleorder: annotate_juncfiles_NoWhitespaceGtf > rna_seq_annotate_juncfiles
+ruleorder: AnnotateConcatedUniqJuncFile_basic_NoWhitespaceGtf > rna_seq_AnnotateConcatedUniqJuncFile_basic
+rule all:
+    input:
+        expand("MazinLeafcutterAnalysis/ClassifyJuncs/{GenomeName}.{JunctionSet}._junction_classifications.txt", GenomeName = CordosMoreiraGenomes, JunctionSet = ["Clustered", "AllObserved"]),
+        expand("MazinLeafcutterAnalysis/SplicingSpearmanCoefs/{GenomeName}.{Metric}.tsv.gz", GenomeName = CordosMoreiraGenomes, Metric = ["PSI", "PSI_ByMax"]),
+        expand("featureCounts/{GenomeName}/AllSamplesUnstrandedCounting.Counts.txt", GenomeName = CordosMoreiraGenomes),
+        expand("MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/{GenomeName}.{Metric}.Extended.tsv.gz", GenomeName= CordosMoreiraGenomes, Metric = ["log2tpm", "log2rpkm", "log2cpm"]),
+        expand("rna-seq/SplicingAnalysis/leafcutter/{GenomeName}/juncTableBeds/PSI_ByMax.sorted.bed.gz.indexing_done", GenomeName=CordosMoreiraGenomes),
+        expand("MazinLeafcutterAnalysis/Contrasts_ds_tidy/{treatment}.joined.tsv.gz", treatment = Cordoso_contrasts.index),
+        # expand("rna-seq/bigwigs/unstranded/{sample}.bw", sample=CordosoMoreira_df.loc[CordosoMoreira_df['ID_Species']!="Opossum"].index),
+        expand("MazinLeafcutterAnalysis/ClassifyJuncs/Ensembl/{GenomeName}.AllObserved._junction_classifications.txt", GenomeName = GenomesWithEnsembl.unique()),
+        expand("MazinLeafcutterAnalysis/ClassifyJuncs/RefSeq/{GenomeName}.AllObserved._junction_classifications.txt", GenomeName = GenomesWithRefSeq.unique()),
+        expand("MazinLeafcutterAnalysis/ClassifyJuncs/Gencode/{GenomeName}.AllObserved._junction_classifications.txt", GenomeName = ['Human_UCSC.hg38_GencodeComprehensive46','Mouse_UCSC.mm39_GencodeComprehensive46']),
+        expand("MazinLeafcutterAnalysis/Splicing_qqNormed/{GenomeName}/DevAS.tsv.gz", GenomeName = CordosMoreiraGenomes),
+        expand("MazinLeafcutterAnalysis/SummarisedClassificationsBySample/{Species}.tsv.gz", Species=CordosMoreiraGenomes_dict.keys())
+        # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
+        # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.fa.fai", GenomeName = STAR_genomes.index),
+        # expand("kaessmanAnalysis/JuncListsForLeafcutter2/{GenomeName}._junction_classifications.txt", GenomeName = "Human_ensemblv75"),
+        # expand("GenomeFiles/{GenomeName}/SpliceSites.seq.bed.gz", GenomeName = STAR_genomes.index),
+        # expand("GenomeFiles/{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
+        # # expand("GenomeFiles/{GenomeName}/Reference.gtf", GenomeName = STAR_genomes.index),
+        # expand("rna-seq/SplicingAnalysis/juncfiles/{sample}.junccounts.tsv.gz", sample=samples.index),
+        # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.igv.genome.json", GenomeName = STAR_genomes.index),
+        # expand("GenomeFiles/{GenomeName}/Reannotated.{TranslationApproach}.gtf.gz", GenomeName = STAR_genomes.index, TranslationApproach = ["A", "B", "C", "D", "E"]),
+        # # The first rule should define the default target files
+        # # Subsequent target rules can be specified below. They should start with all_*.
+        # expand("CordosoMoreira_Fastq/{SampleTitle}.fastq.gz", SampleTitle = CordosoMoreira_df.index),
+
+rule GatherSpecifics:
+    input:
+        expand("rna-seq/SplicingAnalysis/leafcutter/{GenomeName}/juncTableBeds/{Metric}.sorted.bed.gz.indexing_done", Metric = ["PSI", "PSI_ByMax", "JuncCounts"],GenomeName=CordosMoreiraGenomes)
+
 
 module rna_seq:
     snakefile: "module_workflows/snakemake-workflow_rna-seq/Snakefile"
@@ -23,27 +59,4 @@ CreateSymlinksOfDir1ContentsIntoDir2("module_workflows/snakemake-workflow_rna-se
 
 include: "rules/other.smk"
 include: "rules/LiftoverJuncs.smk"
-
-ruleorder: rna_seq_faidxGenome > faidxGenome
-ruleorder: annotate_juncfiles_NoWhitespaceGtf > rna_seq_annotate_juncfiles
-ruleorder: AnnotateConcatedUniqJuncFile_basic_NoWhitespaceGtf > rna_seq_AnnotateConcatedUniqJuncFile_basic
-rule all:
-    input:
-        # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
-        # expand(config['GenomesPrefix'] + "{GenomeName}/Reference.fa.fai", GenomeName = STAR_genomes.index),
-        "conservation/human.AS_segments.bed",
-        "conservation/PhyloP.hg19.bw",
-        expand("kaessmanAnalysis/leaf2_to_AS_segments/{GenomeName}.collapsed.tsv.gz", GenomeName = MazinGenomes),
-        # expand("kaessmanAnalysis/JuncListsForLeafcutter2/{GenomeName}._junction_classifications.txt", GenomeName = "Human_ensemblv75"),
-        expand("GenomeFiles/{GenomeName}/SpliceSites.seq.bed.gz", GenomeName = STAR_genomes.index),
-        expand("GenomeFiles/{GenomeName}/Reference.bed.gz", GenomeName = STAR_genomes.index),
-        # expand("GenomeFiles/{GenomeName}/Reference.gtf", GenomeName = STAR_genomes.index),
-        expand("rna-seq/SplicingAnalysis/juncfiles/{sample}.junccounts.tsv.gz", sample=samples.index),
-        expand(config['GenomesPrefix'] + "{GenomeName}/Reference.igv.genome.json", GenomeName = STAR_genomes.index),
-        expand("GenomeFiles/{GenomeName}/Reannotated.{TranslationApproach}.gtf.gz", GenomeName = STAR_genomes.index, TranslationApproach = ["A", "B", "C", "D", "E"]),
-        # The first rule should define the default target files
-        # Subsequent target rules can be specified below. They should start with all_*.
-        expand("CordosoMoreira_Fastq/{SampleTitle}.fastq.gz", SampleTitle = CordosoMoreira_df.index),
-        expand("Downloads/Cordos_Moreira_DownloadBatches/{n}.txt", n=range(5))
-
-
+include: "rules/MazinLeafcutterAnalysis.smk"

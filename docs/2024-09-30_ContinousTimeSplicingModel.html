@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2024-09-30" />
+
+<title>2024-09-30_ContinousTimeSplicingModel</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">2024_ComparativeSplicing</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">2024-09-30_ContinousTimeSplicingModel</h1>
+<h4 class="date">2024-09-30</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#intro" id="toc-intro">Intro</a></li>
+</ul>
+</div>
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-10-03
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>2024_comparativesplicing/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed19900924code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(19900924)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed19900924code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(19900924)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/.Rhistory
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/ChainFiles/
+    Ignored:    code/CordosoMoreira_Fastq/
+    Ignored:    code/Downloads/
+    Ignored:    code/GenomeFiles/
+    Ignored:    code/LiftoverJuncs/
+    Ignored:    code/Log.out
+    Ignored:    code/MazinLeafcutterAnalysis/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/config/OldConfigs/2040822_Cordoso_Moreira_SampleList.tsv
+    Ignored:    code/conservation/
+    Ignored:    code/featureCounts/
+    Ignored:    code/kaessmanAnalysis/
+    Ignored:    code/kaessman_AS_dat/
+    Ignored:    code/logs/
+    Ignored:    code/rna-seq/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.SpearmanCor_Mazin_log2RPKM.R.swp
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/.vscode/
+    Ignored:    code/snakemake.log
+    Ignored:    data/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/.ipynb_checkpoints/
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_AllSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_SampleStagesFixed.Rmd
+    Untracked:  analysis/2024-08-24_BioMartLookupGenes.Rmd
+    Untracked:  analysis/2024-08-29_ExploreJuncLiftovers.Rmd
+    Untracked:  analysis/2024-08-29_OrganizeCrossSpeciesTables.Rmd
+    Untracked:  analysis/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd
+    Untracked:  analysis/2024-09-09_Organize_ConserveddevASJuncs.Rmd
+    Untracked:  analysis/2024-09-10_RedoMazinJuncAnalysisFixedClassifications.Rmd
+    Untracked:  analysis/2024-09-23_FixMouseEnsemblBed12ToGtf.Rmd
+    Untracked:  analysis/2024-09-30_ContinousExpressionSplicingModel.Rmd
+    Untracked:  analysis/2024-09-30_ContinousTimeSplicingModel.Rmd
+    Untracked:  analysis/20240815_LiftoverJuncsTest.ipynb
+    Untracked:  analysis/Untitled.ipynb
+    Untracked:  code/config/CordosoGenomes_Extra_Gtfs.tsv
+    Untracked:  code/config/GTEx_juncFileList.tsv
+    Untracked:  code/envs/crossmap.yml
+    Untracked:  code/envs/py27.yml
+    Untracked:  code/rules/MazinLeafcutterAnalysis.smk
+    Untracked:  code/scripts/FeatureCounts_to_Mat.R
+    Untracked:  code/scripts/PrepAllJuncsFor_JunctionClassifier.R
+    Untracked:  code/scripts/QQNorm_PSITable_ByTissue.R
+    Untracked:  code/scripts/SpearmanCor_Mazin_LeafcutterPSI.R
+    Untracked:  code/scripts/SpearmanCor_Mazin_log2RPKM.R
+    Untracked:  code/scripts/Untitled.ipynb
+    Untracked:  code/scripts/leafcutter_to_PSI_GTEX.R
+    Untracked:  data/Stages_AsIn_CordosoMoreira.tsv
+    Untracked:  data/Stages_AsIn_CordosoMoreira_Recoded.txt
+    Untracked:  output/Conserved.devAS.leafcutter.tsv.gz
+    Untracked:  output/Ensembl.GeneHumanHomologs.tsv.gz
+    Untracked:  output/Ensembl.TranscriptInfo.tsv.gz
+    Untracked:  output/GTEx_DS_DE_FromChao_CordosoTissuePairs.tsv.gz
+
+Unstaged changes:
+    Modified:   analysis/2024-07-16_Download_CordosoMoreira_Fastq.Rmd
+    Modified:   analysis/index.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/config/ChainFiles.tsv
+    Modified:   code/config/Cordoso_Moreira_SampleList.tsv
+    Modified:   code/config/STAR_Genome_List.tsv
+    Modified:   code/config/samples.tsv
+    Modified:   code/envs/bedparse.yml
+    Modified:   code/module_workflows/snakemake-workflow_rna-seq
+    Modified:   code/rules/LiftoverJuncs.smk
+    Modified:   code/rules/common.smk
+    Modified:   code/scripts/daiuc_leafcutter2
+    Modified:   code/scripts/leafcutter2
+    Modified:   output/QC/ReadCountsPerSamples.tsv
+
+Staged changes:
+    Modified:   .gitmodules
+    New:        code/scripts/daiuc_leafcutter2
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Had some wierd results using spearman correlation coef as proxy for
+effect size (beta) when making the splicing beta vs expression beta
+scatter plots across developmental time in various tissues/species.
+Mabye that spearman correlation coef is just not the way to go with
+leafcutter quantifications. Maybe if we prepare the splicing
+quantifications a little more carefully (eg standardization and
+normalization as in sQTL splicing table preperation), then get ’beta’s
+from linear model (Splicing ~ OrdinalDevelopmentalTime) within each
+species:tissue combination, the problem will go away. Let’s try setting
+up that, here (and possibly later incorporating that work into the
+snakemake).</p>
+<pre class="r"><code>library(tidyverse)
+library(data.table)
+library(magrittr)
+
+PSI.table &lt;- read_tsv(&quot;../code/rna-seq/SplicingAnalysis/leafcutter/Human_UCSC.hg38_GencodeComprehensive46/juncTableBeds/PSI.sorted.bed.gz&quot;)
+
+CordosoSamples &lt;- read_tsv(&quot;../code/config/Cordoso_Moreira_SampleList.tsv&quot;)
+
+PSI.table.tidy &lt;- PSI.table %&gt;%
+  dplyr::select(-c(1:3, 5, 6)) %&gt;%
+  pivot_longer(names_to = &quot;ID&quot;, values_to = &quot;PSI&quot;, -junc) %&gt;%
+  inner_join(
+    CordosoSamples %&gt;%
+      filter(`Used library?` %in% c(&quot;yes&quot;, &quot;Yes&quot;)) %&gt;%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %&gt;%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=&quot;,&quot;)
+  )</code></pre>
+<p>Now let’s tidy the data by standardizing the rows, qqnorm the
+columns, within each tissue.</p>
+<pre class="r"><code>Heart.AndLiver &lt;- PSI.table.tidy %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis %in% c(&quot;Heart&quot;, &quot;Liver&quot;))
+
+#test vector for qqnorm function
+A &lt;- c(7, 1,2,3,4,4, 5, NaN, 6)
+scale(A)</code></pre>
+<pre><code>      [,1]
+ [1,]  1.5
+ [2,] -1.5
+ [3,] -1.0
+ [4,] -0.5
+ [5,]  0.0
+ [6,]  0.0
+ [7,]  0.5
+ [8,]  NaN
+ [9,]  1.0
+attr(,&quot;scaled:center&quot;)
+[1] 4
+attr(,&quot;scaled:scale&quot;)
+[1] 2</code></pre>
+<pre class="r"><code>qnorm(dense_rank(A)/(sum(!is.na(A)) + 1))</code></pre>
+<pre><code>[1]  0.7647097 -1.2206403 -0.7647097 -0.4307273 -0.1397103 -0.1397103  0.1397103
+[8]         NA  0.4307273</code></pre>
+<pre class="r"><code>Heart.AndLiver.qq.normed &lt;- Heart.AndLiver %&gt;%
+  group_by(junc, Tissue_ForDevelopementalAnalysis) %&gt;%
+  mutate(PSI.normalized = scale(PSI)) %&gt;%
+  mutate(var.PSI = var(PSI, na.rm = T)) %&gt;%
+  ungroup() %&gt;%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %&gt;%
+  mutate(PSI.normalized = qnorm(dense_rank(PSI.normalized)/(sum(!is.na(PSI.normalized)) + 1))) %&gt;%
+  ungroup()
+  
+Example.Junc.Heart.AndLiver.qq.normed &lt;- Heart.AndLiver.qq.normed %&gt;%
+  filter(str_detect(junc, &quot;chr20:63931182:63931465&quot;))
+  
+
+Example.Junc.Heart.AndLiver.qq.normed</code></pre>
+<pre><code># A tibble: 93 × 10
+   junc  ID      PSI ID_Species ID_Organ ID_Stage Ordinal_stage Tissue_ForDevel…
+   &lt;chr&gt; &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;            &lt;dbl&gt; &lt;chr&gt;           
+ 1 chr2… Huma…  0    Human      Heart    10w                  7 Heart           
+ 2 chr2… Huma… 35.7  Human      Liver    10w                  7 Liver           
+ 3 chr2… Huma… 18.2  Human      Liver    10w                  7 Liver           
+ 4 chr2… Huma… 10.7  Human      Heart    11w                  8 Heart           
+ 5 chr2… Huma…  0    Human      Heart    11w                  8 Heart           
+ 6 chr2… Huma… 24.4  Human      Liver    11w                  8 Liver           
+ 7 chr2… Huma…  5.88 Human      Heart    12w                  9 Heart           
+ 8 chr2… Huma… 30    Human      Liver    18w                 12 Liver           
+ 9 chr2… Huma… 30.4  Human      Liver    18w                 12 Liver           
+10 chr2… Huma… 25    Human      Liver    20w                 14 Liver           
+# … with 83 more rows, and 2 more variables: PSI.normalized &lt;dbl&gt;,
+#   var.PSI &lt;dbl&gt;</code></pre>
+<pre class="r"><code>Example.Junc.Heart.AndLiver.qq.normed %&gt;%
+  ggplot(aes(x=PSI, y=PSI.normalized)) +
+  geom_point(alpha=0.5) +
+  facet_wrap(~Tissue_ForDevelopementalAnalysis)</code></pre>
+<p><img src="figure/2024-09-30_ContinousTimeSplicingModel.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Example.Junc.Heart.AndLiver.qq.normed %&gt;%
+  pivot_longer(names_to = &quot;stat&quot;, values_to = &quot;value&quot;, c(&quot;PSI&quot;, &quot;PSI.normalized&quot;)) %&gt;%
+  ggplot(aes(x=Ordinal_stage, y=value, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.5) +
+  geom_smooth(method=&#39;loess&#39;, se=F) +
+  facet_wrap(~stat, scales=&quot;free&quot;) +
+  theme(legend.position = &quot;bottom&quot;)</code></pre>
+<p><img src="figure/2024-09-30_ContinousTimeSplicingModel.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Example.Junc.Heart.AndLiver.qq.normed %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis == &quot;Liver&quot;) %$%
+  cor.test(y=PSI.normalized, x=Ordinal_stage,  method=&#39;s&#39;)</code></pre>
+<pre><code>
+    Spearman&#39;s rank correlation rho
+
+data:  Ordinal_stage and PSI.normalized
+S = 13226, p-value = 0.0226
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+     rho 
+0.325217 </code></pre>
+<pre class="r"><code>Example.Junc.Heart.AndLiver.qq.normed %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis == &quot;Liver&quot;) %$%
+  cor.test(y=PSI, x=Ordinal_stage,  method=&#39;s&#39;)</code></pre>
+<pre><code>
+    Spearman&#39;s rank correlation rho
+
+data:  Ordinal_stage and PSI
+S = 13607, p-value = 0.03263
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+      rho 
+0.3057645 </code></pre>
+<pre class="r"><code>Example.Junc.Heart.AndLiver.qq.normed %&gt;%
+  filter(Tissue_ForDevelopementalAnalysis == &quot;Liver&quot;) %$%
+  lm(PSI~Ordinal_stage) %&gt;%
+  summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = PSI ~ Ordinal_stage)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-26.438  -7.819  -1.438   7.601  37.421 
+
+Coefficients:
+              Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)    16.9199     3.3443   5.059 6.88e-06 ***
+Ordinal_stage   0.6799     0.2712   2.507   0.0157 *  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 13.37 on 47 degrees of freedom
+Multiple R-squared:  0.118, Adjusted R-squared:  0.09919 
+F-statistic: 6.286 on 1 and 47 DF,  p-value: 0.01569</code></pre>
+<pre class="r"><code>Heart.AndLiver.qq.normed %&gt;%
+  filter(var.PSI &gt; 0) %&gt;%
+  ggplot(aes(x=PSI, y=PSI.normalized)) +
+  geom_hex(bins=100) +
+  scale_fill_viridis_c(trans=&#39;log10&#39;) +
+  facet_wrap(~Tissue_ForDevelopementalAnalysis)</code></pre>
+<p><img src="figure/2024-09-30_ContinousTimeSplicingModel.Rmd/unnamed-chunk-2-3.png" width="672" style="display: block; margin: auto;" />
+Let’s check PCA goes with time course, before considering linear model
+(with no covariates).</p>
+<pre class="r"><code>pca.results &lt;- Heart.AndLiver.qq.normed %&gt;%
+  filter(var.PSI &gt; 0 &amp; Tissue_ForDevelopementalAnalysis == &quot;Liver&quot;) %&gt;%
+  dplyr::select(ID, junc, PSI.normalized) %&gt;%
+  pivot_wider(names_from = &quot;ID&quot;, values_from = &quot;PSI.normalized&quot;) %&gt;%
+  drop_na() %&gt;%
+  column_to_rownames(&quot;junc&quot;) %&gt;%
+  t() %&gt;%
+  prcomp()
+
+
+pca.results$x %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;ID&quot;) %&gt;%
+  inner_join(
+    CordosoSamples %&gt;%
+      filter(`Used library?` %in% c(&quot;yes&quot;, &quot;Yes&quot;)) %&gt;%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %&gt;%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=&quot;,&quot;)) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title=&quot;PCA, liver, PSI.normalized&quot;)</code></pre>
+<p><img src="figure/2024-09-30_ContinousTimeSplicingModel.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pca.results &lt;- Heart.AndLiver.qq.normed %&gt;%
+  filter(var.PSI &gt; 0 &amp; Tissue_ForDevelopementalAnalysis == &quot;Heart&quot;) %&gt;%
+  dplyr::select(ID, junc, PSI.normalized) %&gt;%
+  pivot_wider(names_from = &quot;ID&quot;, values_from = &quot;PSI.normalized&quot;) %&gt;%
+  drop_na() %&gt;%
+  column_to_rownames(&quot;junc&quot;) %&gt;%
+  t() %&gt;%
+  prcomp()
+
+
+pca.results$x %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;ID&quot;) %&gt;%
+  inner_join(
+    CordosoSamples %&gt;%
+      filter(`Used library?` %in% c(&quot;yes&quot;, &quot;Yes&quot;)) %&gt;%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %&gt;%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=&quot;,&quot;)) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title=&quot;PCA, Heart, PSI.normalized&quot;)</code></pre>
+<p><img src="figure/2024-09-30_ContinousTimeSplicingModel.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Let’s compare to PCA just based on PSI (not normalized)…</p>
+<pre class="r"><code>pca.results &lt;- Heart.AndLiver.qq.normed %&gt;%
+  filter(var.PSI &gt; 0 &amp; Tissue_ForDevelopementalAnalysis == &quot;Liver&quot;) %&gt;%
+  dplyr::select(ID, junc, PSI) %&gt;%
+  pivot_wider(names_from = &quot;ID&quot;, values_from = &quot;PSI&quot;) %&gt;%
+  drop_na() %&gt;%
+  column_to_rownames(&quot;junc&quot;) %&gt;%
+  scale() %&gt;%
+  t() %&gt;%
+  prcomp()
+
+
+pca.results$x %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;ID&quot;) %&gt;%
+  inner_join(
+    CordosoSamples %&gt;%
+      filter(`Used library?` %in% c(&quot;yes&quot;, &quot;Yes&quot;)) %&gt;%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %&gt;%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=&quot;,&quot;)) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title=&quot;PCA, liver, PSI&quot;)</code></pre>
+<p><img src="figure/2024-09-30_ContinousTimeSplicingModel.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pca.results &lt;- Heart.AndLiver.qq.normed %&gt;%
+  filter(var.PSI &gt; 0 &amp; Tissue_ForDevelopementalAnalysis == &quot;Heart&quot;) %&gt;%
+  dplyr::select(ID, junc, PSI) %&gt;%
+  pivot_wider(names_from = &quot;ID&quot;, values_from = &quot;PSI&quot;) %&gt;%
+  drop_na() %&gt;%
+  column_to_rownames(&quot;junc&quot;) %&gt;%
+  scale() %&gt;%
+  t() %&gt;%
+  prcomp()
+
+
+pca.results$x %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;ID&quot;) %&gt;%
+  inner_join(
+    CordosoSamples %&gt;%
+      filter(`Used library?` %in% c(&quot;yes&quot;, &quot;Yes&quot;)) %&gt;%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %&gt;%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=&quot;,&quot;)) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title=&quot;PCA, Heart, PSI&quot;)</code></pre>
+<p><img src="figure/2024-09-30_ContinousTimeSplicingModel.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pca.results$x %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;ID&quot;) %&gt;%
+  inner_join(
+    CordosoSamples %&gt;%
+      filter(`Used library?` %in% c(&quot;yes&quot;, &quot;Yes&quot;)) %&gt;%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis, RQN, &quot;PtAligned&quot;=`% aligned reads`, &quot;NumReads&quot;=`Total number aligned reads`) %&gt;%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=&quot;,&quot;)) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, color=PtAligned)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title=&quot;PCA, Heart, PSI&quot;)</code></pre>
+<p><img src="figure/2024-09-30_ContinousTimeSplicingModel.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" />
+Hmm, I think there might be some other effects, like batch effects
+playing a role. And the PSI standardization/normalization probably helps
+a bit.</p>
+<p>I forget how base R <code>lm</code> handles missing data by default.
+Let’s play around a bit to make things are reasonable.</p>
+<pre class="r"><code>test.lm.dat &lt;- data.frame(x=c(1,2,3,4,5), y=c(2,NA,4,5,6), y2=c(2,3,NA,NA,6), x2=1)
+res &lt;- lm(y~x, data=test.lm.dat)
+res.2 &lt;- lm(y2~x, data=test.lm.dat)
+res.3 &lt;- lm(y~x2, data=test.lm.dat)
+
+summary(res.2)</code></pre>
+<pre><code>
+Call:
+lm(formula = y2 ~ x, data = test.lm.dat)
+
+Residuals:
+         1          2          5 
+ 1.923e-16 -2.564e-16  6.410e-17 
+
+Coefficients:
+             Estimate Std. Error   t value Pr(&gt;|t|)    
+(Intercept) 1.000e+00  3.511e-16 2.848e+15 2.24e-16 ***
+x           1.000e+00  1.110e-16 9.007e+15  &lt; 2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 3.268e-16 on 1 degrees of freedom
+  (2 observations deleted due to missingness)
+Multiple R-squared:      1, Adjusted R-squared:      1 
+F-statistic: 8.113e+31 on 1 and 1 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>summary(res.3)</code></pre>
+<pre><code>
+Call:
+lm(formula = y ~ x2, data = test.lm.dat)
+
+Residuals:
+    1     3     4     5 
+-2.25 -0.25  0.75  1.75 
+
+Coefficients: (1 not defined because of singularities)
+            Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept)   4.2500     0.8539   4.977   0.0156 *
+x2                NA         NA      NA       NA  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 1.708 on 3 degrees of freedom
+  (1 observation deleted due to missingness)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] magrittr_2.0.3    data.table_1.14.2 forcats_0.5.1     stringr_1.4.0    
+ [5] dplyr_1.0.9       purrr_0.3.4       readr_2.1.2       tidyr_1.2.0      
+ [9] tibble_3.1.7      ggplot2_3.3.6     tidyverse_1.3.1  
+
+loaded via a namespace (and not attached):
+ [1] httr_1.4.3        sass_0.4.1        bit64_4.0.5       vroom_1.5.7      
+ [5] jsonlite_1.8.0    viridisLite_0.4.0 splines_4.2.0     modelr_0.1.8     
+ [9] bslib_0.3.1       assertthat_0.2.1  highr_0.9         cellranger_1.1.0 
+[13] yaml_2.3.5        pillar_1.7.0      backports_1.4.1   lattice_0.20-45  
+[17] glue_1.6.2        digest_0.6.29     promises_1.2.0.1  rvest_1.0.2      
+[21] colorspace_2.0-3  htmltools_0.5.2   httpuv_1.6.5      Matrix_1.5-3     
+[25] pkgconfig_2.0.3   broom_0.8.0       haven_2.5.0       scales_1.3.0     
+[29] later_1.3.0       tzdb_0.3.0        git2r_0.30.1      mgcv_1.8-40      
+[33] generics_0.1.2    farver_2.1.0      ellipsis_0.3.2    withr_2.5.0      
+[37] hexbin_1.28.3     cli_3.6.2         crayon_1.5.1      readxl_1.4.0     
+[41] evaluate_0.15     fs_1.5.2          fansi_1.0.3       nlme_3.1-157     
+[45] xml2_1.3.3        tools_4.2.0       hms_1.1.1         lifecycle_1.0.1  
+[49] munsell_0.5.0     reprex_2.0.1      compiler_4.2.0    jquerylib_0.1.4  
+[53] rlang_1.0.2       grid_4.2.0        rstudioapi_0.13   labeling_0.4.2   
+[57] rmarkdown_2.14    gtable_0.3.0      DBI_1.1.2         R6_2.5.1         
+[61] lubridate_1.8.0   knitr_1.39        fastmap_1.1.0     bit_4.0.4        
+[65] utf8_1.2.2        workflowr_1.7.0   rprojroot_2.0.3   stringi_1.7.6    
+[69] parallel_4.2.0    Rcpp_1.0.12       vctrs_0.4.1       dbplyr_2.1.1     
+[73] tidyselect_1.1.2  xfun_0.30        </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

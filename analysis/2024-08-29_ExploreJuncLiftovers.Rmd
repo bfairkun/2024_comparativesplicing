@@ -1,0 +1,730 @@
+---
+title: "2024-08-29_ExploreJuncLiftovers"
+output: html_document
+date: '2024-08-29'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+I have tried two liftover methods for to liftover juncs to hg38: (1) AsJuncs: liftover the junc coordinates corresponding to spliced segment as single feature, or (2) AsFlanks: liftover the flanking 1bp nucleotides as a blocked bed file as input for crossmap. Let's compare.
+
+```{r}
+library(tidyverse)
+library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+```
+
+Read in data
+
+```{r, eval=F}
+Liftovers.AsJuncs <- Sys.glob("../code/LiftoverJuncs/AsJuncs/*.Lifted.bed.gz") %>%
+  str_subset("Rabbit", negate=T) %>%
+  setNames(str_replace(., "../code/LiftoverJuncs/AsJuncs/(.+?).Lifted.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  bind_rows(.id = "OriginGenome")
+
+Liftovers.AsJuncs %>%
+```
+
+Wow, based just on file size, I can already say that the AsJuncs approach is not right... way too many hits (multiple liftover hits).
+
+```{r}
+
+Liftovers.AsFlanks <- Sys.glob("../code/LiftoverJuncs/AsFlanks/*.Lifted.bed.gz") %>%
+  # str_subset("Rat", negate=T) %>%
+  setNames(str_replace(., "../code/LiftoverJuncs/AsFlanks/(.+?).Lifted.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "end", "name", "score", "strand", "thickStart", "thickStop", "color", "nBlocks", "blockSizes", "blockStarts")) %>%
+  bind_rows(.id = "OriginGenome")
+
+
+Liftovers.AsFlanks %>%
+  distinct(OriginGenome)
+
+HumanJuncs <- read_tsv("../code/rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/Human_UCSC.hg38_GencodeComprehensive46.uniq.annotated.tsv.gz")
+
+Joined <- Liftovers.AsFlanks %>%
+  # filter(OriginGenome == "Macaque_UCSC.rheMac10_ensv101") %>%
+  mutate(start = start +1, end=end) %>%
+  inner_join(
+    HumanJuncs, by=c("chrom", "start", "end", "strand"), suffix=c(".other",".human")
+  ) %>%
+  mutate(OriginGenome = factor(OriginGenome, levels=c("Macaque_UCSC.rheMac10_ensv101", "Mouse_UCSC.mm39_GencodeComprehensive46", "Rat_UCSC.rn7_RefSeqv108", "Rabbit_UCSC.oryCun2_ensv101", "Opossum_UCSC.monDom5_ensvUnknown", "Chicken_UCSC.galGal6_ensv101")))
+
+Joined %>%
+  count(OriginGenome) %>%
+  ggplot(aes(x=OriginGenome, y=n)) +
+  geom_col() +
+  coord_cartesian(ylim=c(50E3, 400E3)) +
+  Rotate_x_labels
+
+```
+
+Now let's check how things map back to human, and verify they mostly map to same place...
+
+```{r}
+#todo
+```
+
+
+Now let's add back junction productivity
+
+First let's explore the junction productivity. I did it two ways: with just the clustered juncs, or with all observed juncs (no minimum read count)...
+
+```{r}
+JunctionProductivity.OnlyClustered <- JuncAnnotations <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.Clustered._junction_classifications.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).Clustered._junction_classifications.txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Species") %>%
+  mutate(Species.short = str_replace(Species, "^(.+?)_.+", "\\1"))
+
+JunctionProductivity <- JuncAnnotations <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.AllObserved._junction_classifications.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).AllObserved._junction_classifications.txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Species") %>%
+  mutate(Species.short = str_replace(Species, "^(.+?)_.+", "\\1"))
+
+# Do the Coding status match for the two methods?
+Classification.Counts.TwoMethods <- JunctionProductivity.OnlyClustered %>%
+  inner_join(JunctionProductivity,
+             by=c("Species", "Gene_name", "Intron_coord", "Species.short"), suffix=c(".OnlyClustered", ".AllObserved")) %>%
+  count(Coding.OnlyClustered, Coding.AllObserved)
+Classification.Counts.TwoMethods
+
+Classification.Counts.TwoMethods %>%
+  mutate(ClusteredCoding_AllObseredCoding = paste(Coding.OnlyClustered, Coding.AllObserved)) %>%
+  ggplot(aes(x=1, y=n, fill=ClusteredCoding_AllObseredCoding)) +
+  geom_col(position='fill')
+
+
+79392/(654460+79392)
+```
+
+So about 10% of juncs that are classified as non-coding when you only use the leafcutter clustered junctions become coding if you consider all observed junctions. That isn't big enough for me to worry much about which set of classifications I use.
+
+Now let's check the total number of productive/unproductive (using the All observed method for classifying junctions)
+
+```{r}
+
+JunctionProductivity %>% distinct(Species.short)
+
+JunctionProductivity %>%
+  count(Species.short, Annot, Coding) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  mutate(Species = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  Rotate_x_labels +
+  labs(y="Number unique juncs", caption=str_wrap("GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. All observed juncs", 30), x="Species, gene model source")
+
+JunctionProductivity %>%
+  count(Species.short, Annot, Coding) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  mutate(Species = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='fill') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  Rotate_x_labels +
+  labs(y="fraction unique juncs", caption=str_wrap("GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. All observed juncs", 30), x="Species, gene model source")
+
+
+JunctionProductivity.OnlyClustered %>%
+  count(Species.short, Annot, Coding) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  mutate(Species = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  Rotate_x_labels +
+  labs(y="Number unique juncs", caption=str_wrap("GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels. Clustered juncs", 30), x="Species, gene model source")
+  
+  
+```
+
+Now let's just consider the juncs that lifted over...
+
+```{r}
+Joined.WithProductivityStatus <- Joined %>%
+  # head(10000) %>%
+  mutate(Intron_coord = str_replace(name.other, "(^.+)_([0-9]+?)_([0-9]+?)_[+-]$", "\\1:\\2-\\3")) %>%
+  inner_join(JunctionProductivity, by=c("OriginGenome"="Species", "Intron_coord"))
+
+# JunctionProductivity
+
+Joined.WithProductivityStatus %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  count(Species.short, Group) %>%
+  mutate(Species = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  Rotate_x_labels
+```
+
+Ok something weird is happening... Let's check how many are human annotated juncs from regtools
+
+```{r}
+
+Joined %>%
+  mutate(known_junction = factor(known_junction)) %>%
+  count(OriginGenome, known_junction) %>%
+  ggplot(aes(x=OriginGenome, y=n, fill=known_junction)) +
+  geom_col(position='stack') +
+  coord_cartesian(ylim=c(50E3, 400E3)) +
+  Rotate_x_labels
+
+JunctionProductivity %>%
+  distinct(Species)
+
+
+HumanJuncs %>%
+  mutate(Intron_coord = str_replace(name, "(^.+)_([0-9]+?)_([0-9]+?)_[+-]$", "\\1:\\2-\\3")) %>%
+  inner_join(
+      JunctionProductivity %>%
+        filter(Species == "Human_UCSC.hg38_GencodeComprehensive46")
+  ) %>%
+  count(Annot)
+
+```
+
+Ok, I think there mayb be some bug somewhere... regtools says they are mostly known juncs, yet when I join with the productivity status, almost all the succesful joins are labelled as unannotated. I suspect there is a bug that messes up coordinates only for Annot juncs. Let's manually check some juncs in IGV for GT-AG splice sites.
+
+```{r}
+JunctionProductivity %>%
+    filter(Species == "Human_UCSC.hg38_GencodeComprehensive46") %>%
+    sample_n(100)
+```
+
+Ok I can confirm there is an error there... Intron_coord column for Annotated juncs is off by one at end. For now let's fix it, here. And fix it later in the script. After chatting with Chao and Quinn, they are aware of this bug have have fixed it in their repo. I won't bother trying to fix the script.
+
+```{r}
+
+
+JunctionProductivity.fixed <- JunctionProductivity %>%
+  # head() %>%
+  separate(Intron_coord, into=c("chrom", "start", "stop"), sep='[-:]', convert=T) %>%
+  mutate(Intron_coord = case_when(
+    Annot ~ str_glue("{chrom}:{start}-{stop-1}"),
+    TRUE ~ str_glue("{chrom}:{start}-{stop}")
+  )) %>%
+  dplyr::select(-chrom, -start, -stop)
+
+Joined.WithProductivityStatus <- Joined %>%
+  # head(10000) %>%
+  mutate(Intron_coord = str_replace(name.other, "(^.+)_([0-9]+?)_([0-9]+?)_[+-]$", "\\1:\\2-\\3")) %>%
+  inner_join(JunctionProductivity.fixed, by=c("OriginGenome"="Species", "Intron_coord"))
+
+
+Joined.WithProductivityStatus %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  count(Species.short, Group) %>%
+  mutate(Species = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  Rotate_x_labels +
+  labs(y="Number lifted juncs\nwith human match", x="Species, Annotation source for ClassifyJuncs", fill="ClassifyJuncs")
+```
+
+Same, but now facet based on total junction counts across all samples
+
+```{r, fig.height=8, fig.width=10}
+Joined.WithProductivityStatus %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  mutate(JunctionCountGroup = cut(score.other, breaks=c(0, 10, 100, 1000, Inf))) %>%
+  # distinct(JunctionCountGroup)
+  count(Species.short, Group, JunctionCountGroup) %>%
+  mutate(Species = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  facet_wrap(~JunctionCountGroup, scales="free") +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  Rotate_x_labels +
+  labs(y="Number lifted juncs\nwith human match", x="Species, Annotation source for ClassifyJuncs", fill="ClassifyJuncs")
+```
+
+Another version of this based on PSI (perhaps max PSI, with minimum of X counts) instead of junc counts would be useful.
+
+Ok, now's lets subset just the juncs that have significant spearman test in any tissue within the species.
+
+```{r}
+Spearman.tests <- Sys.glob("../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/*.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/(.+?).tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome") %>%
+  dplyr::rename(chrom=start, start=stop, stop=chrom) %>%
+  mutate(Intron_coord = str_glue("{chrom}:{start}-{stop}"))
+
+
+Spearman.tests.WithProductivity <- Spearman.tests %>%
+  inner_join(
+    JunctionProductivity.fixed,
+    by=c("OriginGenome"="Species", "Intron_coord")
+  )
+
+Spearman.tests.WithProductivity %>%
+  count(OriginGenome, Coding, Annot)
+```
+
+blah. this bug again. I don't know how this is happening exactly, but I will just fix it to make sure I reasonably capture all juncs
+
+```{r}
+
+Spearman.tests.WithProductivity <- Spearman.tests %>%
+  inner_join(
+    JunctionProductivity,
+    by=c("OriginGenome"="Species", "Intron_coord")
+  )
+
+Spearman.tests.WithProductivity %>%
+  count(OriginGenome, Coding, Annot)
+
+Spearman.tests.WithProductivity %>%
+  filter(OriginGenome=="Human_UCSC.hg38_GencodeComprehensive46")
+```
+
+Now let's focus on subset that are developmentally regulated (not necessarily conserved)
+
+```{r}
+
+Spearman.tests.WithProductivity %>%
+  filter(q < 0.05) %>%
+  distinct(junc, OriginGenome, .keep_all=T) %>%
+  dplyr::select(OriginGenome, Intron_coord, Gene_name, Annot, Coding, UTR, Species.short) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  count(Species.short, Group) %>%
+  mutate(Species = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  Rotate_x_labels +
+  labs(y="Number devAS juncs", x="Species, Annotation source for ClassifyJuncs", fill="ClassifyJuncs")
+
+Spearman.tests.WithProductivity %>%
+  filter(q < 0.05) %>%
+  group_by(cluster, OriginGenome) %>%
+  mutate(ClusterContainsNoncoding = any(!Coding)) %>%
+  ungroup() %>%
+  distinct(junc, OriginGenome, .keep_all=T) %>%
+  dplyr::select(OriginGenome, ClusterContainsNoncoding, Intron_coord, Gene_name, Annot, Coding, UTR, Species.short) %>%
+  mutate(Group = ClusterContainsNoncoding) %>%
+  count(Species.short, Group) %>%
+  mutate(Species = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  scale_fill_manual(values = c("FALSE"="#1f78b4", "TRUE"="#e31a1c"), labels=c("TRUE"="Cluster w/ sig unproductive", "FALSE"="Cluster w/out sig unproductive")) +
+  Rotate_x_labels +
+  labs(y="Number sig devAS clusters", x="Species, Annotation source for ClassifyJuncs", fill="ClassifyJuncs")
+  
+```
+
+Now let's just look at devAS juncs that also liftover to human junc that is also devAS in same way.
+
+```{r}
+Spearman.tests.WithProductivity %>%
+  filter(q < 0.05) %>%
+  filter(OriginGenome=="Human_UCSC.hg38_GencodeComprehensive46")
+
+Conserved.devAS <- Spearman.tests.WithProductivity %>%
+  filter(q < 0.05) %>%
+  filter(!OriginGenome=="Human_UCSC.hg38_GencodeComprehensive46") %>%
+  mutate(strand = str_extract(junc, "[+-]$")) %>%
+  mutate(OriginName = str_glue("{chrom}_{start}_{stop-1}_{strand}")) %>%
+  inner_join(
+    Liftovers.AsFlanks %>%
+      mutate(start = start +1, end=end-1) %>%
+      dplyr::select(OriginGenome, OriginName = name, JuncCount = score, Hg38_chrom=chrom, Hg38_start=start, Hg38_end=end, Hg38_strand=strand),
+    by=c("OriginGenome", "OriginName")
+  ) %>%
+  inner_join(
+    Spearman.tests.WithProductivity %>%
+      filter(q < 0.05) %>%
+      filter(OriginGenome=="Human_UCSC.hg38_GencodeComprehensive46") %>%
+      mutate(strand = str_extract(junc, "[+-]$")) %>%
+      mutate(stop = stop - 1) %>%
+      dplyr::select(Hg38_chrom=chrom, Hg38_start=start, Hg38_end=stop, Hg38_strand=strand, Tissue, Junc.Human=junc, corr, P, q, Annot, Coding, UTR, Gene_name),
+    by=c("Hg38_chrom", "Hg38_start", "Hg38_end", "Hg38_strand", "Tissue"),
+    suffix = c(".OtherSpecies", ".Human")
+  ) %>%
+  mutate(Species.short = factor(Species.short, levels=c("Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken")))
+
+
+
+Conserved.devAS %>%
+  mutate(Coding_Other_Human = paste(Coding.OtherSpecies, Coding.Human)) %>%
+  ggplot(aes(x=corr.OtherSpecies, y=corr.Human)) +
+    geom_point(alpha=0.1) +
+    facet_wrap(~Coding_Other_Human)
+
+Conserved.devAS %>%
+  mutate(SameSign = sign(corr.OtherSpecies)==sign(corr.Human)) %>%
+  sample_frac(1) %>%
+  distinct(Junc.Human, Species.short, .keep_all=T) %>%
+  count(Species.short, SameSign) %>%
+  ggplot(aes(x=Species.short, y=n, fill=SameSign)) +
+  geom_col(position='stack') +
+  Rotate_x_labels +
+  labs(y="Num devAS juncs", x="Species")
+
+Conserved.devAS %>%
+  mutate(SameSign = sign(corr.OtherSpecies)==sign(corr.Human)) %>%
+  filter(SameSign) %>%
+  sample_frac(1) %>%
+  distinct(Junc.Human, Species.short, .keep_all=T) %>%
+  count(Species.short, Coding.Human, Coding.OtherSpecies) %>%
+  ggplot(aes(x=Species.short, y=n, fill=Coding.Human, color=Coding.OtherSpecies)) +
+  geom_col(position='stack') +
+  Rotate_x_labels +
+  labs(y="Num devAS juncs", x="Species")
+
+Conserved.devAS %>%
+  mutate(SameSign = sign(corr.OtherSpecies)==sign(corr.Human)) %>%
+  filter(SameSign) %>%
+  sample_frac(1) %>%
+  distinct(Junc.Human, Species.short, .keep_all=T) %>%
+  group_by(cluster, Species.short) %>%
+  summarise(ContainsNoncoding.Human = any(Coding.Human), ContainsNoncoding.OtherSpecies = any(Coding.OtherSpecies)) %>%
+  ungroup() %>%
+  count(Species.short, ContainsNoncoding.Human, ContainsNoncoding.OtherSpecies) %>%
+  ggplot(aes(x=Species.short, y=n, fill=ContainsNoncoding.Human, color=ContainsNoncoding.OtherSpecies)) +
+  geom_col(position='stack') +
+  Rotate_x_labels +
+  labs(y="Num devAS juncs", x="Species")
+
+```
+
+
+```{r}
+Conserved.devAS %>%
+  mutate(SameSign = sign(corr.OtherSpecies)==sign(corr.Human)) %>%
+  filter(SameSign) %>%
+  sample_frac(1) %>%
+  distinct(Junc.Human, Species.short, .keep_all=T) %>%
+  filter(Species.short == "Chicken") %>%
+  filter(!Coding.Human & !Coding.OtherSpecies) %>%
+  distinct(cluster, .keep_all=T)
+
+```
+
+Perhaps this analysis, with the goal in mind of quantifying how much unproductive splicing there might be, is overly conservative in the sense that unproductive juncs need to be conserved to level of junction coordinate liftovers... Maybe we can just pseudo-liftover juncs by identifying clusters with devAS that contain a junction with a proper liftover and say if there is a devAS junction within the corresponding cluster in both species that is devAS in the same way, it probably represents a real conserved unproductive event.
+
+First let's see that productive liftover juncs generally liftover to productive juncs
+
+```{r}
+
+JunctionProductivity.fixed %>%
+  distinct(Species)
+
+Joined.WithProductivityStatus.WithHuman <- Joined.WithProductivityStatus %>%
+  # filter(Coding) %>%
+  inner_join(
+    JunctionProductivity.fixed %>%
+      filter(Species == "Human_UCSC.hg38_GencodeComprehensive46") %>%
+      dplyr::select(-Species, -Species.short) %>%
+      # head(10000) %>%
+      separate(Intron_coord, into=c("chrom", "start", "end"), sep="[:-]", convert=T) %>%
+      mutate(end = end + 1),
+    by=c("chrom", "start", "end"),
+    suffix=c(".otherGenome", ".human")
+    )
+
+Joined.WithProductivityStatus.WithHuman %>%
+  mutate(Species.short = factor(Species.short, levels=c("Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  mutate(Annot = if_else(Annot.human, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding.human, "Productive", "Unproductive")) %>%
+  mutate(Coding.otherGenome = if_else(Coding.otherGenome, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  count(Species.short, Group, Coding.otherGenome) %>%
+  ggplot(aes(x=Species.short, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  facet_wrap(~Coding.otherGenome) +
+  Rotate_x_labels +
+  labs(fill="Human junc classified", caption="facet is HostSpecies junc classified")
+
+Joined.WithProductivityStatus.WithHuman %>%
+  mutate(Species.short = factor(Species.short, levels=c("Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  mutate(JunctionCountGroup = cut(score.other, breaks=c(0, 10, 100, 1000, Inf))) %>%
+  mutate(Annot = if_else(Annot.human, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding.human, "Productive", "Unproductive")) %>%
+  mutate(Coding.otherGenome = if_else(Coding.otherGenome, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  count(Species.short, Group, Coding.otherGenome, JunctionCountGroup) %>%
+  ggplot(aes(x=Species.short, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  facet_grid(JunctionCountGroup~Coding.otherGenome) +
+  Rotate_x_labels +
+  labs(fill="Human junc classified", caption="facet is HostSpecies junc classified x TotalJuncCounts")
+  
+  
+```
+
+These results generally make sense to me, but point out that not every 'productive' junc that lifts over to human will be productive in human. I could imagine some ways this might happen. For example, maybe it is productive and primary isoform in HostSpecies (and ancestral state), but in human it is a low-PSI poison junction that nonetheless lifts over.
+
+I think it might be worth remaking this plot with also a sub-grouping for TotalJuncCounts (or PSI) in human rather than origin species.
+
+But for now, maybe it is justified to match clusters even if a junc within clusters isn't annotated productive in both species. I think this is good enough to proceed in mapping clusters across species. Let's read in clusters and check that it is generally a one-to-one mapping between clusters from different species
+
+```{r}
+
+juncs.and.clusters <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.AllObserved.juncList.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).AllObserved.juncList.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id = "OriginGenome") %>%
+  filter(str_detect(chrom, "clu_NA", negate = T)) %>%
+  separate(chrom, into=c("chrom", "start", "stop", "cluster"), sep=":", convert=T) %>%
+  mutate(stop = stop-1) %>%
+  mutate(Intron_coord = str_glue("{chrom}:{start}-{stop}")) %>%
+  mutate(strand = str_extract(cluster, "[-+]$")) %>%
+  mutate(name = str_glue("{chrom}_{start}_{stop}_{strand}"))
+
+
+Cluster2ClusterMap <- Liftovers.AsFlanks %>%
+  mutate(start = start +1, end=end-1) %>%
+  dplyr::select(OriginGenome, OriginName = name, JuncCount = score, Hg38_chrom=chrom, Hg38_start=start, Hg38_end=end, Hg38_strand=strand) %>%
+  inner_join(juncs.and.clusters, by=c("OriginGenome", "OriginName"="name")) %>%
+  inner_join(juncs.and.clusters %>%
+               filter(OriginGenome == "Human_UCSC.hg38_GencodeComprehensive46") %>%
+               dplyr::select(Hg38_chrom=chrom, Hg38_start=start, Hg38_end=stop, Hg38_strand=strand, Hg38Name = name, Hg38Cluster = cluster),
+             by=c("Hg38_chrom", "Hg38_start", "Hg38_end", "Hg38_strand"))
+
+Cluster2ClusterMap %>%
+  distinct(OriginGenome, cluster, Hg38Cluster) %>%
+  count(OriginGenome, cluster) %>%
+  ggplot(aes(x=n, color=OriginGenome)) +
+  stat_ecdf() +
+  labs(x="Num human clusters for\neach OriginGenome cluster")
+
+```
+
+Ok, so it's clearly not one to one, but it's close enough that to deal with those details I'll just inner join with all matching clusters... Essentially combining all linked clusters.
+
+```{r}
+
+
+
+MappedByClusters <- Spearman.tests.WithProductivity %>%
+  filter(q < 0.1) %>%
+  filter(!OriginGenome=="Human_UCSC.hg38_GencodeComprehensive46") %>%
+  mutate(strand = str_extract(junc, "[+-]$")) %>%
+  mutate(OriginName = str_glue("{chrom}_{start}_{stop-1}_{strand}")) %>%
+  inner_join(
+    Cluster2ClusterMap %>%
+      dplyr::select(OriginGenome, OriginName, cluster, Hg38Cluster),
+    by=c("OriginGenome", "OriginName", "cluster")
+  ) %>%
+  inner_join(
+    Spearman.tests.WithProductivity %>%
+      filter(q < 0.1) %>%
+      filter(OriginGenome=="Human_UCSC.hg38_GencodeComprehensive46") %>%
+      mutate(strand = str_extract(junc, "[+-]$")) %>%
+      mutate(stop = stop - 1) %>%
+      dplyr::select(Hg38_chrom=chrom, Hg38_start=start, Hg38_end=stop, Hg38_strand=strand, Hg38Cluster=cluster, Tissue, Junc.Human=junc, corr, P, q, Annot, Coding, UTR, Gene_name),
+    by=c("Hg38Cluster", "Tissue"),
+    suffix = c(".OtherSpecies", ".Human")
+  ) %>%
+  mutate(Species.short = factor(Species.short, levels=c("Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken")))
+
+MappedByClusters %>%
+  filter(!(Coding.OtherSpecies | Coding.Human)) %>%
+  sample_frac(1) %>%
+  distinct(junc, OriginGenome, .keep_all=T) %>%
+  mutate(IsMatchingSigns = sign(corr.Human)==sign(corr.OtherSpecies)) %>%
+  count(IsMatchingSigns, Species.short) %>%
+  ggplot(aes(x=Species.short, y=n, fill=IsMatchingSigns)) +
+    geom_col() +
+    Rotate_x_labels +
+  labs(caption=str_wrap('Only juncs in matching clusters that are non-coding in human and Other species', 25))
+
+```
+
+Ok, so now, when not strictly requiring proper lift over, there is still an enrichment for matching signs which is actually pretty comforting. But the enrichment isn't so obvious. If you consider the non-matching signs as estimate of background, then you might be left with 1/2 of the true ones for rodents. So we are talking hundreds of events. So this is a modest improvement over requiring exact liftover matches.
+
+
+Just as a sanity check, if I make the same plot for productive (in both species) juncs, I expect the sign to often not match, since each junc may randomly be referring to the opposite isoform.
+
+```{r}
+MappedByClusters %>%
+  filter((Coding.OtherSpecies & Coding.Human)) %>%
+  sample_frac(1) %>%
+  distinct(junc, OriginGenome, .keep_all=T) %>%
+  mutate(IsMatchingSigns = sign(corr.Human)==sign(corr.OtherSpecies)) %>%
+  count(IsMatchingSigns, Species.short) %>%
+  ggplot(aes(x=Species.short, y=n, fill=IsMatchingSigns)) +
+    geom_col() +
+    Rotate_x_labels
+
+
+```
+Ok yes. That makes sense. To get some sense of the releative number of unproductive juncs, let's make the same plots, but collapse to cluster level to make sure we aren't double counting the same AS locus with more than one junc.
+
+
+
+```{r}
+
+bind_rows(
+  MappedByClusters %>%
+    filter(!(Coding.OtherSpecies | Coding.Human)) %>%
+    sample_frac(1) %>%
+    distinct(cluster, OriginGenome, .keep_all=T) %>%
+    mutate(Group = "Unproductive in both"),
+  MappedByClusters %>%
+    filter((Coding.OtherSpecies & Coding.Human)) %>%
+    sample_frac(1) %>%
+    distinct(cluster, OriginGenome, .keep_all=T) %>%
+    mutate(Group = "Productive in both"),
+  MappedByClusters %>%
+    filter((!Coding.OtherSpecies & Coding.Human) | (Coding.OtherSpecies & !Coding.Human)) %>%
+    sample_frac(1) %>%
+    distinct(cluster, OriginGenome, .keep_all=T) %>%
+    mutate(Group = "Classification inconsistent b/n species"),
+) %>%
+  mutate(IsMatchingSigns = sign(corr.Human)==sign(corr.OtherSpecies)) %>%
+  count(IsMatchingSigns, Species.short, Group) %>%
+ggplot(aes(x=Species.short, y=n, fill=IsMatchingSigns)) +
+  geom_col() +
+  facet_wrap(~Group) +
+  Rotate_x_labels +
+  labs(caption="Juncs matched by cluster, not by exact liftover", fill="devAS cor\ncoef same sign?", y="num clusters")
+
+
+```
+Ok this still leaves me with the impression than most evolutionarily conserved AS is productive. Granted, there could still be some sampling bias, especially since this is all from steady state polyA data where unproductive isoforms are harder to identify. but actually i am under the impression that if we limit to reasonably expressed genes, the sampling bias shouldn't be so influential to totally explain the overabundance of 'productive in both' versus 'unproductive in both'. Note that there are also a lot that inconsistent in both, but that might just be because of how i matched things to cluster level, not junction level so i'm not really looking at the same junction most of the time. Probably best approach would be to classify clusters as devAS unproductive, and keep only unproductive junc that matches lifts over, or say the strongest (max corr) within species.
+
+In any case, from this my intuition is that the main 'purpose' (over evolutionary timescales) of AS is regulation through productive protein isoforms rather than NMD. Maybe there are reasons NMD isoforms would be less desireable way to alter protein function than protein isoforms? I'm not sure.
+
+Let's start by adding a distinction for the juncs that do liftover properly.
+
+```{r, fig.height=6, fig.width-9}
+
+MappedByClusters <- Spearman.tests.WithProductivity %>%
+  filter(q < 0.1) %>%
+  filter(!OriginGenome=="Human_UCSC.hg38_GencodeComprehensive46") %>%
+  mutate(strand = str_extract(junc, "[+-]$")) %>%
+  mutate(OriginName = str_glue("{chrom}_{start}_{stop-1}_{strand}")) %>%
+  inner_join(
+    Cluster2ClusterMap %>%
+      dplyr::select(OriginGenome, OriginName, cluster, Hg38Cluster),
+    by=c("OriginGenome", "OriginName", "cluster")
+  ) %>%
+  inner_join(
+    Spearman.tests.WithProductivity %>%
+      filter(q < 0.1) %>%
+      filter(OriginGenome=="Human_UCSC.hg38_GencodeComprehensive46") %>%
+      mutate(strand = str_extract(junc, "[+-]$")) %>%
+      mutate(stop = stop - 1) %>%
+      dplyr::select(Hg38_chrom=chrom, Hg38_start=start, Hg38_end=stop, Hg38_strand=strand, Hg38Cluster=cluster, Tissue, Junc.Human=junc, corr, P, q, Annot, Coding, UTR, Gene_name),
+    by=c("Hg38Cluster", "Tissue"),
+    suffix = c(".OtherSpecies", ".Human")
+  ) %>%
+  mutate(Species.short = factor(Species.short, levels=c("Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  left_join(
+    Conserved.devAS %>%
+      dplyr::select(OriginGenome, junc, Junc.Human) %>%
+      distinct() %>%
+      mutate(Liftover = T)
+  ) %>%
+  replace_na(list(Liftover=F))
+  
+MappedByClusters %>%
+  mutate(Group = case_when(
+    Coding.Human & Coding.OtherSpecies ~ "Productive",
+    !Coding.Human & !Coding.OtherSpecies ~ "Unproductive",
+    TRUE ~ "Switches b/n human"
+  )) %>%
+  mutate(Group = factor(Group, levels=c("Unproductive", "Productive", "Switches b/n human"))) %>%
+  arrange(OriginGenome, cluster, desc(Liftover), Group, desc(abs(corr.OtherSpecies))) %>%
+  distinct(OriginGenome, cluster, junc, .keep_all=T) %>%
+  mutate(IsMatchingSigns = sign(corr.Human)==sign(corr.OtherSpecies)) %>%
+  count(IsMatchingSigns, Species.short, Liftover, Group) %>%
+  mutate(Liftover = if_else(Liftover, "Exact junc liftover", "Non-exact")) %>%
+  ggplot(aes(x=Species.short, y=n, fill=IsMatchingSigns)) +
+  geom_col(position='stack') +
+  facet_grid(Liftover~Group) +
+  Rotate_x_labels +
+  labs(x="Species", y="Num devAS juncs\n(one representative per cluster)", fill="SpearmanCoef sign\nmatches cross species?", caption=str_wrap("Single representative juncs per cluster chosen by ordered critera (1) Exact liftover (2) Productivity group (3) Greatest coef",30))
+
+```
+Are we justified in counting the non-exact liftovers for unproductive as likely conserved devAS, but not for productive? If so, I would expect matching signs more often than chance in unproductive group... Let's replot as percent for a little more visual clarity
+
+```{r}
+MappedByClusters %>%
+  mutate(Group = case_when(
+    Coding.Human & Coding.OtherSpecies ~ "Productive",
+    !Coding.Human & !Coding.OtherSpecies ~ "Unproductive",
+    TRUE ~ "Switches b/n human"
+  )) %>%
+  mutate(Group = factor(Group, levels=c("Unproductive", "Productive", "Switches b/n human"))) %>%
+  mutate(IsMatchingSigns = sign(corr.Human)==sign(corr.OtherSpecies)) %>%
+  arrange(OriginGenome, cluster, desc(Liftover), Group, desc(abs(corr.OtherSpecies))) %>%
+  distinct(OriginGenome, cluster, junc, .keep_all=T) %>%
+  count(IsMatchingSigns, Species.short, Liftover, Group) %>%
+  mutate(Liftover = if_else(Liftover, "Exact junc liftover", "Non-exact")) %>%
+  ggplot(aes(x=Species.short, y=n, fill=IsMatchingSigns)) +
+  geom_col(position='fill') +
+  facet_grid(Liftover~Group) +
+  Rotate_x_labels +
+  labs(x="Species", y="Num devAS juncs\n(one representative per cluster)", fill="SpearmanCoef sign\nmatches cross species?", caption=str_wrap("Single representative juncs per cluster chosen by ordered critera (1) Exact liftover (2) Productivity group (3) Greatest coef",30)) +
+  geom_hline(yintercept = 0.5)
+
+```
+Hmm, not very clear... Maybe there is modest enrichment for correct signage, but it's really small effect, such that most of them are more likely chance.. Maybe it is best to just focus on the exact liftover juncs which by the most part are trustworthy based on sign-matching directions of effects in all productivity classification groups
+
+Ok, let's write out some useful processed data tables before moving on to a new notebook to verify that changes in unproductive splicing over developement is associated with expected changes in expression.
+
+```{r}
+MappedByClusters %>%
+  mutate(Group = case_when(
+    Coding.Human & Coding.OtherSpecies ~ "Productive",
+    !Coding.Human & !Coding.OtherSpecies ~ "Unproductive",
+    TRUE ~ "Switches b/n human"
+  )) %>%
+  mutate(Group = factor(Group, levels=c("Unproductive", "Productive", "Switches b/n human"))) %>%
+  mutate(IsMatchingSigns = sign(corr.Human)==sign(corr.OtherSpecies)) %>%
+  arrange(OriginGenome, cluster, desc(Liftover), Group, desc(abs(corr.OtherSpecies))) %>%
+  group_by(OriginGenome, cluster) %>%
+  mutate(Rn = row_number()) %>%
+  mutate(IsRepresentativeJuncForCluster = Rn==1) %>%
+  ungroup() %>%
+  write_tsv("../output/Conserved.devAS.leafcutter.tsv.gz")
+```
+
+
+## Conclusions
+
+Based on the number conserved devAS juncs/clusters that exactly liftover, it seems that only 10-20% of the functional (evolutoinary conserved tissue specific pattern with evolutionarily conserved result in terms of productive or unproductive) AS events are unproductive. Maybe one could argue that this polyA+ steady-state data is still too strongly under-sampling unproductive juncs to be a reasonable estimate, but I don't think looking at naRNA (generally 2-4 fold enriched for unproductive juncs) will make all that much of a difference. As a thought experiment (which I could later actually check), I could sort of address that by setting a threshold for host-gene expression being 2-4fold higher for unproductive clusters to count towards these plots in order to sort of adjust for power, and since genes so often vary over >100 fold range, I just have the intuition that it won't make such a big difference to alter the general conclusion that most functional/conserved AS is productive. I wonder if there is a reason that over evolutioary time, there might a reason to favor productive alternative protein isoforms as a form of regulation over NMD. Maybe NMD is already at a certain overwhelming capacity that keeping too much regulation dependent on it would sort of weaken the strength of its regulation... If that was the case, that NMD machinery is rate limiting, then highly over-expressing exogenous NMD targets might noticeably effect the NMD efficiency of endogenous targets.

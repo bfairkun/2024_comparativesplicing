@@ -37,7 +37,7 @@ ipynbs <- list.files(path = "../analysis/", pattern="^.+\\.ipynb$") %>%
   str_replace("^(.+?)\\.ipynb$", "\\1")
 
 for(fn in ipynbs){
-  cat("[", i, "](",params$github, "analysis/",  fn,")\n\n", sep="")
+  cat("[", fn, "](",params$github, "analysis/",  fn,")\n\n", sep="")
 }
 
 ```

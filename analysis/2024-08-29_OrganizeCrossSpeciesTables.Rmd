@@ -1,0 +1,314 @@
+---
+title: "2024-08-29_OrganizeCrossSpeciesTables"
+output: html_document
+date: '2024-08-29'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+I have quantified splicing and expression did liftovers and classified junctions as productive and unproductive across species. To bring it all together, I need to get some common IDs for genes across species, by finding orthologs and organizing all the mess of different identifiers (ensembl, verses ID) that I used in different species (by necessity from what was available for download from UCSC). Let's use some biomart commands here and organize stuff...
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(biomaRt)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+First let's figure out how to make our biomart query...
+
+```{r}
+mart.chicken <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "ggallus_gene_ensembl",
+    host = "https://aug2020.archive.ensembl.org"
+)
+
+PotentialAttributes <- listAttributes(mart.chicken)
+
+PotentialAttributes %>%
+  filter(str_detect(name,"hsap"))
+```
+
+
+
+```{r}
+
+
+attributes <- c(
+    "ensembl_gene_id",      # Gene ID
+    "ensembl_gene_id_version",
+    "gene_biotype",         # Gene biotype
+    "ensembl_transcript_id", # Transcript ID
+    "ensembl_transcript_id_version",
+    "transcript_biotype",    # Transcript type/biotype
+    "hgnc_symbol",
+    "external_gene_name"
+)
+
+attributes.genes <- c(
+    "ensembl_gene_id",      # Gene ID
+    "ensembl_gene_id_version",
+    "gene_biotype",         # Gene biotype
+    "hgnc_symbol",
+    "external_gene_name"
+)
+
+attributes_homologs <- c(
+    "ensembl_gene_id",      # Gene ID
+    "hsapiens_homolog_ensembl_gene",
+    "hsapiens_homolog_perc_id",
+    "hsapiens_homolog_perc_id_r1",
+    "hsapiens_homolog_orthology_confidence",
+    "hsapiens_homolog_orthology_type"
+)
+
+info.chicken <- getBM(
+    attributes = attributes,
+    mart = mart.chicken
+) %>%
+  as_tibble()
+
+info.chicken %>%
+  distinct(ensembl_gene_id)
+
+info.chicken.genes <- getBM(
+    attributes = attributes.genes,
+    mart = mart.chicken
+) %>%
+  as_tibble()
+
+info.chicken.homologs <- getBM(
+    attributes = attributes_homologs,
+    mart = mart.chicken
+) %>%
+  as_tibble()
+
+info.chicken.homologs %>%
+  mutate(IsHumanOrtholog = !hsapiens_homolog_ensembl_gene=="") %>%
+  group_by(ensembl_gene_id) %>%
+  summarise(NumHumanOrthologs = sum(IsHumanOrtholog)) %>%
+  ungroup() %>%
+  ggplot(aes(x=NumHumanOrthologs)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5)) +
+  labs(y='ecdf', 'number human orthologs')
+
+info.chicken.homologs %>%
+  distinct(ensembl_gene_id)
+
+info.chicken.homologs %>% distinct(hsapiens_homolog_orthology_confidence)
+
+info.chicken.homologs %>%
+  mutate(IsHumanOrtholog = hsapiens_homolog_orthology_confidence==1) %>%
+  group_by(ensembl_gene_id) %>%
+  summarise(NumHumanOrthologs = sum(IsHumanOrtholog, na.rm=T)) %>%
+  ungroup() %>%
+  ggplot(aes(x=NumHumanOrthologs)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5)) +
+  labs(y='ecdf', 'number human orthologs', caption="Only high confidence orthologs")
+
+info.chicken.homologs %>%
+  filter(hsapiens_homolog_orthology_type == "ortholog_one2one") %>%
+  add_count(ensembl_gene_id) %>%
+  filter(n>1)
+
+```
+
+So there are definitely some 1:many orhologs (and many:1) orthologs...
+
+For now, let's similarly get all orthologs and gene/trancript info for all species and think about how to deal with this issue later...
+
+
+
+```{r}
+Chicken.mart <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "ggallus_gene_ensembl",
+    host = "https://aug2020.archive.ensembl.org"
+)
+
+Macaque.mart <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "mmulatta_gene_ensembl",
+    host = "https://aug2020.archive.ensembl.org"
+)
+
+Rabbit.mart <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "ocuniculus_gene_ensembl",
+    host = "https://aug2020.archive.ensembl.org"
+)
+
+Human.mart <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "hsapiens_gene_ensembl",
+    host = "https://may2024.archive.ensembl.org"
+)
+
+Mouse.mart <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "mmusculus_gene_ensembl",
+    host = "https://may2024.archive.ensembl.org"
+)
+
+Rat.mart <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "rnorvegicus_gene_ensembl",
+    host = "https://may2024.archive.ensembl.org"
+)
+
+Opossum.mart <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "mdomestica_gene_ensembl",
+    host = "https://jul2019.archive.ensembl.org"
+)
+
+Get_transcript.info <- function(Mart){
+  attributes <- c(
+    "ensembl_gene_id",      # Gene ID
+    "ensembl_gene_id_version",
+    "gene_biotype",         # Gene biotype
+    "ensembl_transcript_id", # Transcript ID
+    "ensembl_transcript_id_version",
+    "transcript_biotype",    # Transcript type/biotype
+    "external_gene_name"
+    )
+   getBM(
+    attributes = attributes,
+    mart = Mart
+) %>%
+  as_tibble() %>%
+  return()
+}
+
+Marts = list("Chicken"=Chicken.mart, "Macaque"=Macaque.mart, "Rabbit"=Rabbit.mart, "Mouse"=Mouse.mart, "Rat"=Rat.mart, "Opossum"=Opossum.mart, "Human"=Human.mart)
+
+Transcripts <- lapply(Marts, Get_transcript.info) %>%
+  bind_rows(.id="Species")
+
+```
+
+Ok let's reproduce that histogram of number of unproductive transcripts annotated per gene
+
+```{r}
+Transcripts %>%
+  filter(gene_biotype == "protein_coding") %>%
+  mutate(IsProteinCoding = transcript_biotype=="protein_coding") %>%
+  group_by(Species, ensembl_gene_id) %>%
+  summarise(NumCodingTranscripts = sum(IsProteinCoding),
+         NumNoncodingTranscripts = sum(!IsProteinCoding)) %>%
+  ungroup() %>%
+  pivot_longer(names_to = "Group", values_to = "Num", c("NumCodingTranscripts", "NumNoncodingTranscripts")) %>%
+  count(Species, Group, Num) %>%
+  mutate(Num = if_else(Num>10, as.integer(10), Num)) %>%
+  group_by(Species, Group, Num) %>%
+  summarise(n = sum(n)) %>%
+  ungroup() %>%
+  filter(Num>0) %>%
+  ggplot(aes(x=Num, y=n, fill=Group)) +
+    geom_col() +
+    facet_wrap(~Species)
+```
+
+Oh yeah, this isn't quite correct because rat transcripts come from refseq, not ensembl. So for publication will actually have to parse gtf... In any case, lets get homologs table...
+
+
+```{r}
+Get_homologs.info <- function(Mart){
+  attributes_homologs <- c(
+      "ensembl_gene_id",      # Gene ID
+      "hsapiens_homolog_ensembl_gene",
+      "hsapiens_homolog_perc_id",
+      "hsapiens_homolog_perc_id_r1",
+      "hsapiens_homolog_orthology_confidence",
+      "hsapiens_homolog_orthology_type"
+  )
+   getBM(
+    attributes = attributes_homologs,
+    mart = Mart
+) %>%
+  as_tibble() %>%
+  return()
+}
+
+
+Homologs <- Marts %>%
+  purrr::list_modify("Human" = NULL) %>%
+  lapply(Get_homologs.info) %>%
+  bind_rows(.id="Species")
+```
+
+Let's explore the results a bit
+
+```{r}
+Homologs %>%
+  mutate(IsHumanOrtholog = !hsapiens_homolog_ensembl_gene=="") %>%
+  group_by(ensembl_gene_id, Species) %>%
+  summarise(NumHumanOrthologs = sum(IsHumanOrtholog)) %>%
+  ungroup() %>%
+  ggplot(aes(x=NumHumanOrthologs, color=Species)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5)) +
+  labs(y='ecdf', 'number human orthologs')
+
+Homologs %>%
+  mutate(IsHumanOrtholog = hsapiens_homolog_orthology_confidence==1) %>%
+  group_by(ensembl_gene_id, Species) %>%
+  summarise(NumHumanOrthologs = sum(IsHumanOrtholog, na.rm=T)) %>%
+  ungroup() %>%
+  ggplot(aes(x=NumHumanOrthologs, color=Species)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5)) +
+  labs(y='ecdf', 'number human orthologs')
+
+
+```
+
+Wow, so mouse apparently has more genes with human ortholog than other rodents and macaque? Obviously an annotation bias. Maybe percent identity among the said orthologs will be a less biased metric..
+
+```{r}
+Homologs %>%
+  mutate(IsHumanOrtholog = !hsapiens_homolog_ensembl_gene=="") %>%
+  filter(IsHumanOrtholog) %>%
+  pivot_longer(names_to = "Facet", values_to="value", c("hsapiens_homolog_perc_id", "hsapiens_homolog_perc_id_r1")) %>%
+  ggplot(aes(x=value, color=Species)) +
+  stat_ecdf() +
+  facet_wrap(~Facet) +
+  labs(x="Percent identity", y='ecdf')
+  
+
+```
+
+Ok, that makes more sense. Macacque has the highest percent identity among orthologs, and i can even see a little shoulder in mouse compared to other rodents that is consistent with an annotation bias wherein more mouse genes are classified as human orthologs compared to other rodents such that the human:mouse orthologs class has smaller percent identity than the human:OtherRodent sets.
+
+Ok, now let's just write out the relevent results for convenience in later analyses.
+
+```{r, eval=F}
+Transcripts %>%
+  write_tsv("../output/Ensembl.TranscriptInfo.tsv.gz")
+
+
+Homologs %>%
+  inner_join(
+    Transcripts %>%
+    dplyr::select(Species, ensembl_gene_id, external_gene_name) %>%
+      distinct()
+  ) %>%
+  write_tsv("../output/Ensembl.GeneHumanHomologs.tsv.gz")
+
+```
+

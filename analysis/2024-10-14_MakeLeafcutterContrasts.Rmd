@@ -1,0 +1,533 @@
+---
+title: "2024-10-14_MakeLeafcutterContrasts"
+output: html_document
+date: '2024-10-14'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+As one last attempt to make the beat beta scatter heatmap right, let's use leafcutter differential splicing to calculate dpsi, and compare to log2FC.
+
+First, let's sysytematically make the contrast tables.
+
+```{r}
+library(tidyverse)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+samples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+
+Stages <- read_tsv("../data/Stages_AsIn_CordosoMoreira_Recoded.txt")
+```
+
+Now make dot plot of samples, to better understand how we can split the timecourse into two for simple contrasts
+
+```{r, fig.height=8, fig.width=8}
+samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  count(Ordinal_stage, ID_Species, Tissue_ForDevelopementalAnalysis) %>%
+  inner_join(
+    Stages %>%
+      dplyr::select(Ordinal_stage, Marker, ID_Species=Species)
+  ) %>%
+  ggplot(aes(x=Ordinal_stage, y=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(aes(size=n)) +
+  # geom_line() +
+  geom_vline(data = . %>%
+               filter(!is.na(Marker)) %>%
+               distinct(Marker, Ordinal_stage, ID_Species),
+             aes(color=Marker, xintercept=Ordinal_stage)
+               ) +
+  facet_wrap(~ID_Species, scales="free") +
+  theme(legend.position='bottom')
+```
+
+
+
+Maybe we can try stages before onset meiosis, versus after birth. or first 5 versus last 5. or pre-birth vs post-birth.
+
+1. ) Before meiosis vs after spermatogenesis
+2. ) Before vs after birth
+3. ) Before birth vs after spermatogenesis
+4. ) first half vs second half within tissue species set
+5. ) First 10 samples in timecourse vs last 10 samples tissue-species set
+
+First let's make contrasts for #1 (Before meiosis vs after spermatogenesis)
+
+```{r}
+Stages %>%
+  dplyr::select(Ordinal_stage, Marker, ID_Species=Species) %>%
+  filter(!is.na(Marker)) %>%
+  distinct() %>%
+  arrange(ID_Species, Ordinal_stage)
+  
+
+
+Approach1.samples.grouped <- samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  left_join(
+    Stages %>%
+      dplyr::select(LeftMarkerStage=Ordinal_stage, Marker, ID_Species=Species) %>%
+      filter(!is.na(Marker)) %>%
+      distinct() %>%
+      filter(Marker == "Onset meiosis oogenesis") %>%
+      dplyr::select(-Marker)
+  ) %>%
+  left_join(
+    Stages %>%
+      dplyr::select(RightMarkerStage=Ordinal_stage, Marker, ID_Species=Species) %>%
+      filter(!is.na(Marker)) %>%
+      distinct() %>%
+      filter(Marker == "Onset meiosis spermatogenesis") %>%
+      dplyr::select(-Marker)
+  ) %>%
+  mutate(
+    Group = case_when(
+      Ordinal_stage <= LeftMarkerStage ~ "Early",
+      Ordinal_stage >= RightMarkerStage ~ "Late",
+      TRUE ~ "Middle"
+    )
+  ) %>%
+  filter(Group %in% c("Early", "Late")) %>%
+  mutate(Group = relevel(factor(Group), "Early")) %>%
+  dplyr::select(Group, Tissue_ForDevelopementalAnalysis, ID_Species, ID)
+
+Approach1.samples.grouped %>%
+  count(ID_Species, Group, Tissue_ForDevelopementalAnalysis) %>%
+  ggplot(aes(x=Tissue_ForDevelopementalAnalysis, y=n, fill=Group)) +
+  geom_col(position='dodge') +
+  facet_wrap(~ID_Species) +
+  Rotate_x_labels
+  
+```
+
+So we will obviously be missing some tissue:species pairs with this set up. but that's ok.
+
+Let's make the other contrasts...
+
+```{r}
+Approach2.samples.grouped <- samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  left_join(
+    Stages %>%
+      dplyr::select(LeftMarkerStage=Ordinal_stage, Marker, ID_Species=Species) %>%
+      filter(!is.na(Marker)) %>%
+      distinct() %>%
+      filter(Marker == "Birth") %>%
+      dplyr::select(-Marker)
+  ) %>%
+  left_join(
+    Stages %>%
+      dplyr::select(RightMarkerStage=Ordinal_stage, Marker, ID_Species=Species) %>%
+      filter(!is.na(Marker)) %>%
+      distinct() %>%
+      filter(Marker == "Birth") %>%
+      dplyr::select(-Marker)
+  ) %>%
+  mutate(
+    Group = case_when(
+      Ordinal_stage < LeftMarkerStage ~ "Early",
+      Ordinal_stage > RightMarkerStage ~ "Late",
+      TRUE ~ "Middle"
+    )
+  ) %>%
+  filter(Group %in% c("Early", "Late")) %>%
+  mutate(Group = relevel(factor(Group), "Early")) %>%
+  dplyr::select(Group, Tissue_ForDevelopementalAnalysis, ID_Species, ID)
+
+Approach3.samples.grouped <- samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  left_join(
+    Stages %>%
+      dplyr::select(LeftMarkerStage=Ordinal_stage, Marker, ID_Species=Species) %>%
+      filter(!is.na(Marker)) %>%
+      distinct() %>%
+      filter(Marker == "Birth") %>%
+      dplyr::select(-Marker)
+  ) %>%
+  left_join(
+    Stages %>%
+      dplyr::select(RightMarkerStage=Ordinal_stage, Marker, ID_Species=Species) %>%
+      filter(!is.na(Marker)) %>%
+      distinct() %>%
+      filter(Marker == "Onset meiosis spermatogenesis") %>%
+      dplyr::select(-Marker)
+  ) %>%
+  mutate(
+    Group = case_when(
+      Ordinal_stage < LeftMarkerStage ~ "Early",
+      Ordinal_stage >= RightMarkerStage ~ "Late",
+      TRUE ~ "Middle"
+    )
+  ) %>%
+  filter(Group %in% c("Early", "Late")) %>%
+  mutate(Group = relevel(factor(Group), "Early")) %>%
+  dplyr::select(Group, Tissue_ForDevelopementalAnalysis, ID_Species, ID)
+
+Approach4.samples.grouped <- samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  group_by(ID_Species, Tissue_ForDevelopementalAnalysis) %>%
+  mutate(Ordinal_Percent_Rank = percent_rank(Ordinal_stage)) %>%
+  ungroup() %>%
+  mutate(
+    Group = case_when(
+      Ordinal_Percent_Rank < 0.5 ~ "Early",
+      Ordinal_Percent_Rank >= 0.5 ~ "Late",
+      TRUE ~ "Middle"
+    )) %>%
+  filter(Group %in% c("Early", "Late")) %>%
+  mutate(Group = relevel(factor(Group), "Early")) %>%
+  dplyr::select(Group, Tissue_ForDevelopementalAnalysis, ID_Species, ID)
+
+Approach5.samples.grouped <- samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  group_by(ID_Species, Tissue_ForDevelopementalAnalysis) %>%
+  mutate(Ordinal_Rank = rank(Ordinal_stage, ties.method='random')) %>%
+  mutate(Ordinal_RevRank = rank(desc(Ordinal_stage), ties.method='random')) %>%
+  ungroup() %>%
+  mutate(
+    Group = case_when(
+      Ordinal_Rank <= 10 & Ordinal_RevRank > 10 ~ "Early",
+      Ordinal_RevRank <= 10 & Ordinal_Rank > 10 ~ "Late",
+      TRUE ~ "Middle"
+    )) %>%
+  filter(Group %in% c("Early", "Late")) %>%
+  mutate(Group = relevel(factor(Group), "Early")) %>%
+  dplyr::select(Group, Tissue_ForDevelopementalAnalysis, ID_Species, ID) %>%
+  arrange(ID_Species, Tissue_ForDevelopementalAnalysis, Group)
+
+```
+
+
+
+And now look at sample sizes in contrasts
+
+```{r}
+bind_rows(
+  list(
+    "BeforeM_vs_AfterS" = Approach1.samples.grouped,
+    "BeforeB_vs_AfterB" = Approach2.samples.grouped,
+    "BeforeB_vs_AferS" = Approach3.samples.grouped,
+    "FirstHalf_vs_SecondHalf" = Approach4.samples.grouped,
+    "First10_vs_Second10" = Approach5.samples.grouped
+  ),
+  .id="Approach"
+) %>%
+  count(Group, Tissue_ForDevelopementalAnalysis, Approach, ID_Species) %>%
+  ggplot(aes(x=Tissue_ForDevelopementalAnalysis, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  facet_grid(Approach~ID_Species) +
+  Rotate_x_labels
+
+Contrasts <- bind_rows(
+  list(
+    "BeforeM_vs_AfterS" = Approach1.samples.grouped,
+    "BeforeB_vs_AfterB" = Approach2.samples.grouped,
+    "BeforeB_vs_AferS" = Approach3.samples.grouped,
+    "FirstHalf_vs_SecondHalf" = Approach4.samples.grouped,
+    "First10_vs_Second10" = Approach5.samples.grouped
+  ),
+  .id="Approach"
+) %>%
+  add_count(Group, Tissue_ForDevelopementalAnalysis, Approach, ID_Species) %>%
+  group_by(Group, Tissue_ForDevelopementalAnalysis, Approach, ID_Species) %>%
+  filter(all(n>=2)) %>%
+  ungroup() %>%
+  group_by(Tissue_ForDevelopementalAnalysis, Approach, ID_Species) %>%
+  filter(any(Group=="Late") & any(Group=="Early")) %>%
+  ungroup() %>%
+  mutate(GenomeName = recode(ID_Species, "Chicken"="Chicken_UCSC.galGal6_ensv101", "Rabbit"="Rabbit_UCSC.oryCun2_ensv101", "Opossum"="Opossum_UCSC.monDom5_ensvUnknown", "Human"="Human_UCSC.hg38_GencodeComprehensive46", "Mouse"="Mouse_UCSC.mm39_GencodeComprehensive46", "Rat"="Rat_UCSC.rn7_RefSeqv108", "Macaque"="Macaque_UCSC.rheMac10_ensv101")) %>%
+  mutate(ContrastName = str_glue("{Approach}.{Tissue_ForDevelopementalAnalysis}.{ID_Species}"))
+
+
+Contrasts %>%
+  distinct(ContrastName, GenomeName) %>%
+  dplyr::select(ContrastName, GenomeName) %>%
+  write_tsv("../code/config/CordosoTimeSeriesContrasts.tsv")
+
+dir.create("../code/MazinLeafcutterAnalysis/ContrastGroupFiles/")
+
+Contrasts %>%
+  dplyr::select(ContrastName, ID, ID_Species, Tissue_ForDevelopementalAnalysis, Group) %>%
+  arrange(ID_Species, Tissue_ForDevelopementalAnalysis, Group) %>%
+  group_by(ContrastName) %>%
+  dplyr::select(ID, Group) %>%
+  group_walk(~ write_delim(.x, paste0("../code/MazinLeafcutterAnalysis/ContrastGroupFiles/", .y$ContrastName, ".txt"), delim = ' ', col_names = F))
+```
+
+And now let's prototype a quick DE analysis from the same contrast file
+
+```{r}
+Example.contrast <- read_delim("../code/MazinLeafcutterAnalysis/ContrastGroupFiles/BeforeB_vs_AferS.Brain.Chicken.txt", col_names = c("ID", "Group"), delim = ' ')
+
+Counts <- fread("../code/MazinLeafcutterAnalysis/Expression/Chicken_UCSC.galGal6_ensv101.counts.tsv.gz") %>%
+  dplyr::select(Geneid, Example.contrast$ID) %>%
+  column_to_rownames("Geneid")
+
+y <- DGEList(counts=Counts, group=Example.contrast$Group)
+
+y$samples
+
+
+keep <- filterByExpr(y)
+y <- y[keep, , keep.lib.sizes=FALSE]
+
+dim(y)
+
+results <- y %>%
+  calcNormFactors() %>%
+  estimateDisp() %>%
+  exactTest() %>%
+  topTags(n=Inf) %>%
+  as.data.frame() %>%
+  rownames_to_column("Geneid")
+
+results %>%
+  ggplot(aes(x=logFC, y=-log10(PValue), color=FDR<0.01)) +
+  geom_point(alpha=0.1)
+
+results %>%
+  ggplot(aes(x=logCPM, y=logFC, color=FDR<0.01)) +
+  geom_point(alpha=0.1)
+
+results %>%
+  mutate(IsSig = FDR<0.01) %>%
+  count(IsSig)
+
+```
+
+
+Lastly, I also want to include a contrast for neonate vs mature adult (post spermatogenesis meiosis), and a contrast for each mature adult tissue pair within species.
+
+```{r}
+# How many post-birth samples are there for each tissue/species
+samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  left_join(
+    Stages %>%
+      dplyr::select(LeftMarkerStage=Ordinal_stage, Marker, ID_Species=Species) %>%
+      filter(!is.na(Marker)) %>%
+      distinct() %>%
+      filter(Marker == "Birth") %>%
+      dplyr::select(-Marker)
+  ) %>%
+  filter(Ordinal_stage >= LeftMarkerStage) %>%
+  arrange(ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage) %>%
+  count(ID_Species, Tissue_ForDevelopementalAnalysis)
+
+
+# How many neonate samples are there
+samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  left_join(
+    Stages %>%
+      dplyr::select(LeftMarkerStage=Ordinal_stage, Marker, ID_Species=Species) %>%
+      filter(!is.na(Marker)) %>%
+      distinct() %>%
+      filter(Marker == "Birth") %>%
+      dplyr::select(-Marker)
+  ) %>%
+  filter(Ordinal_stage == LeftMarkerStage) %>%
+  count(ID_Species, Tissue_ForDevelopementalAnalysis)
+
+```
+
+So for some species, we might need to broaden the definition of neonate to include all tissues
+
+```{r}
+samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  left_join(
+    Stages %>%
+      dplyr::select(LeftMarkerStage=Ordinal_stage, Marker, ID_Species=Species) %>%
+      filter(!is.na(Marker)) %>%
+      distinct() %>%
+      filter(Marker == "Birth") %>%
+      dplyr::select(-Marker)
+  ) %>%
+  filter(Ordinal_stage >= LeftMarkerStage) %>%
+  arrange(ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage) %>%
+  add_count(Tissue_ForDevelopementalAnalysis, ID_Species, Ordinal_stage) %>%
+  distinct(Tissue_ForDevelopementalAnalysis, ID_Species, Ordinal_stage, .keep_all=T) %>%
+  mutate(label = str_glue("{Label_As_in_PreviousAnalysis};{n}")) %>%
+  ggplot(aes(x=Ordinal_stage, y=Tissue_ForDevelopementalAnalysis)) +
+    geom_point(aes(size=n)) +
+    # geom_text(aes(label=label)) +
+    facet_wrap(~ID_Species, scales="free_x")
+  
+```
+Ok I think the best will be manual labelling neonate groups for each tissue in excel... Let's write out a tsv file to open in excel, then I'll manually make neonate and adult tissue groups
+
+```{r}
+samples %>%
+  filter(`Used library?` %in% c("yes", "Yes")) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+  left_join(
+    Stages %>%
+      filter(!is.na(Marker)) %>%
+      dplyr::select(Ordinal_stage, Marker, ID_Species=Species) %>%
+      distinct()
+  ) %>%
+  arrange(ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage) %>%
+  dplyr::select(ID, ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage, Label_As_in_PreviousAnalysis, Marker) %>%
+  write_tsv("../code/scratch/Samples_ForManualNeonateAndAdultClassification.tsv")
+```
+
+After manual annotation...
+
+```{r}
+ManuallyAnnotated_Neonate_v_Adults <- read_tsv("../code/scratch/Samples_ForManualNeonateAndAdultClassification_ManuallyClassified.txt")
+
+ManuallyAnnotated_Neonate_v_Adults %>%
+  filter(!is.na(DifferentialSplicingAndExpressionGroup)) %>%
+  add_count(Ordinal_stage, Tissue_ForDevelopementalAnalysis, ID_Species) %>%
+  distinct(Ordinal_stage, Tissue_ForDevelopementalAnalysis, ID_Species, .keep_all = T) %>%
+  ggplot(aes(x=Ordinal_stage, y=Tissue_ForDevelopementalAnalysis, color=DifferentialSplicingAndExpressionGroup)) +
+  geom_point(aes(size=n)) +
+  facet_wrap(~ID_Species, scales="free_x")
+
+ManuallyAnnotated_Neonate_v_Adults %>%
+  filter(!is.na(DifferentialSplicingAndExpressionGroup)) %>%
+  count(ID_Species, Tissue_ForDevelopementalAnalysis, DifferentialSplicingAndExpressionGroup) %>%
+  ggplot(aes(x=Tissue_ForDevelopementalAnalysis, fill=DifferentialSplicingAndExpressionGroup, y=n)) +
+  geom_col(position=position_dodge()) +
+  facet_wrap(~ID_Species) +
+  labs(y="Sample size") +
+  Rotate_x_labels
+```
+Ok, so for alsmost all species:tissue pairs, I have a reasonably sized sample (n>=4) for the neonate and the adult group. Now I want to make contrasts for each adult tissue pair within species, and neonate vs adult within each tissue:species pair.
+
+Let's rewrite the Contrasts variable to include all of these
+
+```{r}
+Approach6.samples.grouped <- ManuallyAnnotated_Neonate_v_Adults %>%
+  filter(!is.na(DifferentialSplicingAndExpressionGroup)) %>%
+  mutate(Group = recode(DifferentialSplicingAndExpressionGroup, "neonate"="Early", "adult"="Late")) %>%
+  mutate(Group = factor(Group)) %>%
+  dplyr::select(Group, Tissue_ForDevelopementalAnalysis, ID, ID_Species)
+
+bind_rows(
+  list(
+    "BeforeM_vs_AfterS" = Approach1.samples.grouped,
+    "BeforeB_vs_AfterB" = Approach2.samples.grouped,
+    "BeforeB_vs_AferS" = Approach3.samples.grouped,
+    "FirstHalf_vs_SecondHalf" = Approach4.samples.grouped,
+    "First10_vs_Second10" = Approach5.samples.grouped,
+    "Neonate_vs_Adult" = Approach6.samples.grouped
+  ),
+  .id="Approach"
+) %>%
+  count(Group, Tissue_ForDevelopementalAnalysis, Approach, ID_Species) %>%
+  ggplot(aes(x=Tissue_ForDevelopementalAnalysis, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  facet_grid(Approach~ID_Species) +
+  Rotate_x_labels
+
+Contrasts <- bind_rows(
+  list(
+    "BeforeM_vs_AfterS" = Approach1.samples.grouped,
+    "BeforeB_vs_AfterB" = Approach2.samples.grouped,
+    "BeforeB_vs_AferS" = Approach3.samples.grouped,
+    "FirstHalf_vs_SecondHalf" = Approach4.samples.grouped,
+    "First10_vs_Second10" = Approach5.samples.grouped,
+    "Neonate_vs_Adult" = Approach6.samples.grouped
+  ),
+  .id="Approach"
+) %>%
+  add_count(Group, Tissue_ForDevelopementalAnalysis, Approach, ID_Species) %>%
+  group_by(Group, Tissue_ForDevelopementalAnalysis, Approach, ID_Species) %>%
+  filter(all(n>=2)) %>%
+  ungroup() %>%
+  group_by(Tissue_ForDevelopementalAnalysis, Approach, ID_Species) %>%
+  filter(any(Group=="Late") & any(Group=="Early")) %>%
+  ungroup() %>%
+  mutate(GenomeName = recode(ID_Species, "Chicken"="Chicken_UCSC.galGal6_ensv101", "Rabbit"="Rabbit_UCSC.oryCun2_ensv101", "Opossum"="Opossum_UCSC.monDom5_ensvUnknown", "Human"="Human_UCSC.hg38_GencodeComprehensive46", "Mouse"="Mouse_UCSC.mm39_GencodeComprehensive46", "Rat"="Rat_UCSC.rn7_RefSeqv108", "Macaque"="Macaque_UCSC.rheMac10_ensv101")) %>%
+  mutate(ContrastName = str_glue("{Approach}.{Tissue_ForDevelopementalAnalysis}.{ID_Species}"))
+
+
+Contrasts %>%
+  distinct(ContrastName, GenomeName) %>%
+  dplyr::select(ContrastName, GenomeName) %>%
+  write_tsv("../code/config/CordosoTimeSeriesContrasts.tsv")
+
+dir.create("../code/MazinLeafcutterAnalysis/ContrastGroupFiles/")
+
+Contrasts %>%
+  dplyr::select(ContrastName, ID, ID_Species, Tissue_ForDevelopementalAnalysis, Group) %>%
+  arrange(ID_Species, Tissue_ForDevelopementalAnalysis, Group) %>%
+  group_by(ContrastName) %>%
+  dplyr::select(ID, Group) %>%
+  group_walk(~ write_delim(.x, paste0("../code/MazinLeafcutterAnalysis/ContrastGroupFiles/", .y$ContrastName, ".txt"), delim = ' ', col_names = F))
+```
+
+Now let's add the constrasts for adult tissue vs adult tissue. Let's write this to a different set of contrasts.
+
+```{r}
+
+AdultTissueContrasts <- full_join(
+  ManuallyAnnotated_Neonate_v_Adults %>%
+    filter(DifferentialSplicingAndExpressionGroup == "adult") %>%
+    dplyr::select(ID, ID_Species, Tissue_ForDevelopementalAnalysis) %>%
+    distinct(ID_Species, Tissue_ForDevelopementalAnalysis),
+  ManuallyAnnotated_Neonate_v_Adults %>%
+    filter(DifferentialSplicingAndExpressionGroup == "adult") %>%
+    dplyr::select(ID, ID_Species, Tissue_ForDevelopementalAnalysis) %>%
+    distinct(ID_Species, Tissue_ForDevelopementalAnalysis),
+  by=c("ID_Species")
+) %>%
+  filter(!Tissue_ForDevelopementalAnalysis.x==Tissue_ForDevelopementalAnalysis.y) %>%
+  mutate(OrderedComparison = paste(pmin(Tissue_ForDevelopementalAnalysis.x, Tissue_ForDevelopementalAnalysis.y), 
+                        pmax(Tissue_ForDevelopementalAnalysis.x, Tissue_ForDevelopementalAnalysis.y), sep= "-")) %>%
+  distinct(ID_Species, OrderedComparison, .keep_all=T) %>%
+  pivot_longer(c("Tissue_ForDevelopementalAnalysis.x", "Tissue_ForDevelopementalAnalysis.y"), names_to = "X_or_Y", values_to = "Tissue_ForDevelopementalAnalysis") %>%
+  dplyr::select(-X_or_Y) %>%
+  inner_join(
+    ManuallyAnnotated_Neonate_v_Adults %>%
+      filter(DifferentialSplicingAndExpressionGroup == "adult") %>%
+      dplyr::select(ID, ID_Species, Tissue_ForDevelopementalAnalysis) 
+  ) %>%
+  mutate(Tissue_ForDevelopementalAnalysis = factor(Tissue_ForDevelopementalAnalysis, levels=c("Brain", "Cerebellum", "Heart", "Kidney","Liver", "Ovary", "Testis"))) %>%
+  arrange(ID_Species, OrderedComparison, Tissue_ForDevelopementalAnalysis, ID) %>%
+  mutate(ContrastName = str_glue("{ID_Species}_{OrderedComparison}")) %>%
+  inner_join(
+    read_tsv("../code/config/samples.tsv") %>%
+      dplyr::select(ID=SampleName, GenomeName = STARGenomeName)
+  )
+
+
+AdultTissueContrasts %>%
+  distinct(ContrastName, GenomeName) %>%
+  dplyr::select(ContrastName, GenomeName) %>%
+  write_tsv("../code/config/CordosoTissueContrasts.tsv")
+
+dir.create("../code/MazinLeafcutterAnalysis/ContrastAdultTissueGroupFiles/")
+
+AdultTissueContrasts %>%
+  dplyr::select(ContrastName, ID, Tissue_ForDevelopementalAnalysis) %>%
+  arrange(ContrastName, Tissue_ForDevelopementalAnalysis) %>%
+  group_by(ContrastName) %>%
+  dplyr::select(ID, Group=Tissue_ForDevelopementalAnalysis) %>%
+  group_walk(~ write_delim(.x, paste0("../code/MazinLeafcutterAnalysis/ContrastAdultTissueGroupFiles/", .y$ContrastName, ".txt"), delim = ' ', col_names = F))
+
+```
+

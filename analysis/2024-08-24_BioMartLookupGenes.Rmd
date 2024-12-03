@@ -1,0 +1,321 @@
+---
+title: "2024-08-24_BioMartLookupGenes"
+output: html_document
+date: '2024-08-24'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+The gtf's from UCSC (which have UCSC style chromosome names and are accessible through a URL link that doesn't need to be modified for my snakemake) unfortunately don't have all the tags as the gtf from ensembl which is the same set of transcript models. So I will use biomart to get those transscript/gene attributes instead
+
+```{r}
+library(biomaRt)
+library(tidyverse)
+library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+listEnsemblArchives()
+
+ensembl101 <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    # dataset = "ggallus_gene_ensembl",
+    host = "https://aug2020.archive.ensembl.org"
+)
+
+
+listDatasets(ensembl101) %>%
+  filter(str_detect(description, "hicken"))
+
+
+mart.chicken <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "ggallus_gene_ensembl",
+    host = "https://aug2020.archive.ensembl.org"
+)
+
+listAttributes(mart.chicken)
+
+attributes <- c(
+    "ensembl_gene_id",      # Gene ID
+    "ensembl_gene_id_version",
+    "gene_biotype",         # Gene biotype
+    "ensembl_transcript_id", # Transcript ID
+    "ensembl_transcript_id_version",
+    "transcript_biotype",    # Transcript type/biotype
+    "hgnc_symbol",
+    "external_gene_name"
+)
+
+
+# Retrieve the data
+info.chicken <- getBM(
+    attributes = attributes,
+    mart = mart.chicken
+) %>%
+  as_tibble()
+
+head(info.chicken, 20)
+```
+
+Ok that is good. I think I should manually get this info for al species and organize a table to make it easier to convert gtfs to a consistent style and know which transcripts/genes are protein_coding... Use the appropriate biomart depending on the gtf from UCSC (which itself takes annotations from a particular ensembl version)
+
+```{r}
+
+# macaque
+listDatasets(ensembl101) %>%
+   filter(str_detect(description, "acaque"))
+
+info.macaque <- getBM(
+    attributes = attributes,
+    mart = useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "mmulatta_gene_ensembl",
+    host = "https://aug2020.archive.ensembl.org"
+)
+) %>%
+  as_tibble()
+
+# rabbit
+listDatasets(ensembl101) %>%
+   filter(str_detect(description, "abbit"))
+
+info.rabbit <- getBM(
+    attributes = attributes,
+    mart = useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "ocuniculus_gene_ensembl",
+    host = "https://aug2020.archive.ensembl.org"
+)
+) %>%
+  as_tibble()
+
+# human
+ensembl112 <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    host = "https://may2024.archive.ensembl.org"
+)
+
+listDatasets(ensembl112) %>%
+  filter(str_detect(description, "uman"))
+
+
+info.human <- getBM(
+    attributes = attributes,
+    mart = useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "hsapiens_gene_ensembl",
+    host = "https://may2024.archive.ensembl.org"
+)
+) %>%
+  as_tibble()
+
+
+# mouse
+listDatasets(ensembl112) %>%
+  filter(str_detect(description, "ouse"))
+
+
+info.mouse <- getBM(
+    attributes = attributes,
+    mart = useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "mmusculus_gene_ensembl",
+    host = "https://may2024.archive.ensembl.org"
+)
+) %>%
+  as_tibble()
+```
+
+So far we have human, mouse, rabbit, macaque and chicken... We still need rat (for which the gtf is refSeq transcripts), and oppossum (not yet sure which ensembl version this gtf is from, but based on the number of transcripts, I think it is ensembl v97)...
+
+
+```{r}
+# oppossum
+listDatasets(
+  useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    host = "https://apr2020.archive.ensembl.org"
+)) %>%
+  filter(str_detect(description, "possum"))
+
+info.opossum <- getBM(
+    attributes = attributes,
+    mart = useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "mdomestica_gene_ensembl",
+    host = "https://apr2020.archive.ensembl.org"
+)
+) %>%
+  as_tibble()
+
+info.opossum %>%
+  distinct(ensembl_transcript_id_version)
+
+```
+
+Well this possum set has more transcripts than the gtf I actually used. I think I probably have the wrong version. Oh well, I can just rely on the stable IDs and hope it works...
+
+Let's get the rat one, which is tricky because the gtf is not based on ensembl, but rather, refseq
+
+```{r}
+listDatasets(
+  useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    host = "https://may2024.archive.ensembl.org"
+)) %>%
+  filter(str_detect(description, "Rat"))
+
+
+Rat.Mart <- useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "rnorvegicus_gene_ensembl",
+    host = "https://may2024.archive.ensembl.org"
+)
+
+Rat.Mart %>%
+  listAttributes()
+
+info.rat <- getBM(
+    attributes = c("external_gene_name", "ensembl_transcript_id", "transcript_biotype", "gene_biotype", "ensembl_gene_id", "refseq_mrna", "refseq_mrna_predicted"),
+    mart = useMart(
+    biomart = "ENSEMBL_MART_ENSEMBL",
+    dataset = "rnorvegicus_gene_ensembl",
+    host = "https://may2024.archive.ensembl.org"
+)
+) %>%
+  as_tibble()
+
+info.rat
+
+```
+
+Ok, this is confusing because the same ensembl transcript is listed as mapping to multiple refseq's including some "refseq_mrna" and some "refseq_mrna_predicted". So there is no way to directly get ensembl transcript_biotype from RefSeq transcript ID...
+
+Perhaps the simplest solution is to just use the chain files and genome versions from UCSC (as I have been doing), but use the gtf from ensembl, in which case I would have to first convert the ensembl gtf chromosome names to UCSC style (eg chr1 instead of 1).
+
+
+Before we consider doing that... let's just check that the annotations of these other genomes are mostly protein_coding transcripts for protein_coding genes
+
+```{r}
+info.all <- bind_rows(
+  info.opossum,
+  info.human,
+  info.mouse,
+  info.macaque,
+  info.chicken,
+  info.rabbit,
+  .id="source"
+) %>%
+  mutate(Species = recode(source, "1"="Opossum", "2"="Human", "3"="Mouse", "4"="Macaque", "5"="Chicken", "6"="Rabbit"))
+
+info.all %>%
+  filter(gene_biotype == "protein_coding") %>%
+  distinct(ensembl_gene_id, .keep_all=T) %>%
+  count(Species)
+
+info.all %>%
+  filter(gene_biotype == "protein_coding") %>%
+  count(transcript_biotype, Species) %>%
+  filter(n>200) %>%
+  ggplot(aes(x=Species, y=n, fill=transcript_biotype)) +
+  geom_col(position='stack') +
+  Rotate_x_labels
+```
+
+Ok, so just as before, for protein_coding genes, only mouse and human have non- protein_coding transcripts in the annotation.
+ts 
+ Let's recheck how many of the ClassifyJunctions script ouputs are coding and non-coding, after only considering protein-coding genes...
+ 
+ First, let's make plot before filtering...
+ 
+```{r}
+JuncAnnotations <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*._junction_classifications.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?)._junction_classifications.txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Species") %>%
+  mutate(Species = str_replace(Species, "^(.+?)_.+", "\\1"))
+
+JuncAnnotations %>%
+  count(Species, Annot, Coding) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Annot, Coding)) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='fill') +
+  Rotate_x_labels
+
+```
+
+And now same plot after filtering ensembl gene_biotype == "protein_coding"
+
+```{r}
+
+JuncAnnotations %>%
+  filter(Species == "Mouse") %>% head()
+
+info.all.GeneNamesToMatch <- info.all %>%
+  mutate(Gene_name = case_when(
+    Species %in% c("Human", "Mouse") ~ external_gene_name,
+    Species == "Opossum" ~ ensembl_gene_id,
+    TRUE ~ ensembl_gene_id_version
+  ))
+  
+
+JuncAnnotations.filtered <- JuncAnnotations %>%
+  mutate(Gene_name = case_when(
+    Species == "Opossum" ~ str_replace(Gene_name, "(^.+?)\\..+$", "\\1"),
+    TRUE ~ Gene_name
+  )) %>%
+  inner_join(
+    info.all.GeneNamesToMatch %>%
+      filter(gene_biotype == "protein_coding") %>%
+      distinct(Species, ensembl_gene_id_version, .keep_all=T) %>%
+      dplyr::select(Species, Gene_name, gene_biotype)
+  )
+
+JuncAnnotations.filtered %>%
+  count(Species, Annot, Coding) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Annot, Coding)) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(y="Fraction ClassifyJunction.py juncs")
+
+  
+```
+ I don't understand what the annot unproductive juncs could be...
+ 
+```{r}
+JuncAnnotations.filtered %>%
+  filter(Annot & !Coding)
+
+JuncAnnotations.filtered %>%
+  filter(Annot & !Coding) %>%
+  head(1000) %>%
+  separate(Intron_coord, into=c("chrom", "start", "stop"), sep="[:-]", convert=T) %>%
+  mutate(Diff = stop - start)
+
+JuncAnnotations.filtered %>%
+  filter(! (Annot & !Coding)) %>%
+  head(1000) %>%
+  separate(Intron_coord, into=c("chrom", "start", "stop"), sep="[:-]", convert=T) %>%
+  mutate(Diff = stop - start)
+```
+
+Ok, I'm noticing that a lot of these Annot and Unproductive ones have backwards coordinates... I think this stems from a problem with python script correctly parsing the gtf... Will have to check it out later... Maybe the solution is in fact to rewrite a gtf myself.
+
+
+ 

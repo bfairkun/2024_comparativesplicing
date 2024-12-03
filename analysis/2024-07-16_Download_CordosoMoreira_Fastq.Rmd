@@ -169,6 +169,11 @@ NewSamplesTsv <- read_tsv("../code/config/OldConfigs/samples.tsv") %>%
   mutate(STARGenomeName = recode(STARGenomeName, "Human_ensembl_v112"="Human_UCSC.hg38_GencodeBasic46", "Chicken_ensembl_v112"="Chicken_UCSC.galGal6_ensv101", "Macaque_ensembl_v112"="Macaque_UCSC.rheMac10_ensv101", "Opossum_ensembl_v112"="Opossum_UCSC.monDom5_ensvUnknown", "Mouse_ensembl_v112"="Mouse_UCSC.mm39_GencodeBasic46", "Rabbit_ensembl_v112"="Rabbit_UCSC.oryCun2_ensv101", "Rat_ensembl_v112"="Rat_UCSC.rn7_RefSeqv108"))
 
 write_tsv(NewSamplesTsv, "../code/config/samples.tsv")
+
+NewSamplesTsv %>%
+  mutate(STARGenomeName = recode(STARGenomeName, "Human_UCSC.hg38_GencodeBasic46"="Human_UCSC.hg38_GencodeComprehensive46", "Mouse_UCSC.mm39_GencodeBasic46"="Mouse_UCSC.mm39_GencodeComprehensive46")) %>%
+  write_tsv("../code/config/samples.tsv")
+
 ```
 
 Finally, let's write a table of chain files to do liftovers to and from hg38 for these new genomes...
@@ -196,5 +201,61 @@ Genomes %>%
     "https://hgdownload.soe.ucsc.edu/goldenPath/rn7/liftOver/rn7ToHg38.over.chain.gz"
     )) %>%
   write_tsv("../code/config/ChainFiles.tsv")
+```
+
+Also, for a seperate project, Yang wants me to process some RNA-seq and Bru-seq datasets... Let's make a samples.tsv file for that...
+
+```{r, eval=F}
+original.samples.tsv <- read_tsv("/project2/yangili1/bjf79/2024_splicingefficiency/code/module_workflows/rna-seq/config/samples.tsv")
+  
+original.samples.tsv %>% head(1)
+
+
+
+encode.metadata <- read_tsv("/project2/yangili1/bjf79/2024_splicingefficiency/code/encode_dat/metadata.tsv")
+
+bruseq.samples <- bind_rows(
+  encode.metadata %>%
+    dplyr::select(`Paired end`,  Accession=`File accession`, dbxrefs, Rep=`Technical replicate(s)`) %>%
+    mutate(fn = str_glue("/cds/yangili1/bjf79/Fastq/2024EncodeBruseq/{Accession}.fastq.gz")) %>%
+    pivot_wider(names_from = c("Paired end"), values_from = fn, names_prefix = "R", id_cols = dbxrefs) %>%
+    mutate(sample = str_replace(dbxrefs, ".+?:(.+$)", "\\1")) %>%
+    mutate(STARGenomeName = "GRCh38_GencodeRelease44Comprehensive") %>%
+    mutate(Strandedness = "RF") %>%
+    dplyr::select(sample, STARGenomeName, R1, R2, Strandedness),
+  data.frame(R1 = Sys.glob("/project2/yangili1/yangili/bruseq/data/rnaseq/bedi_bruseq/*/*gz")) %>%
+    mutate(sample = str_replace(R1, "/project2/yangili1/yangili/bruseq/data/rnaseq/bedi_bruseq/.+?/(.+?).fastq.gz$", "\\1")) %>%
+    mutate(R2 = "") %>%
+    mutate(STARGenomeName = "GRCh38_GencodeRelease44Comprehensive") %>%
+    mutate(Strandedness = "U")
+)
+
+
+write_tsv(bruseq.samples, "/project2/yangili1/bjf79/2024_splicingefficiency/code/config/samples.tsv")
+
+```
+
+```{r}
+bruseq.samples <- read_tsv("/project2/yangili1/bjf79/2024_splicingefficiency/code/config/samples.tsv")
+  
+knitr::kable(bruseq.samples)
+
+
+
+```
+
+Ok, I realize another thing I want to change... I want to use the comprehensive gencode annotations for human and mouse, not the basic.
+
+```{r}
+bind_rows(
+  Genomes %>%
+    filter(!str_detect(GenomeName, "GencodeBasic46")),
+  Genomes %>%
+    filter(str_detect(GenomeName, "GencodeBasic46")) %>%
+    mutate(GenomeName = str_replace(GenomeName, "(.+?)_GencodeBasic46", "\\1_GencodeComprehensive46")) %>%
+    mutate(GtfLink = c("https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_46/gencode.v46.primary_assembly.annotation.gtf.gz", "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M35/gencode.vM35.primary_assembly.annotation.gtf.gz"))
+) %>%
+  write_tsv("../code/config/STAR_Genome_List.tsv")
+
 ```
 

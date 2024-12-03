@@ -1,0 +1,2159 @@
+---
+title: "2024-11-14_FinalFigs2"
+output: html_document
+date: '2024-11-14'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+this notebook is to make final figures for comparative splicing analysis in Chao's paper. This is pretty much like a [previous notebook](2024-10-16_FinalFigs.html), except I am doing some analysis slightly differently, such that no human embryo samples are included. The part that will change the most substantively is the sections where I perform a differential splicing contrast between early embryo and adult in each species. Now I will do neonate vs adult, and also (since I anticipate there won't be nearly as many significant hits in neonate vs adult to have compelling results), adult tissueX vs adult tissue Y.
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(ggrepel)
+library(qvalue)
+library(ggbreak)
+library(cowplot)
+library(ggnewscale)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+
+First, let's define which samples are to be used for which analyses (that haven't already been defined by differential splicing contrast files)...
+
+```{r}
+samples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+Stages <- read_tsv("../data/Stages_AsIn_CordosoMoreira_Recoded.txt")
+all.samples <- read_tsv("../code/config/samples.tsv")
+
+BirthStage <- Stages %>%
+  filter(Marker == "Birth") %>%
+  distinct(Species, Marker, Ordinal_stage) %>%
+  dplyr::select(ID_Species = Species, BirthStage = Ordinal_stage)
+
+samples.WhichAreUsedForWhichAnalyses <- samples %>%
+  dplyr::select(ID, ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage, `Used library?`) %>%
+  left_join(BirthStage, by=c("ID_Species")) %>%
+  mutate(NoEmbryo = `Used library?` %in% c("Yes", "yes") & Ordinal_stage >= BirthStage) %>%
+  mutate(NoHumanEmbryo = `Used library?` %in% c("Yes", "yes") &
+           ((Ordinal_stage >= BirthStage & ID_Species == "Human") | !ID_Species == "Human"))  %>%
+  left_join(all.samples %>%
+              dplyr::select(ID=SampleName, GenomeName = STARGenomeName))
+
+samples.WhichAreUsedForWhichAnalyses %>%
+  write_tsv("../data/Cordoso_SampleList.WhichAreNonHumanEmbryo.tsv.gz")
+```
+
+
+```{r}
+JunctionProductivity <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.AllObserved._junction_classifications.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).AllObserved._junction_classifications.txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome") %>%
+  mutate(Species.short = str_replace(OriginGenome, "^(.+?)_.+", "\\1")) %>%
+  mutate(Species_AnnotationSource = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species_AnnotationSource = factor(Species_AnnotationSource, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  dplyr::rename("AlgorithmCoding"="Coding") %>%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+
+
+Junc.regtools.annotations <- Sys.glob("../code/rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/*.uniq.annotated.tsv.gz") %>%
+  setNames(str_replace(., "../code/rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/(.+?).uniq.annotated.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome") %>%
+  mutate(end = end - 1) %>%
+  mutate(Intron_coord = str_glue("{chrom}:{start}-{end}"))
+
+
+JunctionProductivity.AndAnnotated <- JunctionProductivity %>%
+  inner_join(
+    Junc.regtools.annotations %>%
+      dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+    by=c("Intron_coord", "OriginGenome")
+  ) %>%
+  mutate(Species.short = factor(Species.short, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  ))
+
+Alt.Annotations.ttypes <- Sys.glob("../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/*/*.TranscriptTypes.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/Reformated_ExtraGTFs/(.+?)/(.+?).TranscriptTypes.tsv.gz", "\\1;\\2")) %>%
+  lapply(fread) %>%
+  bind_rows(.id = "Genome_AnnotSource") %>%
+  separate(Genome_AnnotSource, into=c("AnnotationSource", "OriginGenome"), sep=";") %>%
+  mutate(Species.short = str_replace(OriginGenome, "^(.+?)_.+", "\\1")) %>%
+  mutate(Species.short = factor(Species.short, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken")))
+```
+
+Now read in the total counts per junc after removing the embryonic samples...
+
+```{r}
+TotalCountsPerJunc_NoEmbryo <- Sys.glob("../code/MazinLeafcutterAnalysis/ObservedJuncsAnnotations/*.uniq.junc.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ObservedJuncsAnnotations/(.+?).uniq.junc.gz", "\\1")) %>%
+  lapply(fread, select=c(4,5), col.names=c("JuncName", "SumCount.NoEmbryo")) %>%
+  bind_rows(.id="OriginGenome")
+
+
+JunctionProductivity.AllGtfs <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*/*.AllObserved._junction_classifications.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?)/(.+?).AllObserved._junction_classifications.txt", "\\1;\\2")) %>%
+  lapply(fread) %>%
+  bind_rows(.id = "Genome_AnnotSource") %>%
+  separate(Genome_AnnotSource, into=c("AnnotationSource", "OriginGenome"), sep=";") %>%
+  mutate(Species.short = str_replace(OriginGenome, "^(.+?)_.+", "\\1")) %>%
+  dplyr::rename("AlgorithmCoding"="Coding") %>%
+  mutate(Coding = AlgorithmCoding | GencodePC) %>%
+  inner_join(
+    Junc.regtools.annotations %>%
+      dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+    by=c("Intron_coord", "OriginGenome")
+  ) %>%
+  mutate(Species.short = factor(Species.short, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  ))
+```
+
+
+Percent splice junction reads in each species in each category
+
+```{r}
+JunctionProductivity.AllGtfs.P.dat <- JunctionProductivity.AllGtfs %>%
+  filter(!ProductivityLabel=="NE") %>%
+  dplyr::select(-score) %>%
+  inner_join(
+    TotalCountsPerJunc_NoEmbryo %>%
+      dplyr::select(name = JuncName, score = SumCount.NoEmbryo, OriginGenome)
+  ) %>%
+  mutate(Coding = if_else(ProductivityLabel == "PR", T, F)) %>%
+  group_by(OriginGenome,AnnotationSource, Annot, Coding) %>%
+  summarise(n = sum(score)) %>%
+  ungroup() %>%
+  mutate(Group = case_when(
+    Coding & Annot ~ "Productive, annotated",
+    Coding & !Annot ~ "Productive, unannotated",
+    !Coding & Annot ~ "Unproductive, annotated",
+    !Coding & !Annot ~ "Unproductive, unannotated"
+  )) %>%
+  mutate(Group = factor(Group, levels=rev(c(
+    "Unproductive, unannotated", "Unproductive, annotated","Near UTR, unannotated", "Near UTR, annotated","Productive, unannotated","Productive, annotated"
+  )))) %>%
+  mutate(Species.short = str_replace(OriginGenome, "^(.+?)_.+", "\\1")) %>%
+    mutate(Species.short = factor(Species.short, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %>%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c("Gencode", "Ensembl", "RefSeq"))) %>%
+    mutate(FacetLargeText = if_else(is.na(Group), "NA", NA_character_)) %>%
+  group_by(AnnotationSource, Species.short) %>%
+  mutate(Percent = n/sum(n)*100) %>%
+  ungroup()
+
+ggplot(JunctionProductivity.AllGtfs.P.dat, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position = "stack" ) +
+  scale_fill_manual(values = c(
+    "Unproductive, unannotated"="#fb9a99", "Unproductive, annotated"="#e31a1c","Near UTR, unannotated"="#d9d9d9", "Near UTR, annotated"="#969696","Productive, unannotated"="#a6cee3","Productive, annotated"="#1f78b4"
+  )) +
+  labs(y="Percent junction reads", x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position='none') +
+  facet_wrap(~Species.short, scales="free_x", nrow = 1) +
+  Rotate_x_labels
+ggsave("../code/scratch/FinalFigs/OriginalPlots/PercentJunctionReadsBySimplerClassification.FilterOutNEs.NoEmbryos.AllGtfs.pdf", height=100, width=180, units="mm")
+
+
+JunctionProductivity.AllGtfs.P.dat %>%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c("Gencode", "Ensembl", "RefSeq"))) %>%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %>%
+  filter(Species_AnnotationSource %in% c("Human Gencode", "Mouse Gencode", "Rat RefSeq", "Chicken Ensembl", "Opossum Ensembl", "Macaque Ensembl", "Rabbit Ensembl")) %>%
+  # filter(Species %in% c("Human", "Mouse", "Opossum", "Macaque")) %>%
+  ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position = "stack" ) +
+  scale_fill_manual(values = c(
+    "Unproductive, unannotated"="#fb9a99", "Unproductive, annotated"="#e31a1c","Near UTR, unannotated"="#d9d9d9", "Near UTR, annotated"="#969696","Productive, unannotated"="#a6cee3","Productive, annotated"="#1f78b4"
+  )) +
+  labs(y="Percent junction reads", x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  scale_y_break(c(10, 95)) +
+  theme(legend.position='none') +
+  Rotate_x_labels
+ggsave("../code/scratch/FinalFigs/OriginalPlots/PercentJunctionReadsBySimplerClassification.FilterOutNEs.NoEmbryos.MainGtfs.pdf", height=80, width=75, units="mm")
+```
+
+And now plot fraction of unique juncs in each category (with at least 100 junc read counts across whole dataset)
+
+```{r}
+TotalJuncCounts.PerSpecies <- JunctionProductivity.AllGtfs %>%
+  filter(!ProductivityLabel=="NE") %>%
+  dplyr::select(-score) %>%
+  inner_join(
+    TotalCountsPerJunc_NoEmbryo %>%
+      dplyr::select(name = JuncName, score = SumCount.NoEmbryo, OriginGenome)
+  ) %>%
+  group_by(AnnotationSource, OriginGenome) %>%
+  summarise(TotalJunctionReads = sum(score)) %>%
+  ungroup()
+
+ Count.UniqueJuncs.P.dat.unfiltered <- JunctionProductivity.AllGtfs %>%
+  filter(!ProductivityLabel=="NE") %>%
+  dplyr::select(-score) %>%
+  inner_join(
+    TotalCountsPerJunc_NoEmbryo %>%
+      dplyr::select(name = JuncName, score = SumCount.NoEmbryo, OriginGenome)
+  ) %>%
+  inner_join(
+    TotalJuncCounts.PerSpecies
+  ) %>%
+  mutate(JuncRPM = score/TotalJunctionReads*1E6)
+
+
+# What is an appropriate cutoff? how does RPM relate to total junc count?
+Count.UniqueJuncs.P.dat.unfiltered %>%
+  group_by(OriginGenome, AnnotationSource) %>%
+  sample_n(1000) %>%
+  ungroup() %>%
+  ggplot(aes(x=JuncRPM, y=score, color=OriginGenome)) +
+  geom_line() +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  facet_wrap(~AnnotationSource) +
+  geom_vline(xintercept=0.05) +
+  coord_cartesian(xlim=c(0.001, 10), ylim=c(1, 1000)) +
+  labs(caption="depending on species, 0.05 JuncRPM ~ 50 total counts")
+
+# total unique juncs
+Count.UniqueJuncs.P.dat.unfiltered %>%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c("Gencode", "Ensembl", "RefSeq"))) %>%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %>%
+  filter(Species_AnnotationSource %in% c("Human Gencode", "Mouse Gencode", "Rat RefSeq", "Chicken Ensembl", "Opossum Ensembl", "Macaque Ensembl", "Rabbit Ensembl")) %>%
+  count(Species.short)
+
+# total 'expressed' unique juncs
+Count.UniqueJuncs.P.dat.unfiltered %>%
+  filter(JuncRPM > 0.05) %>%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c("Gencode", "Ensembl", "RefSeq"))) %>%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %>%
+  filter(Species_AnnotationSource %in% c("Human Gencode", "Mouse Gencode", "Rat RefSeq", "Chicken Ensembl", "Opossum Ensembl", "Macaque Ensembl", "Rabbit Ensembl")) %>%
+  count(Species.short)
+
+Count.UniqueJuncs.P.dat <- JunctionProductivity.AllGtfs %>%
+  filter(!ProductivityLabel=="NE") %>%
+  dplyr::select(-score) %>%
+  inner_join(
+    TotalCountsPerJunc_NoEmbryo %>%
+      dplyr::select(name = JuncName, score = SumCount.NoEmbryo, OriginGenome)
+  ) %>%
+  inner_join(
+    TotalJuncCounts.PerSpecies
+  ) %>%
+  mutate(JuncRPM = score/TotalJunctionReads*1E6) %>%
+  filter(JuncRPM > 0.05) %>%
+  # count(OriginGenome, AnnotationSource)
+  mutate(Coding = if_else(ProductivityLabel == "PR", T, F)) %>%
+  # filter(score > 50) %>%
+  mutate(Group = case_when(
+    Coding & Annot ~ "Productive, annotated",
+    Coding & !Annot ~ "Productive, unannotated",
+    !Coding & Annot ~ "Unproductive, annotated",
+    !Coding & !Annot ~ "Unproductive, unannotated"
+  )) %>%
+  mutate(Group = factor(Group, levels=rev(c(
+    "Unproductive, unannotated", "Unproductive, annotated","Near UTR, unannotated", "Near UTR, annotated","Productive, unannotated","Productive, annotated"
+  )))) %>%
+  count(Group, AnnotationSource, OriginGenome) %>%
+  mutate(Species.short = str_replace(OriginGenome, "^(.+?)_.+", "\\1")) %>%
+    mutate(Species.short = factor(Species.short, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+    right_join(
+        expand(., Species.short, AnnotationSource)
+    ) %>%
+    mutate(AnnotationSource = factor(AnnotationSource, levels=c("Gencode", "Ensembl", "RefSeq"))) %>%
+    mutate(FacetLargeText = if_else(is.na(Group), "NA", NA_character_)) %>%
+  group_by(AnnotationSource, Species.short) %>%
+  mutate(Percent = n/sum(n)*100) %>%
+  ungroup()
+
+ggplot(Count.UniqueJuncs.P.dat, aes(x=AnnotationSource, y=Percent, fill=Group)) +
+  geom_col(position = "stack" ) +
+  scale_fill_manual(values = c(
+    "Unproductive, unannotated"="#fb9a99", "Unproductive, annotated"="#e31a1c","Near UTR, unannotated"="#d9d9d9", "Near UTR, annotated"="#969696","Productive, unannotated"="#a6cee3","Productive, annotated"="#1f78b4"
+  )) +
+  labs(y="Percent unique junctions", x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  # scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  # scale_y_break(c(10, 95)) +
+  theme(legend.position='none') +
+  facet_wrap(~Species.short, scales="free_x", nrow = 1) +
+  Rotate_x_labels
+ggsave("../code/scratch/FinalFigs/OriginalPlots/PercentUniqueJunctionBySimplerClassification.NEsIgnored.NoEmbryo.AllGtfs.pdf", height=100, width=180, units="mm")
+
+
+Count.UniqueJuncs.P.dat %>%
+  mutate(AnnotationSource = factor(AnnotationSource, levels=c("Gencode", "Ensembl", "RefSeq"))) %>%
+  mutate(Species_AnnotationSource = paste(Species.short, AnnotationSource)) %>%
+  filter(Species_AnnotationSource %in% c("Human Gencode", "Mouse Gencode", "Rat RefSeq", "Chicken Ensembl", "Opossum Ensembl", "Macaque Ensembl", "Rabbit Ensembl")) %>%
+  # filter(Species %in% c("Human", "Mouse", "Opossum", "Macaque")) %>%
+ggplot(aes(x=Species.short, y=Percent, fill=Group)) +
+  geom_col(position = "stack" ) +
+  scale_fill_manual(values = c(
+    "Unproductive, unannotated"="#fb9a99", "Unproductive, annotated"="#e31a1c","Near UTR, unannotated"="#d9d9d9", "Near UTR, annotated"="#969696","Productive, unannotated"="#a6cee3","Productive, annotated"="#1f78b4"
+  )) +
+  labs(y="Percent unique junctions", x=NULL) +
+  geom_text(aes(y=0, label=FacetLargeText), angle=90, hjust=0) +
+  # scale_y_continuous(breaks=c(0, 5, 10, 95, 100), expand=c(0,0)) +
+  # scale_y_break(c(10, 95)) +
+  theme(legend.position='none') +
+  Rotate_x_labels
+ggsave("../code/scratch/FinalFigs/OriginalPlots/PercentUniqueJunctionBySimplerClassification.NEsIgnored.NoEmbryo.MainGtfs.pdf", height=80, width=75, units="mm")
+```
+
+### main: beta beta scatter and heatmap
+
+first explore data for neonate vs adult contrasts...
+
+```{r}
+dat <- Sys.glob("../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/Neonate_vs_Adult.*.joined.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/Neonate_vs_Adult.(.+?).joined.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Contrast") %>%
+  separate(Contrast, into=c("Tissue", "Species"), sep="\\.") %>%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  ))
+
+dat <- dat %>%
+  dplyr::rename("AlgorithmCoding"="Coding") %>%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+
+betabetascatter.P.dat <- dat %>%
+  # filter(!UTR) %>%
+  
+  # Use bitwise flags
+  filter(!ProductivityLabel=="NE") %>%
+  mutate(Coding = if_else(ProductivityLabel == "PR", T, F)) %>%
+  
+  filter(!is.na(Coding)) %>%
+  filter(p.adjust < 0.05) %>%
+  # filter(abs(logef)>0.5) %>%
+  filter(abs(deltapsi) > 0.05) %>%
+  group_by(Species, Tissue, cluster) %>%
+  mutate(Contains_Noncoding = any(!Coding)) %>%
+  ungroup() %>%
+  arrange(Species, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(deltapsi))) %>%
+  distinct(Species, Tissue, cluster, .keep_all=T)
+
+betabetascatter.P.dat %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  group_by(Tissue, Species, Coding) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  mutate(Plab = case_when(
+    p > 0.05 ~ "",
+    p < 0.05 ~ "*",
+    p < 0.005 ~ "**",
+    p < 0.0005 ~ "***"
+  )) %>%
+  mutate(Plab = format.pval(p, digits=1)) %>%
+  mutate(spearman.of_dPSI_vs_logFC = pmin(0.25, pmax(-0.25, spearman.of_dPSI_vs_logFC))) %>%
+  mutate(label = str_glue("n={n}\nP={Plab}")) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0, low="#003c30", high="#543005", mid="#f5f5f5", breaks=c(-.25, -.125, 0, .125, 0.25), labels=c("<-.25", .125, 0, .125, ">0.25")) +
+  geom_text(aes(label=label), size=3) +
+  facet_wrap(~Coding, nrow=2) +
+  Rotate_x_labels +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  labs(fill="spearman\nrho", x=NULL, y=NULL)
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/SplicingVsExpression_Heatmap.NoEmbryo.MainGtfs.pdf", height=95, width=110, units="mm")
+
+
+```
+
+Let's maybe plot it as volcano?
+
+```{r}
+betabetascatter.P.dat %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  group_by(Tissue, Species, Coding) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  ggplot(aes(x=spearman.of_dPSI_vs_logFC, y=-log10(p), color=Coding)) +
+  geom_point()
+```
+
+Ok, that is not very convincing... Let's look at the adult tissue vs adult tissue...
+
+```{r}
+dat.adultTissueComparisons.example <- read_tsv("../code/MazinLeafcutterAnalysis/ContrastAdultTissues_ds_tidy/Chicken_Brain-Cerebellum.joined.tsv.gz")
+
+dat.adultTissueComparisons <- Sys.glob("../code/MazinLeafcutterAnalysis/ContrastAdultTissues_ds_tidy/*.joined.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ContrastAdultTissues_ds_tidy/(.+?).joined.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  lapply(function(x) dplyr::rename(x, "TissueA_PSI"=5, "TissueB_PSI"=6)) %>%
+  bind_rows(.id="Contrast") %>%
+  separate(Contrast, into=c("Species", "TissueA", "TissueB"), sep="[_-]") %>%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  )) %>%
+  dplyr::rename("AlgorithmCoding"="Coding") %>%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+```
+
+And make plots... can tinker with thresholds
+
+```{r}
+betabetascatter.P.dat.adultTissues <- dat.adultTissueComparisons %>%
+  filter(!ProductivityLabel=="NE") %>%
+  mutate(Coding = if_else(ProductivityLabel == "PR", T, F)) %>%
+  filter(!is.na(Coding)) %>%
+  filter(p.adjust < 0.05) %>%
+  # filter(abs(logef)>0.5) %>%
+  filter(abs(deltapsi) > 0.05) %>%
+  group_by(Species, TissueA, TissueB, cluster) %>%
+  mutate(Contains_Noncoding = any(!Coding)) %>%
+  ungroup() %>%
+  arrange(Species, TissueA, TissueB, cluster, Contains_Noncoding, Coding, desc(abs(deltapsi))) %>%
+  distinct(Species, TissueA, TissueB, cluster, .keep_all=T)
+
+betabetascatter.P.dat.adultTissues %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  group_by(TissueA, TissueB, Species, Coding) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  mutate(Plab = case_when(
+    p > 0.05 ~ "",
+    p < 0.05 ~ "*",
+    p < 0.005 ~ "**",
+    p < 0.0005 ~ "***"
+  )) %>%
+  mutate(Plab = format.pval(p, digits=1)) %>%
+  mutate(label = str_glue("n={n}\nP={Plab}")) %>%
+  mutate(TissueA = factor(TissueA, levels=c("Brain", "Cerebellum", "Heart","Kidney", "Liver", "Ovary", "Testis"))) %>%
+  mutate(TissueB = factor(TissueB, levels=c("Brain", "Cerebellum", "Heart","Kidney", "Liver", "Ovary", "Testis"))) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(x=TissueA, y=TissueB, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0, low="#003c30", high="#543005", mid="#f5f5f5") +
+  geom_text(aes(label=label), size=3) +
+  facet_grid(Coding~Species) +
+  Rotate_x_labels +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  labs(fill="spearman\nrho", x=NULL, y=NULL) +
+  theme(legend.position='bottom')
+
+betabetascatter.P.dat.adultTissues %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  group_by(TissueA, TissueB, Species, Coding) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  mutate(Plab = case_when(
+    p > 0.05 ~ "",
+    p < 0.05 ~ "*",
+    p < 0.005 ~ "**",
+    p < 0.0005 ~ "***"
+  )) %>%
+  mutate(Plab = format.pval(p, digits=1)) %>%
+  mutate(label = str_glue("n={n}\nP={Plab}")) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  mutate(TissueTemp = TissueB) %>%
+  mutate(TissueB = if_else(Coding == "Productive", TissueA, TissueB)) %>%
+  mutate(TissueA = if_else(Coding == "Productive", TissueTemp, TissueA)) %>%
+  ggplot(aes(x=TissueA, y=TissueB, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0, low="#003c30", high="#543005", mid="#f5f5f5") +
+  geom_text(aes(label=label), size=3) +
+  facet_wrap(~Species) +
+  Rotate_x_labels +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  labs(fill="spearman\nrho", x=NULL, y=NULL) +
+  theme(legend.position='bottom')
+
+betabetascatter.P.dat.adultTissues %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  group_by(TissueA, TissueB, Species, Coding) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  mutate(Plab = case_when(
+    p > 0.05 ~ "",
+    p < 0.05 ~ "*",
+    p < 0.005 ~ "**",
+    p < 0.0005 ~ "***"
+  )) %>%
+  mutate(Plab = format.pval(p, digits=1)) %>%
+  mutate(label = str_glue("n={n}\nP={Plab}")) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(x=spearman.of_dPSI_vs_logFC, y=-log10(p), color=Species)) +
+  geom_point() +
+  facet_wrap(~Coding)
+
+```
+
+Ok, I think that is reasonable, though it takes up a lot of space and isn't particularly as obvious as the previous version (comparing early embryo vs adult in each species:tissue pair)... I think I will show all versions of the heatmaps in the supplement (adult tissueA vs adult tissueB, neonate vs adult, and early embryo vs adult (excluding human)). Then for the main, I will cherry pick a few examples in the same style that Chao has done in Figure2C.  I think the examples I want to show will be neonate testis vs adult testis in chicken and human, and then brain vs liver in human and chicken
+
+### illustrative Example beta beta scatter
+
+```{r}
+betabetascatter.P.dat %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  filter(Species %in% c("Chicken", "Human") & Tissue == "Testis") %>%
+  filter(!is.na(Coding)) %>%
+ggplot(aes(x=deltapsi, y=logFC, color=Coding)) +
+  geom_point(alpha=0.05) +
+  geom_hline(yintercept=0, linetype='dashed', alpha=0.5) +
+  geom_smooth(method='lm', se=F) +
+  # geom_abline(data = deming.lines, aes(slope=slp, intercept = int)) +
+  geom_text( data = betabetascatter.P.dat %>%
+            mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+            filter(!is.na(Coding)) %>%
+            group_by(Coding, Species, Tissue) %>%
+            summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(), p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+            ungroup() %>%
+            mutate(AdjP = p.adjust(p, method="BH")) %>%
+            filter(Species %in% c("Chicken", "Human") & Tissue == "Testis") %>%
+            mutate(Plab = format.pval(p, digits=2), PadjLab = format.pval(AdjP, digits=2)) %>%
+            mutate(label = str_glue(" n={n}\n spearman rho={round(spearman.of_dPSI_vs_logFC, 2)}\n P={Plab}\nP.adj={PadjLab}")),
+            aes(label=label),
+            x=-0.8, y=Inf, vjust=1.1, hjust=0, color='black'
+                           ) +
+  scale_color_manual(values=c("Productive"="#1f78b4", "Unproductive"="#e31a1c")) +
+  facet_grid(Species~Coding) +
+  coord_cartesian(ylim=c(-3,3)) +
+  theme(legend.position='none') +
+  labs(x="Differential splicing\n(Delta PSI)", y="Differential gene\nexpression (log2FC)", title="Neonate Testis vs Adult Testis")
+
+
+# test to see if unproductive is meaningfully different than productive
+results <- betabetascatter.P.dat %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  group_by(Tissue, Species, Coding) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  # filter(p <0.05) %>%
+  dplyr::select(-n, -p) %>%
+  pivot_wider(names_from = "Coding", values_from = "spearman.of_dPSI_vs_logFC") %>%
+  # {t.test(.$Productive, .$Unproductive, var.equal = F, paired=F)}
+  {wilcox.test(.$Productive, .$Unproductive)}
+
+
+betabetascatter.P.dat.adultTissues %>%
+  mutate(Tissue = paste(TissueA, TissueB)) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  group_by(Tissue, Species, Coding) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  # filter(p <0.05) %>%
+  dplyr::select(-n, -p) %>%
+  pivot_wider(names_from = "Coding", values_from = "spearman.of_dPSI_vs_logFC") %>%
+  # {t.test(.$Productive, .$Unproductive, var.equal = F, paired=F)}
+  {wilcox.test(.$Productive, .$Unproductive)}
+
+```
+
+Let's also read in the data for the early embryo vs adult, even though I will not include human in the final plots...
+
+```{r}
+dat.earlyembyo_vs_adult <- Sys.glob("../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/First10_vs_Second10.*.joined.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/First10_vs_Second10.(.+?).joined.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Contrast") %>%
+  separate(Contrast, into=c("Tissue", "Species"), sep="\\.") %>%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  ))
+
+dat.earlyembyo_vs_adult <- dat.earlyembyo_vs_adult %>%
+  dplyr::rename("AlgorithmCoding"="Coding") %>%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+
+betabetascatter.P.dat.early_embryo <- dat.earlyembyo_vs_adult %>%
+  # filter(!UTR) %>%
+  
+  # Use bitwise flags
+  filter(!ProductivityLabel=="NE") %>%
+  mutate(Coding = if_else(ProductivityLabel == "PR", T, F)) %>%
+  
+  filter(!is.na(Coding)) %>%
+  filter(p.adjust < 0.05) %>%
+  # filter(abs(logef)>0.5) %>%
+  filter(abs(deltapsi) > 0.05) %>%
+  group_by(Species, Tissue, cluster) %>%
+  mutate(Contains_Noncoding = any(!Coding)) %>%
+  ungroup() %>%
+  arrange(Species, Tissue, cluster, Contains_Noncoding, Coding, desc(abs(deltapsi))) %>%
+  distinct(Species, Tissue, cluster, .keep_all=T)
+
+betabetascatter.P.dat.early_embryo %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  group_by(Tissue, Species, Coding) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  mutate(Plab = case_when(
+    p > 0.05 ~ "",
+    p < 0.05 ~ "*",
+    p < 0.005 ~ "**",
+    p < 0.0005 ~ "***"
+  )) %>%
+  mutate(Plab = format.pval(p, digits=1)) %>%
+  mutate(label = str_glue("n={n}\nP={Plab}")) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0, low="#003c30", high="#543005", mid="#f5f5f5") +
+  geom_text(aes(label=label), size=1) +
+  facet_wrap(~Coding, nrow=2) +
+  Rotate_x_labels +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  labs(fill="spearman\nrho", x=NULL, y=NULL)
+```
+
+And now let's make a heatmap to summarise all contrasts that I performed...
+
+```{r}
+AllContrast.Summaries <- bind_rows(
+  betabetascatter.P.dat.early_embryo %>%
+    mutate(Tissue = paste("Early embryo", Tissue, "v Adult", Tissue)) %>%
+    mutate(ContrastGroup = "Early embryo v adult within tissue") %>%
+    filter(!Species == "Human"),
+  betabetascatter.P.dat.adultTissues %>%
+    mutate(Tissue = paste("Adult", TissueA, "v Adult", TissueB)) %>%
+    dplyr::rename(Early=TissueA_PSI, Late=TissueB_PSI) %>%
+    dplyr::select(-TissueA, -TissueB) %>%
+    mutate(ContrastGroup = "Adult tissues"),
+  betabetascatter.P.dat %>%
+    mutate(Tissue = paste("Neonate", Tissue, "v Adult", Tissue)) %>%
+    mutate(ContrastGroup = "Neonate v adult within tissue"),
+) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  group_by(ContrastGroup, Tissue, Species, Coding) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  mutate(Plab = case_when(
+    p > 0.05 ~ "",
+    p < 0.05 ~ "*",
+    p < 0.005 ~ "**",
+    p < 0.0005 ~ "***"
+  )) %>%
+  mutate(Plab = format.pval(p, digits=1)) %>%
+  mutate(label = str_glue("n={n}\nP={Plab}")) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  mutate(Tissue = if_else(Tissue == "Neonate Testis v Adult Testis", "Juvenile Testis vs Adult Testis", Tissue))
+
+AllContrast.Summaries %>%
+  mutate(spearman.of_dPSI_vs_logFC = pmin(0.2, pmax(-0.2, spearman.of_dPSI_vs_logFC))) %>%
+  ggplot(aes(y=Tissue, x=Species, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile(aes(color=n>=100), size=0.75, width=0.925, height=0.925) +
+  scale_color_manual(values=c("TRUE"="black", "FALSE"="white")) +
+  scale_fill_gradient2(midpoint=0, low="#003c30", high="#543005", mid="#f5f5f5", breaks=c(-.2,-0.1, 0, .1, 0.2), labels=c("<-.2", -.1, 0, .1, ">0.2")) +
+  geom_text(aes(label=label), size=1.8) +
+  facet_grid(ContrastGroup~Coding, scales="free", space="free", switch='y') +
+  Rotate_x_labels +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  labs(fill="Expression\nv splicing\nspearman\nrho", x=NULL, y="Contrast") +
+  theme(
+    strip.background.y = element_blank(),
+    strip.text.y = element_blank(),
+    legend.position='bottom',
+    legend.direction='horizontal',
+    legend.text = element_text(angle = 90, hjust=0.9)
+  )
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/SplicingVsExpression_Heatmap.AllContrasts.MainGtfs.pdf", height=300, width=220, units="mm")
+
+AllContrast.Summaries %>%
+  filter(n>=100) %>%
+  # filter(p<0.05) %>%
+  ggplot(aes(x=Species, color=Coding, y=spearman.of_dPSI_vs_logFC)) +
+  geom_hline(yintercept=0) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_point(position = position_jitterdodge(jitter.width=0.15), alpha=0.5) +
+  geom_text( data =  . %>%
+                 group_by(Species) %>%
+                 summarize(results = wilcox.test(spearman.of_dPSI_vs_logFC ~ Coding)$p.value) %>%
+                 ungroup() %>%
+                 mutate(label = str_glue("P=\n{format.pval(results, 1)}")),
+               aes(label=label), y=Inf, color='black', vjust=1.1, size=5) +
+  Rotate_x_labels +
+  scale_color_manual(values=c("Productive"="#1f78b4", "Unproductive"="#e31a1c")) +
+  labs(y="Expression v splicing\nspearman rho", color=NULL)
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/UnproductiveVsProductiveSpearman.AllContrasts.MainGtfs.pdf", height=100, width=180, units="mm")
+
+```
+
+Ok that looks good.
+
+### Plots of total unproductive reads by each sample
+
+```{r}
+TotalCountsByClassification.BySample <- Sys.glob("../code/MazinLeafcutterAnalysis/SummarisedClassificationsBySample/*.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/SummarisedClassificationsBySample/(.+?).tsv.gz", "\\1")) %>%
+  lapply(fread, col.names=c("fn", "Annot", "Coding", "UTR", "GencodePC", "TotalCounts")) %>%
+  bind_rows(.id="Species") %>%
+  mutate(ID = str_replace(fn, "rna-seq/SplicingAnalysis/juncfiles/(.+?).junccounts.tsv.gz", "\\1")) %>%
+  inner_join(
+    samples.WhichAreUsedForWhichAnalyses %>%
+      filter(NoHumanEmbryo)
+  ) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")
+
+AllSamples.PercentUnproductive.P.dat <- TotalCountsByClassification.BySample %>%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  )) %>%
+  filter(!ProductivityLabel=="NE") %>%
+  group_by(ID, Tissue_ForDevelopementalAnalysis, ProductivityLabel) %>%
+  summarise(TotalByCodingStatus = sum(TotalCounts)) %>%
+  ungroup() %>%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %>%
+  mutate(Percent = TotalByCodingStatus/ sum(TotalByCodingStatus) * 100) %>%
+  ungroup() %>%
+  filter(!ProductivityLabel=="PR") %>%
+  right_join(
+    samples.WhichAreUsedForWhichAnalyses %>%
+      dplyr::select(ID, Ordinal_stage, Species=ID_Species)
+  ) %>%
+  group_by(Species) %>%
+  mutate(PercentRank_OrdinalStage = percent_rank(Ordinal_stage)) %>%
+  ungroup() %>%
+  inner_join(Stages %>%
+               dplyr::select(Ordinal_stage, Species, Marker)) %>%
+  mutate(Species = factor(Species, levels = c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  filter(!is.na(Tissue_ForDevelopementalAnalysis)) %>%
+  distinct(ID, Tissue_ForDevelopementalAnalysis, .keep_all=T)
+
+
+
+ggplot(AllSamples.PercentUnproductive.P.dat, aes(x=PercentRank_OrdinalStage, y=Percent)) +
+  geom_vline( data = . %>%
+                  distinct(Ordinal_stage, Species, .keep_all=T) %>%
+                  filter(!is.na(Marker)) %>%
+                  dplyr::select(PercentRank_OrdinalStage, Marker, Species),
+              aes(xintercept = PercentRank_OrdinalStage, color=Marker)) +
+  labs(color = "Developmental landmark") +
+  # ggnewscale::new_scale_color() +
+  geom_point(alpha=0.4, color='black') +
+  coord_cartesian(ylim=c(0,6.5)) +
+  scale_x_continuous(breaks=c(0,1), labels=c("Early embryo", "Adult")) +
+  facet_grid(Species~Tissue_ForDevelopementalAnalysis) +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y="Percent unproductive reads", x="Development")
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/AllTissues_PercentUnproductive.NoHumanEmbryo.pdf", height=150, width=220, units="mm")
+
+
+```
+
+### % unproductive in testis
+
+I would prefer a beeswram plot here, to show all points, since I like showing the individual points, but the boxplots are almost visually useless with the overlapping jitter, and just the jitter is a bit ugly. I am having trouble installing ggbeeswarm so I will also just save the data I want to plot it with in a different environment where I can more easily install ggbeeswarm.
+
+```{r}
+
+
+AllSamples.PercentUnproductive.P.dat.testis <- AllSamples.PercentUnproductive.P.dat %>%
+   filter(Tissue_ForDevelopementalAnalysis == "Testis") %>%
+  inner_join(
+    Stages %>%
+      dplyr::select(Ordinal_stage, Species, Marker) %>%
+      filter(Marker == "Onset meiosis spermatogenesis") %>%
+      distinct() %>%
+      dplyr::select(Species, OnsetSpermatogenesis=Ordinal_stage)
+  ) %>%
+  mutate(BeforeOrAfterSpermatogenesis = case_when(
+    Ordinal_stage > OnsetSpermatogenesis ~ "After onset meiosis",
+    Ordinal_stage < OnsetSpermatogenesis ~ "Before onset meiosis",
+    Ordinal_stage ==  OnsetSpermatogenesis ~ "After onset meiosis")) %>%
+  filter(!BeforeOrAfterSpermatogenesis == "Onset meiosis") %>%
+  mutate(BeforeOrAfterSpermatogenesis = factor(BeforeOrAfterSpermatogenesis, levels=c("Before onset meiosis", "After onset meiosis"))) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken")))
+
+AllSamples.PercentUnproductive.P.dat.testis %>%
+  ggplot(aes(x=Species, y=Percent, color=BeforeOrAfterSpermatogenesis)) +
+  geom_boxplot(outlier.shape = NA, alpha=0.5) +
+  geom_point(position=position_jitterdodge(jitter.width=0.4))+
+  geom_text( data =  . %>%
+               group_by(Species) %>%
+               summarize(results = wilcox.test(Percent ~ BeforeOrAfterSpermatogenesis)$p.value) %>%
+               ungroup() %>%
+               mutate(label = str_glue("P=\n{format.pval(results, 1)}")) %>%
+               mutate(y = if_else(Species == "Opossum", 2, Inf)),
+             aes(label=label, y=y), color='black', vjust=1.1, size=2.5) +
+  scale_color_manual(values=c("Before onset meiosis"="#d95f02", "After onset meiosis"="#7570b3"), labels=c("Before onset meiosis"="Juvenile testis", "Adult (spermatogenic) testis")) +
+  Rotate_x_labels +
+  labs(y="Percent unproductive reads", color=NULL) +
+  theme(legend.position='bottom')
+
+AllSamples.PercentUnproductive.P.dat.testis %>%
+  write_tsv("../output/DataToPlot.Testis.Percent.UP.tsv.gz")
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/Testis_BeforeVsAfter_Smaller.NoHumanEmbryo.pdf", height=100, width=80, units="mm")
+
+```
+
+### plots for juncs to highlight
+
+I don't think I have to change what junctions I want to highlight, except to replot the data while specifically excluding human embryonic samples and using just samples in the kosher contrasts I did. Well, first I should make sure the junctions that I previously highlighted are still significant in at least one of my kosher contrasts in human and other species. Let's recreate that data frame i used to count number of conserved events after matching junctions between species by liftover'd coordinates...
+
+```{r}
+All.ds.results.for.identifying.conserved.events <- bind_rows(
+  dat.adultTissueComparisons %>%
+    mutate(Tissue = paste("Adult", TissueA, "v Adult", TissueB)) %>%
+    dplyr::rename(Early=TissueA_PSI, Late=TissueB_PSI) %>%
+    dplyr::select(-TissueA, -TissueB) %>%
+    mutate(ContrastGroup = "Adult tissues"),
+  dat %>% #neonate vs adult
+    mutate(Tissue = paste("Neonate", Tissue, "v Adult", Tissue)) %>%
+    mutate(ContrastGroup = "Neonate v adult within tissue")
+) %>%
+  mutate(chrom = str_replace(cluster, "^(.+?):clu_.+$", "\\1")) %>%
+  mutate(strand = str_extract(cluster, "[-+]$")) %>%
+  mutate(stop = stop -1) %>%
+  mutate(name = str_glue("{chrom}_{start}_{stop}_{strand}"))
+
+
+Liftovers.AsFlanks <- Sys.glob("../code/LiftoverJuncs/AsFlanks/*.Lifted.bed.gz") %>%
+  setNames(str_replace(., "../code/LiftoverJuncs/AsFlanks/(.+?).Lifted.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "end", "name", "score", "strand", "thickStart", "thickStop", "color", "nBlocks", "blockSizes", "blockStarts")) %>%
+  bind_rows(.id = "OriginGenome") %>%
+  mutate(Species = str_replace(OriginGenome, "^(.+?)_.+$", "\\1")) %>%
+  mutate(start = start +1,
+         end = end - 1) %>%
+  dplyr::select(OriginGenome, Species, name, human.chrom=chrom, human.start=start, human.end=end, human.strand=strand) %>%
+  mutate(human.name = str_glue("{human.chrom}_{human.start}_{human.end}_{human.strand}"))
+
+
+
+dat.JoinedByHumanCoords <- All.ds.results.for.identifying.conserved.events %>%
+  dplyr::rename(q.splicing=p.adjust) %>%
+  filter(!Species=="Human") %>%
+  inner_join(Liftovers.AsFlanks %>%
+               dplyr::select(human.name, name)) %>%
+  inner_join(
+    All.ds.results.for.identifying.conserved.events %>%
+      dplyr::rename(q.splicing=p.adjust) %>%
+      # filter(q.splicing < 0.1) %>%
+      filter(Species=="Human") %>%
+      dplyr::rename(human.name = name),
+    by=c("ContrastGroup", "Tissue", "human.name"),
+    suffix = c(".OtherSpecies", ".Human")
+  ) %>%
+  mutate(Species.OtherSpecies= factor(Species.OtherSpecies, levels=c("Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken")))
+
+# check for NSD1
+dat.JoinedByHumanCoords %>%
+  filter(Intron_coord.Human=="chr5:177248079-177248180")
+
+# check for it specifically in the neonate vs adult comparison 
+dat %>%
+  filter(Intron_coord=="chr5:177248079-177248180")
+
+```
+
+
+Hmm. I don't think this was actually tested in testis in leafcutter, due to insufficient coverage or number of samples.. well so from previous analyses that use embryo, I know this is a conserved event from early embryo to human, but the neonate vs adult doesn't have enough data to test (at least in human, which is the important species since I'm anchoring the word 'conserved' on being conserved with human)...
+
+Let's look at how many species it shows up in the brain vs testis
+
+```{r}
+dat.JoinedByHumanCoords %>%
+  filter(Intron_coord.Human=="chr5:177248079-177248180") %>%
+  filter(q.splicing.Human < 0.1 & p.OtherSpecies < 0.05)
+```
+
+
+Well I suppose I can still show just the cerebellum vs testis, as well as the non-human early embryo vs adult effects.
+
+Let's check the other juncs I wanted to highlight...
+
+```{r}
+# SRSF2
+dat.JoinedByHumanCoords %>%
+  filter(Intron_coord.Human=="chr17:76735158-76735771") %>%
+  filter(q.splicing.Human < 0.1 & p.OtherSpecies < 0.05) %>%
+  distinct(Tissue, Species.OtherSpecies, .keep_all=T) %>%
+  count(Tissue)
+```
+
+So I could pick any number of contrasts to highlight. will think more about which to highlight later.
+
+Let's look at SNC8A1 next: chr12:51780271-51786541
+
+```{r}
+dat.JoinedByHumanCoords %>%
+  filter(Intron_coord.Human=="chr12:51780271-51786541") %>%
+  filter(q.splicing.Human < .1 & p.OtherSpecies < 0.05) %>%
+  distinct(Tissue, Species.OtherSpecies, .keep_all=T) %>%
+  count(Tissue)
+```
+
+Hmm, so this one won't have macaque or rabbit, oh well. I suppose I could again do the trick of including the non-human embryo vs adult as well as the tissue vs tissue
+
+Lastly let's look at SULT4A1
+
+```{r}
+dat.JoinedByHumanCoords %>%
+  filter(Intron_coord.Human=="chr22:43826113-43827513") %>%
+  filter(q.splicing.Human < 0.1 & p.OtherSpecies < 1) %>%
+  distinct(Tissue, Species.OtherSpecies, .keep_all=T) %>%
+  arrange(Tissue) %>%
+  dplyr::select(Species.OtherSpecies, Tissue, p.OtherSpecies, cluster.OtherSpecies)
+
+
+```
+
+
+Ok, because of testing issues (leafcutter only testing introns over some thresholds), it will be much easier to just pick what to show after plotting the raw data for all these groups. The groups I will consider are all of the adult tissues, and neonate testis, and early embryo for all tissues
+
+```{r, fig.height=10, fig.width=10}
+dir.create("../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/", showWarnings = FALSE)
+
+Liftovers.AsFlanks %>%
+  filter(str_detect(human.name, "chr2_152714629_152715994"))
+
+ConservedJuncs.beds <-
+  bind_rows(
+    Liftovers.AsFlanks %>%
+      filter(human.name %in% c("chr22_43826113_43827513_-", "chr12_51780271_51786541_+", "chr17_76735158_76735771_-", "chr5_177248079_177248180_+", "chr7_26191128_26192494_-", "chr2_152694622_152714549_-", "chr2_152714629_152715994_-","chr2_170842648_170844044_+", "chr2_170842654_170844044_+", "chr16_24954730_24959910_-")) %>% #sult4a1, snc8a1, srsf2, nsd1, HNRNPA2B1, PRPF40A,PRPF40A, gad1, gad1, ARHGAP17
+      mutate(external_gene_name = recode(human.name, "chr22_43826113_43827513_-"="SULT4A1", "chr12_51780271_51786541_+"="SCN8A", "chr17_76735158_76735771_-"="SRSF2", "chr5_177248079_177248180_+"="NSD1","chr7_26191128_26192494_-"="HNRNPA2B1", "chr2_152694622_152714549_-"="PRPF40A", "chr2_152714629_152715994_-"="PRPF40A", "chr2_170842648_170844044_+"="GAD1", "chr2_170842654_170844044_+"="GAD1", "chr16_24954730_24959910_-"="ARHGAP17")) %>%
+      mutate(Intron_coord.Human = str_replace(human.name, "^(.+?)_(.+?)_(.+?)_[+-]$", "\\1:\\2-\\3")) %>%
+      mutate(Intron=str_glue("{external_gene_name}:{Intron_coord.Human}")) %>%
+      separate(name, into=c("chrom", "start", "stop", "strand"), convert=T, sep="_") %>%
+      mutate(score = ".") %>%
+      dplyr::select(OriginGenome, chrom, start, stop,Intron, score, strand),
+    dat.JoinedByHumanCoords %>%
+      filter(human.name %in% c("chr22_43826113_43827513_-", "chr12_51780271_51786541_+", "chr17_76735158_76735771_-", "chr5_177248079_177248180_+", "chr7_26191128_26192494_-", "chr2_152694622_152714549_-", "chr2_152714629_152715994_-","chr2_170842648_170844044_+", "chr2_170842654_170844044_+", "chr16_24954730_24959910_-")) %>% #sult4a1, snc8a1, srsf2, nsd1, HNRNPA2B1, PRPF40A,PRPF40A, gad1, gad1
+      distinct(human.name, .keep_all=T) %>%
+      mutate(external_gene_name = recode(human.name, "chr22_43826113_43827513_-"="SULT4A1", "chr12_51780271_51786541_+"="SCN8A", "chr17_76735158_76735771_-"="SRSF2", "chr5_177248079_177248180_+"="NSD1","chr7_26191128_26192494_-"="HNRNPA2B1", "chr2_152694622_152714549_-"="PRPF40A", "chr2_152714629_152715994_-"="PRPF40A", "chr2_170842648_170844044_+"="GAD1", "chr2_170842654_170844044_+"="GAD1", "chr16_24954730_24959910_-"="ARHGAP17")) %>%
+      mutate(Intron_coord.Human = str_replace(human.name, "^(.+?)_(.+?)_(.+?)_[+-]$", "\\1:\\2-\\3")) %>%
+      mutate(Intron=str_glue("{external_gene_name}:{Intron_coord.Human}")) %>%
+      separate(human.name, into=c("chrom", "start", "stop", "strand"), convert=T, sep="_") %>%
+      mutate(score = ".") %>%
+      mutate(OriginGenome = "Human_UCSC.hg38_GencodeComprehensive46") %>%
+      dplyr::select(OriginGenome, chrom, start, stop,Intron, score, strand)
+  ) %>%
+  arrange(OriginGenome, chrom, start, stop) %>%
+  mutate(JuncCoord = str_glue("{chrom}:{start}-{stop}"))
+
+
+ConservedJuncs.beds %>%
+  group_by(OriginGenome) %>%
+  distinct() %>%
+  dplyr::select(-OriginGenome, -JuncCoord) %>%
+  group_walk(~ write_tsv(.x, paste0("../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/",.y$OriginGenome, ".bed"), col_names =F))
+
+GetJuncsOfInterest <- function(fn){
+  OriginGenome <- str_replace(fn, "../code/rna-seq/SplicingAnalysis/leafcutter/(.+?)/juncTableBeds/(.+?).sorted.bed.gz", "\\1")
+  cmd <- str_glue("tabix -h  -R ../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/{OriginGenome}.bed {fn}")
+  fread(cmd) %>%
+    mutate(end = as.numeric(end) - 1) %>%
+    dplyr::rename("chrom"="#Chrom") %>%
+    # return()
+    mutate(JuncCoord = str_glue("{chrom}:{start}-{end}")) %>%
+    filter(JuncCoord %in% ConservedJuncs.beds$JuncCoord) %>%
+    dplyr::select(-c(1:6)) %>%
+    pivot_longer(names_to = "ID", values_to = "PSI", -JuncCoord) %>%
+    mutate(Species = OriginGenome) %>%
+    return()
+}
+
+PSI <- str_glue("../code/rna-seq/SplicingAnalysis/leafcutter/{unique(ConservedJuncs.beds$OriginGenome)}/juncTableBeds/PSI_ByMax.sorted.bed.gz") %>%
+  lapply(GetJuncsOfInterest) %>%
+  bind_rows()
+
+PSI_denoms <- str_glue("../code/rna-seq/SplicingAnalysis/leafcutter/{unique(ConservedJuncs.beds$OriginGenome)}/juncTableBeds/PSIDenom.sorted.bed.gz") %>%
+  lapply(GetJuncsOfInterest) %>%
+  bind_rows()
+
+PSI.IER <- str_glue("../code/rna-seq/SplicingAnalysis/leafcutter/{unique(ConservedJuncs.beds$OriginGenome)}/juncTableBeds/PSI.sorted.bed.gz") %>%
+  lapply(GetJuncsOfInterest) %>%
+  bind_rows()
+
+Contrasts <- Sys.glob("../code/MazinLeafcutterAnalysis/ContrastAdultTissueGroupFiles/*.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ContrastAdultTissueGroupFiles/(.+?).txt", "\\1")) %>%
+  lapply(read_delim, delim=' ', col_names=c("ID", "group")) %>%
+  bind_rows(.id="Species_TissueA_Tissue_B") %>%
+  separate(Species_TissueA_Tissue_B, into=c("Species", "TissueA", "TissueB"), sep="[-_]") %>%
+  mutate(group = case_when(
+    group == TissueA ~ "Early",
+    group == TissueB ~ "Late"
+  ))
+
+Contrasts %>%
+  distinct(ID, Species) %>%
+  inner_join(
+    samples.WhichAreUsedForWhichAnalyses %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")
+  ) %>%
+  mutate(Stage = "Adult")
+
+
+SamplesToPlot <- 
+  bind_rows(
+    Sys.glob("../code/MazinLeafcutterAnalysis/ContrastGroupFiles/Neonate_vs_Adult.*.txt") %>%
+      setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ContrastGroupFiles/Neonate_vs_Adult.(.+?).txt", "\\1")) %>%
+      lapply(read_delim, delim=' ', col_names=c("ID", "group")) %>%
+      bind_rows(.id="Tissue_Species") %>%
+      separate(Tissue_Species, into=c("Tissue", "Species"), sep="\\.") %>%
+      mutate(NewGroup = recode(group, "Early"="Neonate", "Late"="Adult")),
+  Sys.glob("../code/MazinLeafcutterAnalysis/ContrastGroupFiles/First10_vs_Second10.*.txt") %>%
+    setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ContrastGroupFiles/First10_vs_Second10.(.+?).txt", "\\1")) %>%
+    lapply(read_delim, delim=' ', col_names=c("ID", "group")) %>%
+    bind_rows(.id="Tissue_Species") %>%
+    separate(Tissue_Species, into=c("Tissue", "Species"), sep="\\.") %>%
+    filter(group == "Early") %>%
+    mutate(NewGroup = "EarlyEmbryo")
+  ) %>%
+  dplyr::rename(Species.short = Species) %>%
+  mutate(Species.short = factor(Species.short, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  mutate(NewGroup = factor(NewGroup, levels=c("EarlyEmbryo", "Neonate", "Adult")))
+
+SamplesToPlot %>%
+  count(NewGroup)
+
+PSI %>%
+  inner_join(
+    SamplesToPlot
+  ) %>%
+  inner_join(
+    ConservedJuncs.beds %>%
+      dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+  ) %>%
+  ggplot(aes(x=Tissue, alpha=NewGroup, color=NewGroup, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), size=0.5, alpha=0.2) +
+  facet_grid(Species.short~Intron, scales="free") +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text = element_text(size = 3))
+
+ggsave("../code/scratch/AllBoxplots.JuncsOfInterest.3stages.pdf", height=10, width=10)
+
+
+```
+
+Let's plot just SRSF2 and PRPF10 examples
+
+```{r}
+PSI %>%
+  inner_join(
+    SamplesToPlot
+  ) %>%
+  inner_join(
+    ConservedJuncs.beds %>%
+      dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+  ) %>%
+  filter(str_detect(Intron, "SRSF2") | str_detect(Intron, "PRP") | str_detect(Intron, "HNRNP")) %>%
+  ggplot(aes(x=Tissue, color=NewGroup, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), size=0.5, alpha=0.2) +
+  facet_grid(Species.short~Intron, scales="free") +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage")
+ggsave("../code/scratch/AllBoxplots.SpliceFactors.pdf", height=10, width=10)
+
+```
+
+I could still focus on those four events (SNC8A, SRSF2, NSD1, and SULT4A1)... but I'm thinking it might be worth a quick check to look for other events for prettier examples.
+
+### Bar plots of consecutive filters for conserved devAS
+
+```{r}
+dat.JoinedByHumanCoords %>%
+  mutate(Group = case_when(
+    Coding.Human & Coding.OtherSpecies ~ "Productive",
+    !Coding.Human & !Coding.OtherSpecies ~ "Unproductive",
+    !Coding.Human & Coding.OtherSpecies ~ "UP in human only",
+    Coding.Human & !Coding.OtherSpecies ~ "UP in other only",
+    TRUE ~ "Switches"
+  )) %>%
+  filter(q.splicing.Human < 0.05) %>%
+  filter(abs(deltapsi.Human ) > 0.05) %>%
+  # filter(q.splicing.OtherSpecies < 0.1) %>%
+  filter(p.OtherSpecies < 0.05) %>%
+  # mutate(Group = factor(Group, levels=c("Unproductive", "Productive", "Switches"))) %>%
+  # arrange(Species.OtherSpecies, cluster.Human, Group, desc(abs(deltapsi.OtherSpecies))) %>%
+  distinct(Species.OtherSpecies, cluster.Human, .keep_all=T) %>%
+  mutate(IsMatchingSigns = sign(deltapsi.Human)==sign(deltapsi.OtherSpecies)) %>%
+  filter(!Group == "Productive") %>%
+
+  count(IsMatchingSigns, Species.OtherSpecies, Group) %>%
+  ggplot(aes(x=Species.OtherSpecies, y=n, fill=IsMatchingSigns)) +
+    geom_col(position='stack') +
+    scale_fill_manual(values=c("TRUE"="black", "FALSE"="gray"), labels=c("TRUE"="Same Delta PSI sign", "FALSE"="Opposite Delta PSI sign")) +
+    facet_wrap(~Group) +
+    Rotate_x_labels +
+    labs(x="Species", y="*Number of conserved\ndevelopmentally regulated AS events", fill=NULL, caption="*Number of junctions that match a human junction (liftOver)\nand are differentially spliced in both human and species x in at least one tissue") +
+    theme(legend.position='bottom')
+
+dat.JoinedByHumanCoords %>%
+  mutate(Group = case_when(
+    Coding.Human & Coding.OtherSpecies ~ "Productive",
+    !Coding.Human & !Coding.OtherSpecies ~ "Unproductive",
+    # !Coding.Human & Coding.OtherSpecies ~ "UP in human only",
+    # Coding.Human & !Coding.OtherSpecies ~ "UP in other only",
+    TRUE ~ "Switches"
+  )) %>%
+  filter(q.splicing.Human < 0.05) %>%
+  filter(abs(deltapsi.Human ) > 0.05) %>%
+  # filter(q.splicing.OtherSpecies < 0.1) %>%
+  filter(p.OtherSpecies < 0.05) %>%
+  mutate(Group = factor(Group, levels=c("Unproductive", "Productive", "Switches"))) %>%
+  arrange(Species.OtherSpecies, cluster.Human, Group, desc(abs(deltapsi.OtherSpecies))) %>%
+  distinct(Species.OtherSpecies, cluster.Human, .keep_all=T) %>%
+  mutate(IsMatchingSigns = sign(deltapsi.Human)==sign(deltapsi.OtherSpecies)) %>%
+  filter(!Group == "Productive") %>%
+  count(IsMatchingSigns, Species.OtherSpecies, Group) %>%
+  ggplot(aes(x=Species.OtherSpecies, y=n, fill=IsMatchingSigns)) +
+    geom_col(position='stack') +
+    scale_fill_manual(values=c("TRUE"="black", "FALSE"="gray"), labels=c("TRUE"="Same Delta PSI sign", "FALSE"="Opposite Delta PSI sign")) +
+    facet_wrap(~Group) +
+    Rotate_x_labels +
+    labs(x="Species", y="*Number of conserved\ndevelopmentally regulated AS events", fill=NULL, caption="*Number of junctions that match a human junction (liftOver)\nand are differentially spliced in both human and species x in at least one tissue") +
+    theme(legend.position='bottom')
+```
+
+Maybe a better way to show this would be to make plots showing how many events pass consecutive filters for each species...
+
+- lifts over to human
+- significant in human and other species in at least one contrast
+- same sign
+- unproductive
+- also unproductive in human 
+
+```{r}
+
+
+ConservedEventsAndVariousLevels.dat <- dat.JoinedByHumanCoords %>%
+  filter(q.splicing.Human < 0.05) %>%
+  filter(abs(deltapsi.Human ) > 0.05) %>%
+  filter(p.OtherSpecies < 0.05) %>%
+  mutate(UP_in_both = !Coding.OtherSpecies & !Coding.Human) %>%
+  mutate(IsMatchingSigns = sign(deltapsi.Human)==sign(deltapsi.OtherSpecies)) %>%
+  arrange(Species.OtherSpecies, cluster.Human, desc(IsMatchingSigns), desc(UP_in_both), Coding.OtherSpecies) %>%
+  distinct(Species.OtherSpecies, cluster.Human, .keep_all=T)
+
+bind_rows(
+  Liftovers.AsFlanks %>%
+    mutate(Species.OtherSpecies = factor(Species, levels=c("Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+    count(Species.OtherSpecies) %>%
+    mutate(Group = "Matches a human junction (liftOver)"),
+  ConservedEventsAndVariousLevels.dat %>%
+    count(Species.OtherSpecies) %>%
+    mutate(Group = "& significant in both species"),
+  ConservedEventsAndVariousLevels.dat %>%
+    filter(IsMatchingSigns) %>%
+    count(Species.OtherSpecies) %>%
+    mutate(Group = "& same sign effect"),
+  ConservedEventsAndVariousLevels.dat %>%
+    filter(IsMatchingSigns) %>%
+    filter(!Coding.OtherSpecies) %>%
+    count(Species.OtherSpecies) %>%
+    mutate(Group = "& is unproductive"),
+  ConservedEventsAndVariousLevels.dat %>%
+    filter(IsMatchingSigns) %>%
+    filter(!Coding.OtherSpecies) %>%
+    filter(UP_in_both) %>%
+    count(Species.OtherSpecies) %>%
+    mutate(Group = "& is unproductive in human"),
+) %>%
+  mutate(Group = factor(Group, levels=c("Matches a human junction (liftOver)", "& significant in both species", "& same sign effect",  "& is unproductive",  "& is unproductive in human"))) %>%
+  ggplot(aes(x=Species.OtherSpecies, y=n)) +
+  geom_col() +
+  facet_wrap(~Group, scales="free_y", ncol=1, labeller = label_wrap_gen(15)) +
+  Rotate_x_labels +
+  labs(x="Species", y="Number of conserved splice junctions")
+
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/NumberConservedEvents_AfterEachFilter.pdf", height=220, width=70, units="mm")
+
+```
+
+Let's make one different version of this, where the unproductive filter comes right after liftover.
+
+```{r}
+
+
+Liftovers.As.Flanks.count.UP <- Liftovers.AsFlanks %>%
+  mutate(Species.OtherSpecies = factor(Species, levels=c("Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  inner_join(
+    JunctionProductivity.AndAnnotated %>%
+      dplyr::select(Species.OtherSpecies = Species.short, Coding.OtherSpecies = Coding, name)
+    ) %>%
+  inner_join(
+    JunctionProductivity.AndAnnotated %>%
+      filter(Species.short == "Human") %>%
+      dplyr::select(Coding.Human = Coding, human.name=name)
+    )
+
+bind_rows(
+  Liftovers.As.Flanks.count.UP %>%
+    count(Species.OtherSpecies) %>%
+    mutate(Group = "Matches a human junction (liftOver)"),
+  Liftovers.As.Flanks.count.UP %>%
+    filter(!Coding.OtherSpecies) %>%
+    count(Species.OtherSpecies) %>%
+    mutate(Group = "& is unproductive"),
+  Liftovers.As.Flanks.count.UP %>%
+    filter(!Coding.OtherSpecies) %>%
+    filter(!Coding.Human) %>%
+    count(Species.OtherSpecies) %>%
+    mutate(Group = "& matching human junction is unproductive"),
+  ConservedEventsAndVariousLevels.dat %>%
+    filter(UP_in_both) %>%
+    filter(IsMatchingSigns) %>%
+    count(Species.OtherSpecies) %>%
+    mutate(Group = "& is tissue or developmentally regulated in both human and species X")
+) %>%
+  mutate(Group = factor(Group, levels=c("Matches a human junction (liftOver)", "& is unproductive", "& same sign effect",  "& matching human junction is unproductive",  "& is tissue or developmentally regulated in both human and species X"))) %>%
+  ggplot(aes(x=Species.OtherSpecies, y=n)) +
+  geom_col() +
+  facet_wrap(~Group, scales="free_y", ncol=1, labeller = label_wrap_gen(15)) +
+  Rotate_x_labels +
+  labs(x="Species", y="Number of conserved splice junctions")
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/NumberConservedEvents_AfterEachFilter2.pdf", height=220, width=70, units="mm")
+
+```
+
+
+### Junctions of interest in tissues/stages of interest
+
+First let's make a nice plots showing those events, in the select (cherry-picked) tissues.
+
+```{r}
+
+
+PSI.IER %>%
+  inner_join(
+    SamplesToPlot
+  ) %>%
+  inner_join(
+    ConservedJuncs.beds %>%
+      dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+  ) %>%
+  filter(str_detect(Intron, "SCN")) %>%
+  inner_join(
+    PSI_denoms %>%
+      dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+  ) %>%
+  mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+  mutate(NewerGroup = case_when(
+    Tissue %in% c("Brain", "Cerebellum") ~ paste(NewGroup, "brain/cerebellum"),
+    NewGroup == "Adult" & !Tissue %in% c("Brain", "Cerebellum") ~ "Non brain/cerebellum adult",
+    TRUE ~ "Other"
+  )) %>%
+  filter(!NewerGroup == "Other") %>%
+  filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("EarlyEmbryo brain/cerebellum", "Neonate brain/cerebellum", "Adult brain/cerebellum", "Non brain/cerebellum adult"))) %>%
+  ggplot(aes(x=Species.short, color=NewerGroup, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_wrap(~ReadsInClusterGroup)
+
+PSI.IER %>%
+  inner_join(
+    SamplesToPlot
+  ) %>%
+  inner_join(
+    ConservedJuncs.beds %>%
+      dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+  ) %>%
+  filter(str_detect(Intron, "SULT")) %>%
+  inner_join(
+    PSI_denoms %>%
+      dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+  ) %>%
+  mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+  mutate(NewerGroup = case_when(
+    Tissue %in% c("Brain", "Cerebellum") ~ paste(NewGroup, "brain/cerebellum"),
+    NewGroup == "Adult" & !Tissue %in% c("Brain", "Cerebellum") ~ "Non brain/cerebellum adult",
+    TRUE ~ "Other"
+  )) %>%
+  filter(!NewerGroup == "Other") %>%
+  filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("EarlyEmbryo brain/cerebellum", "Neonate brain/cerebellum", "Adult brain/cerebellum", "Non brain/cerebellum adult"))) %>%
+  ggplot(aes(x=Species.short, color=NewerGroup, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_wrap(~ReadsInClusterGroup)
+
+
+PSI.IER %>%
+  inner_join(
+    SamplesToPlot
+  ) %>%
+  inner_join(
+    ConservedJuncs.beds %>%
+      dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+  ) %>%
+  filter(str_detect(Intron, "NSD")) %>%
+  inner_join(
+    PSI_denoms %>%
+      dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+  ) %>%
+  mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+  mutate(NewerGroup = case_when(
+    Tissue %in% c("Testis") ~ paste(NewGroup, "testis"),
+    NewGroup == "Adult" & !Tissue %in% c("Testis") ~ "Non testis adult",
+    TRUE ~ "Other"
+  )) %>%
+  filter(!NewerGroup == "Other") %>%
+  filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("EarlyEmbryo testis", "Neonate testis", "Adult testis", "Non testis adult"))) %>%
+  ggplot(aes(x=Species.short, color=NewerGroup, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_wrap(~ReadsInClusterGroup)
+
+PSI.IER %>%
+  inner_join(
+    SamplesToPlot
+  ) %>%
+  inner_join(
+    ConservedJuncs.beds %>%
+      dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+  ) %>%
+  filter(str_detect(Intron, "ARHG")) %>%
+  inner_join(
+    PSI_denoms %>%
+      dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+  ) %>%
+  mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+  mutate(NewerGroup = case_when(
+    Tissue %in% c("Testis") ~ paste(NewGroup, "testis"),
+    NewGroup == "Adult" & !Tissue %in% c("Testis") ~ "Non testis adult",
+    TRUE ~ "Other"
+  )) %>%
+  filter(!NewerGroup == "Other") %>%
+  filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("EarlyEmbryo testis", "Neonate testis", "Adult testis", "Non testis adult"))) %>%
+  ggplot(aes(x=Species.short, color=NewerGroup, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_wrap(~ReadsInClusterGroup)
+
+```
+
+...And SRSF2
+
+```{r}
+PSI.IER %>%
+  inner_join(
+    SamplesToPlot
+  ) %>%
+  inner_join(
+    ConservedJuncs.beds %>%
+      dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+  ) %>%
+  filter(str_detect(Intron, "SRSF")) %>%
+  inner_join(
+    PSI_denoms %>%
+      dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+  ) %>%
+  mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+  filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+  ggplot(aes(x=Tissue, color=NewGroup, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_grid(Species.short~ReadsInClusterGroup)
+```
+
+Let's check for any age dependence of this junction in GTEx data too...
+
+```{r}
+GTEx.metadata <- read_tsv("../code/scratch/GTEx_Analysis_v10_Annotations_SubjectPhenotypesDS.txt")
+
+
+GTEx.SRSF.PSI <- fread("tabix -h ../code/MazinLeafcutterAnalysis/leafcutter/juncTableBeds/PSI.sorted.bed.gz chr17:76735158-76735771") %>%
+  filter(str_detect(junc, "chr17:76735158:76735772")) %>%
+  dplyr::select(-c(1:6)) %>%
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column("Sample") %>%
+  dplyr::rename(PSI.IER = V1) %>%
+  separate(Sample, into=c("Tissue", "SUBJID"), sep="_") %>%
+  mutate(SUBJID = str_replace_all(SUBJID, "\\.", "-")) %>%
+  left_join(GTEx.metadata) %>%
+  mutate(AGE = factor(AGE, levels=c("20-29", "30-39", "40-49","50-59", "60-69", "70-79"))) %>%
+  mutate(AGE_decades = recode(AGE,"20-29"=20, "30-39"=30, "40-49"=40,"50-59"=50, "60-69"=60, "70-79"=70))
+  
+GTEx.SRSF.PSI.lm.summary <- GTEx.SRSF.PSI %>%
+  group_by(Tissue) %>%
+  group_modify(~ broom::tidy(lm(PSI.IER ~ AGE_decades, data = .x))) %>%
+  filter(term == "AGE_decades") %>%
+  left_join(
+    GTEx.SRSF.PSI %>%
+      count(Tissue)
+  ) %>%
+  mutate(label = str_glue("beta: {round(estimate, 2)}\nP: {format.pval(p.value, 2)}\nn: {n}"))
+
+
+
+GTEx.SRSF.PSI %>%
+  ggplot(aes(x=AGE_decades, y=PSI.IER)) + 
+  geom_boxplot(outlier.shape=NA, aes( group=AGE_decades)) +
+  geom_smooth(method='lm', color='red') +
+  geom_jitter(alpha=0.2) +
+  scale_x_continuous(breaks=c(2:7)*10, labels=c("20-29", "30-39", "40-49","50-59", "60-69", "70-79")) +
+  geom_text(data=GTEx.SRSF.PSI.lm.summary, aes(label=label), x=20, y=Inf, vjust=1.1, hjust=0) +
+  theme_bw() +
+  facet_wrap(~Tissue) +
+  Rotate_x_labels +
+  labs(x="AGE", y="PSI")
+
+GTEx.SRSF.PSI %>%
+  ggplot(aes(x=Tissue, color=factor(DTHHRDY), y=PSI.IER)) + 
+  geom_boxplot(outlier.shape=NA) +
+  geom_smooth(method='lm', aes(group=Tissue), color='red') +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels
+
+
+```
+
+Ok, last thing to get is the expression data for these plots...
+
+```{r}
+GenesToPlotBoxPlots.df <- PSI %>%
+  inner_join(Contrasts %>% dplyr::rename(Species.short = Species)) %>%
+  inner_join(ConservedJuncs.beds %>%
+               dplyr::select(JuncCoord, Intron)) %>%
+  separate(Intron, into=c("gene_name", "HumanChrom", "HumanCoord"), sep=":") %>%
+  filter(gene_name %in% c("NSD1", "SCN8A", "SRSF2", "SULT4A1", "ARHGAP17"))  %>%
+  distinct(JuncCoord, Species.short, Species, gene_name, HumanChrom, HumanCoord) %>%
+  inner_join(
+    JunctionProductivity.AndAnnotated,
+    by=c("Species"="OriginGenome", "JuncCoord"="Intron_coord", "Species.short")
+  )
+
+RPKM <- str_glue("../code/MazinLeafcutterAnalysis/Expression/{unique(GenesToPlotBoxPlots.df$Species)}.log2rpkm.tsv.gz") %>%
+  as.character() %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/Expression/(.+?).log2rpkm.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  lapply(function(x) filter(x, Geneid %in% GenesToPlotBoxPlots.df$Gene_name)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "ID",values_to = "log2RPKM",-Geneid)) %>%
+  bind_rows(.id="OriginGenome") %>%
+  inner_join(SamplesToPlot)
+
+Dat.For.Boxplots <- bind_rows(
+  PSI.IER %>%
+    inner_join(
+      SamplesToPlot
+    ) %>%
+    inner_join(
+      ConservedJuncs.beds %>%
+        dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+    ) %>%
+    filter(str_detect(Intron, "SCN")) %>%
+    inner_join(
+      PSI_denoms %>%
+        dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+    ) %>%
+    mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+    mutate(NewerGroup = case_when(
+      Tissue %in% c("Brain", "Cerebellum") ~ paste(NewGroup, "brain/cerebellum"),
+      NewGroup == "Adult" & !Tissue %in% c("Brain", "Cerebellum") ~ "Non brain/cerebellum adult",
+      TRUE ~ "Other"
+    )) %>%
+    filter(!NewerGroup == "Other") %>%
+    filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+    mutate(gene_name = "SCN8A"),
+  PSI.IER %>%
+    inner_join(
+      SamplesToPlot
+    ) %>%
+    inner_join(
+      ConservedJuncs.beds %>%
+        dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+    ) %>%
+    filter(str_detect(Intron, "SULT")) %>%
+    inner_join(
+      PSI_denoms %>%
+        dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+    ) %>%
+    mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+    mutate(NewerGroup = case_when(
+      Tissue %in% c("Brain", "Cerebellum") ~ paste(NewGroup, "brain/cerebellum"),
+      NewGroup == "Adult" & !Tissue %in% c("Brain", "Cerebellum") ~ "Non brain/cerebellum adult",
+      TRUE ~ "Other"
+    )) %>%
+    filter(!NewerGroup == "Other") %>%
+    filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+    mutate(gene_name = "SULT4A1"),
+  PSI.IER %>%
+    inner_join(
+      SamplesToPlot
+    ) %>%
+    inner_join(
+      ConservedJuncs.beds %>%
+        dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+    ) %>%
+    filter(str_detect(Intron, "NSD")) %>%
+    inner_join(
+      PSI_denoms %>%
+        dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+    ) %>%
+    mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+    mutate(NewerGroup = case_when(
+      Tissue %in% c("Testis") ~ paste(NewGroup, "testis"),
+      NewGroup == "Adult" & !Tissue %in% c("Testis") ~ "Non testis adult",
+      TRUE ~ "Other"
+    )) %>%
+    filter(!NewerGroup == "Other") %>%
+    filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+    mutate(gene_name = "NSD1"),
+  PSI.IER %>%
+    inner_join(
+      SamplesToPlot
+    ) %>%
+    inner_join(
+      ConservedJuncs.beds %>%
+        dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+    ) %>%
+    filter(str_detect(Intron, "ARHGAP17")) %>%
+    inner_join(
+      PSI_denoms %>%
+        dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+    ) %>%
+    mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+    mutate(NewerGroup = case_when(
+      Tissue %in% c("Testis") ~ paste(NewGroup, "testis"),
+      NewGroup == "Adult" & !Tissue %in% c("Testis") ~ "Non testis adult",
+      TRUE ~ "Other"
+    )) %>%
+    filter(!NewerGroup == "Other") %>%
+    filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+    mutate(gene_name = "ARHGAP17"),
+  PSI.IER %>%
+    inner_join(
+      SamplesToPlot
+    ) %>%
+    inner_join(
+      ConservedJuncs.beds %>%
+        dplyr::select(JuncCoord, Intron, Species=OriginGenome)
+    ) %>%
+    filter(str_detect(Intron, "SRSF")) %>%
+    inner_join(
+      PSI_denoms %>%
+        dplyr::select(ID, JuncCoord, ReadsInCluster=PSI)
+    ) %>%
+    mutate(ReadsInClusterGroup = ReadsInCluster>=10) %>%
+    filter(!(NewGroup == "EarlyEmbryo" & Species.short == "Human")) %>%
+    mutate(gene_name = "SRSF2")
+) %>%
+  left_join(
+    GenesToPlotBoxPlots.df %>%
+      dplyr::select(JuncCoord, gene_name, Geneid=Gene_name)
+  ) %>%
+  left_join(
+    RPKM %>%
+      dplyr::select(Geneid, ID, log2RPKM)
+  )
+```
+
+Now make more final plots
+
+```{r}
+
+Dat.For.Boxplots %>%
+  mutate(PSI = if_else(ReadsInClusterGroup==T, PSI, as.numeric(NA))) %>%
+  filter(gene_name == "SCN8A") %>%
+  dplyr::select(PSI, log2RPKM, NewerGroup, Species.short) %>%
+  pivot_longer(names_to = "metric", values_to = "value", c("PSI", "log2RPKM")) %>%
+  mutate(NewerGroup = recode(NewerGroup, "Non brain/cerebellum adult"="Adult non-brain tissue", "EarlyEmbryo brain/cerebellum"="Early embryo brain", "Neonate brain/cerebellum"="Neonate brain","Adult brain/cerebellum"="Adult brain")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("Early embryo brain", "Neonate brain", "Adult brain", "Adult non-brain tissue" ))) %>%
+  mutate(Metric = recode(metric, "PSI"="Splicing,\nPSI", "log2RPKM"="Expression,\nlog2RPKM")) %>%
+  mutate(Metric = factor(metric, levels=c("Splicing,\nPSI", "Expression,\nlog2RPKM"))) %>%
+  ggplot(aes(x=Species.short, color=NewerGroup, y=value)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_wrap(~metric, scales="free_y", nrow=2, strip.position="left") +
+  theme( strip.placement = "outside", legend.position='bottom', strip.background=element_blank(), panel.spacing = unit(2, "lines")) +
+  labs(x=NULL, color=NULL, y=NULL)
+
+Dat.For.Boxplots %>%
+  mutate(PSI = if_else(ReadsInClusterGroup==T, PSI, as.numeric(NA))) %>%
+  filter(gene_name == "SULT4A1") %>%
+  dplyr::select(PSI, log2RPKM, NewerGroup, Species.short) %>%
+  pivot_longer(names_to = "metric", values_to = "value", c("PSI", "log2RPKM")) %>%
+  mutate(NewerGroup = recode(NewerGroup, "Non brain/cerebellum adult"="Adult non-brain tissue", "EarlyEmbryo brain/cerebellum"="Early embryo brain", "Neonate brain/cerebellum"="Neonate brain","Adult brain/cerebellum"="Adult brain")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("Early embryo brain", "Neonate brain", "Adult brain", "Adult non-brain tissue" ))) %>%
+  mutate(Metric = recode(metric, "PSI"="Splicing,\nPSI", "log2RPKM"="Expression,\nlog2RPKM")) %>%
+  mutate(Metric = factor(metric, levels=c("Splicing,\nPSI", "Expression,\nlog2RPKM"))) %>%
+  ggplot(aes(x=Species.short, color=NewerGroup, y=value)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_wrap(~metric, scales="free_y", nrow=2, strip.position="left") +
+  theme( strip.placement = "outside", legend.position='bottom', strip.background=element_blank(), panel.spacing = unit(2, "lines")) +
+  labs(x=NULL, color=NULL, y=NULL)
+
+
+Dat.For.Boxplots %>%
+  mutate(PSI = if_else(ReadsInClusterGroup==T, PSI, as.numeric(NA))) %>%
+  filter(gene_name == "NSD1") %>%
+  dplyr::select(PSI, log2RPKM, NewerGroup, Species.short) %>%
+  pivot_longer(names_to = "metric", values_to = "value", c("PSI", "log2RPKM")) %>%
+  mutate(NewerGroup = recode(NewerGroup, "Non testis adult"="Adult non-testis tissue", "EarlyEmbryo testis"="Early embryo testis", "Neonate testis"="Juvenile testis","Adult testis"="Adult testis")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("Early embryo testis", "Juvenile testis", "Adult testis", "Adult non-testis tissue" ))) %>%
+  mutate(Metric = recode(metric, "PSI"="Splicing,\nPSI", "log2RPKM"="Expression,\nlog2RPKM")) %>%
+  mutate(Metric = factor(metric, levels=c("Splicing,\nPSI", "Expression,\nlog2RPKM"))) %>%
+  filter(!NewerGroup=="Adult non-testis tissue") %>%
+  ggplot(aes(x=Species.short, color=NewerGroup, y=value)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_wrap(~metric, scales="free_y", nrow=2, strip.position="left") +
+  theme( strip.placement = "outside", legend.position='bottom', strip.background=element_blank(), panel.spacing = unit(2, "lines")) +
+  labs(x=NULL, color=NULL, y=NULL)
+
+Dat.For.Boxplots %>%
+  mutate(PSI = if_else(ReadsInClusterGroup==T, PSI, as.numeric(NA))) %>%
+  filter(gene_name == "ARHGAP17") %>%
+  dplyr::select(PSI, log2RPKM, NewerGroup, Species.short) %>%
+  pivot_longer(names_to = "metric", values_to = "value", c("PSI", "log2RPKM")) %>%
+  mutate(NewerGroup = recode(NewerGroup, "Non testis adult"="Adult non-testis tissue", "EarlyEmbryo testis"="Early embryo testis", "Neonate testis"="Juvenile testis","Adult testis"="Adult testis")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("Early embryo testis", "Juvenile testis", "Adult testis", "Adult non-testis tissue" ))) %>%
+  mutate(Metric = recode(metric, "PSI"="Splicing,\nPSI", "log2RPKM"="Expression,\nlog2RPKM")) %>%
+  mutate(Metric = factor(metric, levels=c("Splicing,\nPSI", "Expression,\nlog2RPKM"))) %>%
+  filter(!NewerGroup=="Adult non-testis tissue") %>%
+  ggplot(aes(x=Species.short, color=NewerGroup, y=value)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_wrap(~metric, scales="free_y", nrow=2, strip.position="left") +
+  theme( strip.placement = "outside", legend.position='bottom', strip.background=element_blank(), panel.spacing = unit(2, "lines")) +
+  labs(x=NULL, color=NULL, y=NULL)
+
+Dat.For.Boxplots %>%
+  mutate(PSI = if_else(ReadsInClusterGroup==T, PSI, as.numeric(NA))) %>%
+  filter(gene_name == "ARHGAP17") %>%
+  dplyr::select(PSI, log2RPKM, NewerGroup, Species.short) %>%
+  pivot_longer(names_to = "metric", values_to = "value", c("PSI", "log2RPKM")) %>%
+  mutate(NewerGroup = recode(NewerGroup, "Non testis adult"="Adult non-testis tissue", "EarlyEmbryo testis"="Early embryo testis", "Neonate testis"="Juvenile testis","Adult testis"="Adult testis")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("Early embryo testis", "Juvenile testis", "Adult testis", "Adult non-testis tissue" ))) %>%
+  mutate(Metric = recode(metric, "PSI"="Splicing,\nPSI", "log2RPKM"="Expression,\nlog2RPKM")) %>%
+  mutate(Metric = factor(metric, levels=c("Splicing,\nPSI", "Expression,\nlog2RPKM"))) %>%
+  filter(!NewerGroup=="Adult non-testis tissue") %>%
+  filter(Species.short == "Opossum") %>%
+  ggplot(aes(x=Species.short, color=NewerGroup, y=value)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  theme_bw() +
+  Rotate_x_labels +
+  theme(strip.text.x = element_text(size = 6)) +
+  labs(color="Coarse developmental stage") +
+  facet_wrap(~metric, scales="free_y", nrow=2, strip.position="left") +
+  theme( strip.placement = "outside", legend.position='bottom', strip.background=element_blank(), panel.spacing = unit(2, "lines")) +
+  labs(x=NULL, color=NULL, y=NULL)
+```
+
+Ok, actually maybe NSD1 isn't the best to highlight, since the expression effect is oppossite in both human and macaque (though when considering early embryo in human, it actually makes more sense, from my previous version). I like the idea of highlighting an unproductive event specific to mature testis. Let's look for more events that fit that criteria...
+
+```{r}
+TxInfo <- read_tsv("../output/Ensembl.TranscriptInfo.tsv.gz")
+
+
+dat.JoinedByHumanCoords %>%
+  filter(Tissue == "Neonate Testis v Adult Testis") %>%
+  filter(q.splicing.Human < 0.05 & abs(deltapsi.Human) > 0.05) %>%
+  filter(p.OtherSpecies < 0.05 & (sign(deltapsi.Human) == sign(deltapsi.OtherSpecies))) %>%
+  filter(Coding.Human == F & Coding.OtherSpecies == F) %>%
+  filter((!sign(logFC.Human) == sign(deltapsi.Human)) & !(sign(logFC.OtherSpecies)==sign(deltapsi.OtherSpecies))) %>%
+  add_count(human.name, Gene_name.Human) %>%
+  arrange(desc(n), human.name, Species.OtherSpecies) %>%
+  left_join(
+    TxInfo %>%
+      filter(Species == "Human") %>%
+      dplyr::select(Gene_name.Human=ensembl_gene_id_version, external_gene_name) %>%
+      distinct()
+  ) %>%
+  dplyr::select(Species.OtherSpecies,human.name, external_gene_name, Gene_name.Human, deltapsi.Human, deltapsi.OtherSpecies, n)
+
+```
+ARHGAP17, chr16_24954730_24959910_-, looks promising...
+
+```{r}
+dat.JoinedByHumanCoords %>%
+  filter(Tissue == "Neonate Testis v Adult Testis") %>%
+  filter(human.name == "chr16_24954730_24959910_-")
+```
+
+
+Note, I am just going to add this intron to the code/plots above, even though i discovered at this part of the notebook... after adding ARHGAP17, I notice that the opossum junction might just be wrong, since it doesn't show any affect and is really low PSI... It might be a false positive liftover. But since there is a good hit in chicken, it should exist in opossum. Maybe we can get a better sense of what is going on by looking at the other junctions around this cluster/gene.
+
+Let's look at the testis developmental effect for all junctions in this opossum gene.
+
+```{r}
+#ENSMODG00000016300.4
+
+OpossumBed <- read_tsv("../code/MazinLeafcutterAnalysis/ReformatedGTFs/Opossum_UCSC.monDom5_ensvUnknown.bed", col_names=c("chro","start", "stop", "name", "score", "strand", "thickStart", "thickEnd", "color", "NumBlocks", "BlockSizes","BlockStarts", "gene")) %>%
+  filter(gene == "ENSMODG00000016300.4")
+
+
+
+Opossum.ARHGAP17.PSI <- fread("tabix -h ../code/rna-seq/SplicingAnalysis/leafcutter/Opossum_UCSC.monDom5_ensvUnknown/juncTableBeds/PSI.sorted.bed.gz chr6:143348771-143469844") %>%
+  dplyr::select(junc, gid, contains("Opossum")) %>%
+  pivot_longer(names_to = "ID", values_to = "PSI", contains("Opossum"))
+
+
+
+Dat.For.Boxplots %>%
+  filter(gene_name == "ARHGAP17") %>%
+  filter(Species.short == "Opossum") %>%
+  dplyr::select(Species.short, ID, Tissue, group, NewerGroup) %>%
+  inner_join(
+    Opossum.ARHGAP17.PSI
+  ) %>%
+  mutate(NewerGroup = recode(NewerGroup, "Non testis adult"="Adult non-testis tissue", "EarlyEmbryo testis"="Early embryo testis", "Neonate testis"="Juvenile testis","Adult testis"="Adult testis")) %>%
+  mutate(NewerGroup = factor(NewerGroup, levels=c("Early embryo testis", "Juvenile testis", "Adult testis", "Adult non-testis tissue" ))) %>%
+  filter(!NewerGroup=="Adult non-testis tissue") %>%
+  separate(junc, into=c("chrom", "start", "stop", "cluster"), sep=":", remove=F, convert=T) %>%
+  mutate(Intron_coord = str_glue("{chrom}:{start}-{stop-1}")) %>%
+  inner_join(
+    JunctionProductivity %>%
+      filter(Gene_name == "ENSMODG00000016300.4") %>%
+      dplyr::select(Intron_coord, Annot, AlgorithmCoding, UTR, GencodePC, Coding)
+  ) %>%
+  mutate(facet_name = str_glue("{cluster}\n{AlgorithmCoding}\n{Intron_coord}")) %>%
+  ggplot(aes(x=NewerGroup, color=NewerGroup, y=PSI)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(position=position_jitterdodge(), alpha=0.2) +
+  facet_wrap(~facet_name, scales="free") +
+  theme_bw() +
+  theme(axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank()) + 
+  theme(strip.text.x = element_text(size = 8)) +
+  labs(color="Coarse developmental stage")
+  # theme(legend.position="none")
+
+```
+
+Ok, so there are actually a couple of candidate juncs that clearly go up in adult opossum testis, but often we don't classify them as productive. we will have to look at the actual position of these in the gene to see the most likely truly orthologous regulated intron...
+
+now moving on...
+
+### pygenometracks plot prep
+
+```{r}
+ConservedJuncs.beds
+
+genes_bed12 <- Sys.glob("../code/MazinLeafcutterAnalysis/ReformatedGTFs/*.bed") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ReformatedGTFs/(.+?).bed", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome")
+
+
+```
+
+And now make pygenometracks ini files
+
+```{r}
+JunctionProductivity.onlyClustered <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.Clustered._junction_classifications.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).Clustered._junction_classifications.txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome") %>%
+  mutate(Species.short = str_replace(OriginGenome, "^(.+?)_.+", "\\1")) %>%
+  mutate(Species_AnnotationSource = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species_AnnotationSource = factor(Species_AnnotationSource, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  dplyr::rename("AlgorithmCoding"="Coding") %>%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+
+
+
+JunctionProductivity.AndAnnotated.onlyClustered <- JunctionProductivity.onlyClustered %>%
+  inner_join(
+    Junc.regtools.annotations %>%
+      dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+    by=c("Intron_coord", "OriginGenome")
+  ) %>%
+  mutate(Species.short = factor(Species.short, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  ))
+
+juncs.and.clusters <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.Clustered.juncList.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).Clustered.juncList.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id = "OriginGenome") %>%
+  filter(str_detect(chrom, "clu_NA", negate = T)) %>%
+  separate(chrom, into=c("chrom", "start", "stop", "cluster"), sep=":", convert=T) %>%
+  mutate(Intron_coord = str_glue("{chrom}:{start}-{stop}")) %>%
+  mutate(strand = str_extract(cluster, "[-+]$")) %>%
+  mutate(name = str_glue("{chrom}_{start}_{stop}_{strand}"))
+```
+
+and write necessary files
+
+```{r}
+Juncs.To.Plot <- Dat.For.Boxplots %>%
+  mutate(gene = gene_name) %>%
+  distinct(JuncCoord, Species, gene) %>%
+  inner_join(
+    juncs.and.clusters,
+    by=c("JuncCoord"="Intron_coord", "Species"="OriginGenome")
+  ) %>%
+  inner_join(
+    juncs.and.clusters %>%
+      dplyr::select(Species=OriginGenome, cluster, Intron_coord),
+    by=c("Species", "cluster")
+  ) %>%
+  dplyr::rename(OriginGenome=Species) %>%
+  inner_join(
+    JunctionProductivity.AndAnnotated.onlyClustered %>%
+      dplyr::select(OriginGenome, Gene_name, Intron_coord, AlgorithmCoding, Annot, Coding, UTR, GencodePC, ProductivityLabel)
+  ) %>%
+  # mutate(Coding = AlgorithmCoding) %>%
+  sample_frac(1)
+
+```
+
+check macaque srsf2 isoforms on igv
+
+```{r, eval=F}
+
+genes_bed12 %>%
+  inner_join(
+    Juncs.To.Plot %>%
+      dplyr::select(Gene_name, OriginGenome, gene) %>%
+      distinct(),
+    by=c("V13"="Gene_name", "OriginGenome")
+  ) %>%
+  filter(V16 == "protein_coding") %>%
+  mutate(Len = V3 - V2) %>%
+  filter(gene == "SRSF2" & OriginGenome == "Macaque_UCSC.rheMac10_ensv101") %>%
+  dplyr::select(V1:V12) %>%
+  write_tsv("../code/scratch/MacaqueSRSF2.bed", col_names = F)
+
+```
+
+write bed files for pygenometracks
+
+```{r}
+
+# write out genes bed
+genes_bed12 %>%
+  inner_join(
+    Juncs.To.Plot %>%
+      dplyr::select(Gene_name, OriginGenome) %>%
+      distinct(),
+    by=c("V13"="Gene_name", "OriginGenome")
+  ) %>%
+  filter(V16 == "protein_coding") %>%
+  mutate(Len = V3 - V2) %>%
+  arrange(OriginGenome, desc(Len), desc(V10), desc(V21)) %>%
+  # distinct(OriginGenome, gene, .keep_all=T) %>%
+  distinct(OriginGenome, V13, .keep_all=T) %>%
+  dplyr::select(OriginGenome, V1:V12) %>%
+  bind_rows(
+    genes_bed12 %>%
+    filter(V4=="XM_039089217.1")
+  ) %>%
+  group_by(OriginGenome) %>%
+  group_walk(~ write_tsv(.x, paste0("../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/HostGenes.",.y$OriginGenome, ".bed"), col_names =F))
+
+# Write out juncs as links files, separated by coding or not
+# may want to later change to PR, UP, or NE
+Juncs.To.Plot %>%
+  arrange(OriginGenome, Gene_name, desc(Coding), desc(Annot)) %>%
+  # filter(!UTR) %>%
+  # mutate(Coding = ProductivityLabel) %>%
+  # mutate(Coding = AlgorithmCoding) %>%
+  dplyr::select(Intron_coord, Coding, Annot, OriginGenome) %>%
+  separate(Intron_coord, into=c("chrom", "start", "stop"), sep="[:-]") %>%
+  mutate(chrom2 = chrom, start2=start, stop2=stop, score=1) %>%
+  dplyr::select(chrom, start, start2, chrom2, stop, stop2, score, OriginGenome, Coding, Annot) %>%
+  group_by(Coding, Annot, OriginGenome) %>%
+  group_walk(~ write_tsv(.x, paste0("../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/ClusterLinks",.y$OriginGenome, ".", .y$Coding, ".", .y$Annot, ".links"), col_names =F))
+
+Juncs.To.Plot %>%
+  filter(JuncCoord == Intron_coord) %>%
+  arrange(OriginGenome, Gene_name, desc(Coding), desc(Annot)) %>%
+  # filter(!UTR) %>%
+  # mutate(Coding = ProductivityLabel) %>%
+  # mutate(Coding = AlgorithmCoding) %>%
+  dplyr::select(Intron_coord, Coding, Annot, OriginGenome) %>%
+  separate(Intron_coord, into=c("chrom", "start", "stop"), sep="[:-]") %>%
+  mutate(chrom2 = chrom, start2=start, stop2=stop, score=1) %>%
+  dplyr::select(chrom, start, start2, chrom2, stop, stop2, score, OriginGenome, Coding, Annot) %>%
+  group_by(Coding, Annot, OriginGenome) %>%
+  group_walk(~ write_tsv(.x, paste0("../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/ClusterLinksJuncOfInterest",.y$OriginGenome, ".", .y$Coding, ".", .y$Annot, ".links"), col_names =F))
+
+
+
+Juncs.To.Plot %>%
+  filter(JuncCoord == Intron_coord) %>%
+  group_by(OriginGenome) %>%
+  dplyr::select(chrom, start, stop) %>%
+  group_walk(~ write_tsv(.x, paste0("../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/BedRegionsToHighlight.",.y$OriginGenome, ".bed"), col_names =F))
+```
+
+
+```{r}
+
+JuncsOfInterest.ini.sections <- Juncs.To.Plot %>%
+  filter(JuncCoord == Intron_coord) %>%
+  dplyr::select(Intron_coord, Coding, Annot, OriginGenome) %>%
+  distinct(OriginGenome, Coding, Annot) %>%
+  arrange(OriginGenome, Coding, Annot) %>%
+  mutate(JuncColor = case_when(
+    
+    # # Using bitwise flag conversion
+    # Coding == "PR" & Annot ~ "#1f78b4",
+    # Coding == "UP" & Annot ~ "#e31a1c",
+    # Coding == "PR" & !Annot ~ "#a6cee3",
+    # Coding == "UP" & !Annot ~ "#fb9a99",
+    # Coding == "NE" & Annot ~ "#969696",
+    # Coding == "NE" & !Annot ~ "#d9d9d9"
+    
+    # using coding and annot
+    Coding  & Annot ~ "#1f78b4",
+    !Coding & Annot ~ "#e31a1c",
+    Coding  & !Annot ~ "#a6cee3",
+    !Coding & !Annot ~ "#fb9a99"
+  )) %>%
+  mutate(JuncTracks = str_glue(
+"
+[{Coding}_{Annot}]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/ClusterLinksJuncOfInterest{OriginGenome}.{Coding}.{Annot}.links
+height = 1
+overlay_previous = yes
+links_type = arcs
+color = {JuncColor}
+# alpha = 1
+# if line_width is not given, the score is used to set the line width
+# using the following formula (0.5 * square root(score)
+line_width = 1.5
+# options for line_style are 'solid', 'dashed', 'dotted', and 'dashdot'
+line_style = solid
+file_type = links
+"
+  )) %>%
+  group_by(OriginGenome) %>%
+  summarise(JuncsOfInterestTracksCollapsed = paste0(JuncTracks,collapse = '\n\n')) %>%
+  ungroup()
+
+
+Juncs.To.Plot %>%
+  # filter(!UTR) %>%
+  
+  # mutate(Coding = ProductivityLabel) %>%
+  # mutate(Coding = AlgorithmCoding) %>%
+  
+  dplyr::select(Intron_coord, Coding, Annot, OriginGenome) %>%
+  distinct(OriginGenome, Coding, Annot) %>%
+  arrange(OriginGenome, Coding, Annot) %>%
+  mutate(JuncColor = case_when(
+    
+    # # Using bitwise flag conversion
+    # Coding == "PR" & Annot ~ "#1f78b4",
+    # Coding == "UP" & Annot ~ "#e31a1c",
+    # Coding == "PR" & !Annot ~ "#a6cee3",
+    # Coding == "UP" & !Annot ~ "#fb9a99",
+    # Coding == "NE" & Annot ~ "#969696",
+    # Coding == "NE" & !Annot ~ "#d9d9d9"
+    
+    # using coding and annot
+    Coding  & Annot ~ "#1f78b4",
+    !Coding & Annot ~ "#e31a1c",
+    Coding  & !Annot ~ "#a6cee3",
+    !Coding & !Annot ~ "#fb9a99"
+  )) %>%
+  mutate(JuncTracks = str_glue(
+"
+[{Coding}_{Annot}]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/ClusterLinks{OriginGenome}.{Coding}.{Annot}.links
+height = 1
+overlay_previous = yes
+links_type = arcs
+color = {JuncColor}
+# alpha = 1
+# if line_width is not given, the score is used to set the line width
+# using the following formula (0.5 * square root(score)
+line_width = 1.5
+# options for line_style are 'solid', 'dashed', 'dotted', and 'dashdot'
+line_style = solid
+file_type = links
+"
+  )) %>%
+  group_by(OriginGenome) %>%
+  summarise(JuncTracksCollapsed = paste0(JuncTracks,collapse = '\n\n')) %>%
+  ungroup() %>%
+  left_join(
+    JuncsOfInterest.ini.sections
+  ) %>%
+  mutate(Ini = str_glue(
+"
+[spacer]
+height = 1
+
+{JuncTracksCollapsed}
+
+{JuncsOfInterestTracksCollapsed}
+    
+[Genes]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/HostGenes.{OriginGenome}.bed
+height = 1
+color = darkblue
+labels = false
+fontsize = 10
+#style = UCSC
+style = flybase
+#style = tssarrow
+# if you use UCSC style, you can set the relative distance between 2 arrows on introns
+# default is 2
+#arrow_interval = 2
+# if you use tssarrow style, you can choose the length of the arrow in bp
+# (default is 4% of the plotted region)
+#arrow_length = 5000
+# if you use flybase or tssarrow style, you can choose the color of non-coding intervals:
+color_utr = darkblue
+height_utr = 0.5
+file_type = bed
+    
+
+[JuncOfInterest]
+file = MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/BedRegionsToHighlight.{OriginGenome}.bed
+type = vhighlight
+")) %>%
+  mutate(Ini= if_else(OriginGenome == "Human_UCSC.hg38_GencodeComprehensive46", paste("[PhyloP]
+file = ../../20211209_JingxinRNAseq/code/PhyloP/SourceTrack/PhyloP.hg38.bw
+height = 1
+color = #666666
+min_value = 0
+#max_value = auto
+number_of_bins = 700
+nans_to_zeros = true
+summary_method = mean
+show_data_range = true
+file_type = bigwig
+", Ini, sep="\n"), as.character(Ini))) %>%
+  dplyr::select(OriginGenome, Ini) %>%
+  group_by(OriginGenome) %>%
+  group_walk(~ write.table(.x, paste0("../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/Tracks.",.y$OriginGenome, ".ini"),quote=F, sep="\t", row.names=F, col.names = F))
+
+Juncs.To.Plot %>%
+  filter(Intron_coord == JuncCoord) %>%
+  distinct() %>%
+  dplyr::select(chrom, start, stop, gene, strand, OriginGenome) %>%
+  mutate(Orientation = if_else(strand == "+", "", "--decreasingXAxis")) %>%
+  mutate(Cmd = str_glue("pyGenomeTracks --tracks ../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/Tracks.{OriginGenome}.ini --region {chrom}:{start-1000}-{stop+1000} {Orientation} --width 20 --outFileName ../code/scratch/{gene}_{OriginGenome}.pdf")) %>%
+  arrange(gene, OriginGenome) %>%
+  dplyr::select(Cmd) %>%
+  write_tsv("../code/scratch/MakePlots.sh", col_names = F)
+
+Juncs.To.Plot %>%
+  filter(JuncCoord == Intron_coord) %>%
+  distinct() %>%
+  filter(OriginGenome == "Human_UCSC.hg38_GencodeComprehensive46") %>%
+  mutate(start = start - 1000, stop = stop + 1000) %>%
+  dplyr::select(chrom, start, stop) %>%
+  write_tsv("../code/scratch/Human.PlotRegions.bed", col_names = F)
+```
+
+And from looking at the gene structure, I think the opossum junc really is lifted over correctly, since it is clearly mapping to the same exon skipping event as in other species. It's odd that the skipping event doesn't happen in opossum but does it chicken. Could just be an ancient regulated event that was lost in the opossum lineage.
+
+Lastly, let's write out the data for the jittered plots for possibly making into beeswarm plots in a serperate notebook (that I can run in a seperate environment where it is easier to install beeswearm package.)
+
+```{r, eval=F}
+
+Dat.For.Boxplots %>%
+  write_tsv("../output/DataForReplotting_ConservedAS_Examples.tsv.gz")
+
+GTEx.SRSF.PSI %>%
+  write_tsv("../output/DataForReplotting_ConservedAS_SRSF2_GTEx.tsv.gz")
+
+
+```
+
+
+

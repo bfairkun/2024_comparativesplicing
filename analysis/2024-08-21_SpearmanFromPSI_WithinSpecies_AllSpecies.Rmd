@@ -1,0 +1,211 @@
+---
+title: "2024-08-21_SpearmanFromPSI_AllSpecies"
+output: html_document
+date: '2024-08-21'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Similar to a previous notebook, I calculated the spearman coef and P value (PSI vs developmental time) for each junction within species:tissue pair. Let's read in results and explore a bit
+
+```{r}
+library(tidyverse)
+library(data.table)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+Read in data
+
+```{r}
+
+dat <- Sys.glob("../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/*.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/(.+?).tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Species") %>%
+  mutate(Species = str_replace(Species, "^(.+?)_.+", "\\1"))
+  
+
+```
+
+Histograms of P values..
+
+```{r}
+dat %>%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_grid(Species~Tissue, scales="free") +
+  Rotate_x_labels
+
+```
+
+I see that macaque is less powered across the board for some reason. I think that was true (less devAS exons) from Mazin analysis... And not so many ovary devAS either.
+
+Let's plot as qq-plot...  will have to do some thoughtful subsampling to make the plot more manageable with so many millions of points...
+
+```{r}
+dat %>%
+  count(Tissue, Species)
+
+dat.ForQQ <- dat %>%
+  group_by(Species, Tissue) %>%
+  mutate(ExpectedP = percent_rank(P)) %>%
+  ungroup()
+
+bind_rows(
+  dat.ForQQ %>%
+    filter(ExpectedP < 0.01),
+  dat.ForQQ %>%
+    filter(ExpectedP > 0.01) %>%
+    group_by(Species, Tissue) %>%
+    sample_frac(0.01) %>%
+    ungroup()
+) %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(P), color=Tissue)) +
+  geom_abline(slope=1, intercept = 0) +
+  geom_point() +
+  coord_cartesian(ylim=c(0,10)) +
+  facet_wrap(~Species, scales="free_x")
+  
+```
+
+And also present as bar plot of number FDR significant hits...
+
+```{r}
+NumHits.dat <- dat %>%
+  group_by(Species, Tissue, cluster) %>%
+  summarise(Threshold_100 = any(q < 1),
+         Threshold_10 = any(q < 0.1),
+         Threshold_05 = any(q < 0.05),
+         Threshold_01 = any(q < 0.01)) %>%
+  pivot_longer(names_to = "Threshold", values_to = "IsPassing", contains("Threshold")) %>%
+  group_by(Species, Tissue, Threshold) %>%
+  summarise(SumPass = sum(IsPassing, na.rm=T)) %>%
+  ungroup()
+
+
+NumHits.dat %>%
+  ggplot(aes(x=Tissue, y=SumPass, fill=Threshold)) +
+    geom_col(position = position_dodge()) +
+    scale_fill_brewer(palette = "Blues", labels=c("contains junc FDR<1%", "contains junc FDR<5%","contains junc FDR<10%","All test clusters"),direction = 1) +
+    facet_wrap(~Species) +
+    Rotate_x_labels +
+    labs(y="Number splice clusters")
+
+NumHits.dat %>%
+  filter(Threshold %in%  c("Threshold_10", "Threshold_05","Threshold_01")) %>%
+  ggplot(aes(x=Tissue, y=SumPass, fill=Threshold)) +
+    geom_col(position = position_dodge()) +
+    scale_fill_brewer(palette = "Blues", labels=c("contains junc FDR<1%", "contains junc FDR<5%","contains junc FDR<10%","All test clusters"),direction = 1) +
+    facet_wrap(~Species) +
+    Rotate_x_labels +
+    labs(y="Number splice clusters")
+```
+
+
+Now let's check junction classifications, and make sure they generally reasonable for all species
+
+```{r}
+JuncAnnotations <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*._junction_classifications.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?)._junction_classifications.txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Species") %>%
+  mutate(Species = str_replace(Species, "^(.+?)_.+", "\\1"))
+
+JuncAnnotations %>%
+  count(Species, Annot, Coding) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  mutate(Species = recode(Species, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v?", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v?", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='fill') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  Rotate_x_labels +
+  labs(y="fraction unique juncs", caption=str_wrap("GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels", 30), x="Species, gene model source")
+
+JuncAnnotations %>%
+  count(Species, Annot, Coding) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  mutate(Species = recode(Species, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v?", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species = factor(Species, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v?", "Chicken"="Chicken, Ensembl v101"))) %>%
+  ggplot(aes(x=Species, y=n, fill=Group)) +
+  geom_col(position='stack') +
+  scale_fill_manual(values = c("Productive Annot"="#1f78b4", "Productive Unannot"="#a6cee3", "Unproductive Annot"="#e31a1c", "Unproductive Unannot"="#fb9a99")) +
+  Rotate_x_labels +
+  labs(y="fraction unique juncs", caption=str_wrap("GTF for most recent assembly on UCSC, which itself sources gene models from x-axis labels", 30), x="Species, gene model source")
+
+JuncAnnotations %>%
+  distinct(Species)
+
+JuncAnnotations %>%
+  filter(Species == "Rat")
+```
+
+Ok that makes sense now.
+
+In any case, let's compare number hits from leafcutter method to number devAS reported...
+
+```{r}
+
+devAS <- fread("../code/kaessman_AS_dat/Supplementary_Data/Supplementary_Data_9.csv") %>%
+  mutate(Species = str_replace(V1, "(.+?)\\..+$", "\\1"))
+
+
+devAS %>%
+  dplyr::select(V1, Species, contains("pattern")) %>%
+  pivot_longer(names_to = c(".value", "Tissue") , values_to = "value", cols=contains("pattern"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+  mutate(IsSig = pattern %in% c("u", "d")) %>%
+  count(Species, Tissue, IsSig) %>%
+  filter(IsSig) %>%
+  ggplot(aes(x=Tissue, y=n)) +
+    geom_col(position = position_dodge()) +
+    facet_wrap(~Species) +
+    Rotate_x_labels +
+    labs(y="Number devAS events")
+
+
+bind_rows(
+  NumHits.dat %>%
+    filter(Threshold == "Threshold_05") %>%
+    dplyr::select(Species, Tissue, n=SumPass) %>%
+    mutate(Group = "Leafcutter_01"),
+  devAS %>%
+    dplyr::select(V1, Species, contains("pattern")) %>%
+    pivot_longer(names_to = c(".value", "Tissue") , values_to = "value", cols=contains("pattern"), names_pattern=c("(^.+)\\.(.+$)")) %>%
+    mutate(IsSig = pattern %in% c("u", "d")) %>%
+    count(Species, Tissue, IsSig) %>%
+    filter(IsSig) %>%
+    mutate(Tissue = str_to_title(Tissue)) %>%
+    mutate(Species = recode(Species, "chi"="Chicken", "hum"="Human", "mac"="Macaque", "opo"="Opossum", "rat"="Rat", "rab"="Rabbit", "mou"="Mouse")) %>%
+    dplyr::select(Species, Tissue, n) %>%
+    mutate(Group = "Mazin_devAS_05")
+) %>%
+  pivot_wider(names_from = Group, values_from = n) %>%
+  ggplot(aes(x=Leafcutter_01, y=Mazin_devAS_05)) +
+  geom_point(aes(color=Tissue, shape=Species, fill=Tissue)) +
+  scale_shape_manual(values = c(15:19, 8, 23)) +
+  # geom_point(aes(color=Species, shape=Tissue)) +
+  geom_abline() +
+  labs(x="Num clusters\nLeafcutter PSI (Spearman cor.test adj P < 0.05)", y="Num Mazin reported devAS segments\n(adj P < 0.05)")
+  
+
+
+
+
+```
+

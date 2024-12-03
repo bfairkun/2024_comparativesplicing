@@ -1,0 +1,284 @@
+---
+title: "2024-10-15_HeatmapsWithLeafcutter_dPSI"
+output: html_document
+date: '2024-10-15'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Haven't been able to figure out why unproductive splicing as measured by spearman of leafcutter PSI doesn't correlate negatively with spearman of host gene expression. Now, rather than using spearman correlation coefficients, I am measuring logFC and dPSI (from leafcutter) using contrasts from groups of samples at the beginning or end of the the species:tissue time course.
+
+```{r}
+library(tidyverse)
+library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+```
+
+
+Now read in the data... I defined the groups for leafcutter and edgeR contrasts a couple different ways, as described in previous notebook.
+
+```{r}
+CordosoSamples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+
+dat <- Sys.glob("../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/*joined.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/Contrasts_ds_tidy/(.+?).joined.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Contrast") %>%
+  separate(Contrast, into=c("Contrast", "Tissue", "Species"), sep="\\.") %>%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  ))
+
+
+dat %>%
+  count(Contrast, Tissue, Species)
+
+
+dat %>%
+  filter(p.adjust < 0.1) %>%
+  filter(abs(logef)>1) %>%
+  filter(abs(deltapsi) > 0.1) %>%
+    # count(Contrast, Tissue, Species)
+  group_by(Contrast, Tissue, Species, ProductivityLabel) %>%
+  summarise(spearman.of_CorPSI_vs_CorRPKM = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_CorPSI_vs_CorRPKM)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=n), size=2) +
+  facet_grid(Contrast~ProductivityLabel) +
+  Rotate_x_labels
+
+# ggsave("../code/scratch/HeatmapFromLeafcutterDpsi_and_log2FC.pdf", height=12, width=16)
+
+dat %>%
+  count(Species, Contrast)
+```
+
+Let's look at specific cell at beta beta scatter.
+
+First let's verify I understand the signs of the logFC and deltapsi correctly... I believe it should be Late/Early (so that positive deltapsi means increase in PSI over time, and positive logFC means increase in expression over time)
+
+```{r}
+dat %>%
+  filter(p.adjust < 0.1) %>%
+  filter(abs(logef)>1) %>%
+  filter(abs(deltapsi) > 0.1) %>%
+  filter(Contrast == "BeforeM_vs_AfterS" & Species == "Rat" & Tissue == "Brain") %>%
+  filter(FDR<0.001) %>%
+  arrange(desc(abs(logFC))) %>%
+  head()
+
+RPKM.rat <- fread("../code/MazinLeafcutterAnalysis/Expression/Rat_UCSC.rn7_RefSeqv108.log2rpkm.tsv.gz")
+
+RPKM.rat %>%
+  filter(Geneid == "Plp1") %>%
+  pivot_longer(names_to = "ID", values_to = "log2RPKM", -Geneid) %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(ID_Species == "Rat") %>%
+      filter(`Used library?` %in% c("Yes", "yes")) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis) %>%
+      filter(Tissue_ForDevelopementalAnalysis == "Brain")
+  ) %>%
+  ggplot(aes(x=Ordinal_stage, y=log2RPKM)) +
+  geom_point(alpha=0.3) +
+  geom_smooth(method='loess', se=F)
+
+```
+
+Ok I understand the effect directions properly. Now let's look at one of the scatters...
+
+```{r}
+dat %>%
+  filter(p.adjust < 0.1) %>%
+  filter(abs(logef)>1) %>%
+  filter(abs(deltapsi) > 0.1) %>%
+  filter(Contrast == "BeforeM_vs_AfterS" & Species == "Rat" & Tissue == "Brain") %>%
+  ggplot(aes(x=deltapsi, y=logFC)) +
+  geom_point(alpha=0.2) +
+  geom_smooth(method='lm') +
+  facet_wrap(~ProductivityLabel)
+```
+
+Now let's play with different thresholds for deltapsi and logef
+
+```{r}
+dat$Contrast %>% unique
+
+dat %>%
+  filter(p.adjust < 0.05) %>%
+  # filter(abs(logef)>0.5) %>%
+  filter(abs(deltapsi) > 0.01) %>%
+  filter(!ProductivityLabel=="NE") %>%
+  group_by(Contrast, Species, Tissue, cluster) %>%
+  mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  ungroup() %>%
+  mutate(ProductivityLabel = factor(ProductivityLabel, levels=c("UP", "PR"))) %>%
+  arrange(Contrast, Species, Tissue, cluster, Contains_Noncoding, ProductivityLabel, desc(abs(deltapsi))) %>%
+  distinct(Contrast, Species, Tissue, cluster, .keep_all=T) %>%
+    # count(Contrast, Tissue, Species)
+  group_by(Contrast, Tissue, Species, ProductivityLabel) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  mutate(Contrast = recode(Contrast, "BeforeB_vs_AferS"="Before birth vs\nafter spermatogenesis", "BeforeB_vs_AfterB"="Before birth vs\nafter birth", "BeforeM_vs_AfterS"="Before oogenesis vs\nafter birth", "First10_vs_Second10"="First 10 samples vs\n last 10 samples", "FirstHalf_vs_SecondHalf"="First half vs\nlatter half")) %>%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=n), size=2) +
+  facet_grid(ProductivityLabel~Contrast) +
+  Rotate_x_labels +
+  theme(legend.position='bottom') +
+  labs(caption = "One junc per cluster in each tissue:species pair included.\nleafcutter_ds p.adjust < 0.05 and abs(deltapsi) > 1%")
+ggsave("../code/scratch/HeatmapFromLeafcutterDpsi_and_log2FC.pdf", height=8, width=14)
+
+
+dat %>%
+  filter(p.adjust < 0.05) %>%
+  # filter(abs(logef)>0.5) %>%
+  filter(abs(deltapsi) > 0.05) %>%
+  filter(!ProductivityLabel=="NE") %>%
+  group_by(Contrast, Species, Tissue, cluster) %>%
+  mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  ungroup() %>%
+  mutate(ProductivityLabel = factor(ProductivityLabel, levels=c("UP", "PR"))) %>%
+  arrange(Contrast, Species, Tissue, cluster, Contains_Noncoding, ProductivityLabel, desc(abs(deltapsi))) %>%
+  distinct(Contrast, Species, Tissue, cluster, .keep_all=T) %>%
+    # count(Contrast, Tissue, Species)
+  group_by(Contrast, Tissue, Species, ProductivityLabel) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup() %>%
+  mutate(Contrast = recode(Contrast, "BeforeB_vs_AferS"="Before birth vs\nafter spermatogenesis", "BeforeB_vs_AfterB"="Before birth vs\nafter birth", "BeforeM_vs_AfterS"="Before oogenesis vs\nafter birth", "First10_vs_Second10"="First 10 samples vs\n last 10 samples", "FirstHalf_vs_SecondHalf"="First half vs\nlatter half")) %>%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=n), size=2) +
+  facet_grid(ProductivityLabel~Contrast) +
+  Rotate_x_labels +
+  theme(legend.position='bottom') +
+  labs(caption = "One junc per cluster in each tissue:species pair included.\nleafcutter_ds p.adjust < 0.05 and abs(deltapsi) > 5%")
+ggsave("../code/scratch/HeatmapFromLeafcutterDpsi_and_log2FC.stricterfiltering.pdf", height=8, width=14)
+
+```
+
+
+Also, let's present more similar to Chao has:
+
+```{r}
+dat %>%
+  filter(p.adjust < 0.05) %>%
+  # filter(abs(logef)>0.5) %>%
+  filter(abs(deltapsi) > 0.05) %>%
+  filter(!ProductivityLabel=="NE") %>%
+  group_by(Contrast, Species, Tissue, cluster) %>%
+  mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  ungroup() %>%
+  mutate(ProductivityLabel = factor(ProductivityLabel, levels=c("UP", "PR"))) %>%
+  arrange(Contrast, Species, Tissue, cluster, Contains_Noncoding, ProductivityLabel, desc(abs(deltapsi))) %>%
+  distinct(Contrast, Species, Tissue, cluster, .keep_all=T) %>%
+  # count(Contrast, Tissue, Species)
+  group_by(Contrast, Tissue, Species, ProductivityLabel) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  filter(Contrast == "First10_vs_Second10") %>%
+  ggplot(aes(x=spearman.of_dPSI_vs_logFC, y=-log10(p))) +
+  geom_point(aes(color=Species, shape=Tissue)) +
+  geom_hline(yintercept = 3, linetype='dashed') +
+  facet_wrap(~ProductivityLabel) +
+  coord_cartesian(ylim=c(0,10))
+```
+Ok, let's start making some final looking plots...
+
+```{r}
+Final.heatmap.dat <- dat %>%
+  filter(p.adjust < 0.05) %>%
+  # filter(abs(logef)>0.5) %>%
+  filter(abs(deltapsi) > 0.05) %>%
+  filter(!ProductivityLabel=="NE") %>%
+  filter(Contrast == "First10_vs_Second10") %>%
+  mutate(Contrast = recode(Contrast, "BeforeB_vs_AferS"="Before birth vs\nafter spermatogenesis", "BeforeB_vs_AfterB"="Before birth vs\nafter birth", "BeforeM_vs_AfterS"="Before oogenesis vs\nafter birth", "First10_vs_Second10"="First 10 samples vs\n last 10 samples", "FirstHalf_vs_SecondHalf"="First half vs\nlatter half")) %>%
+  group_by(Contrast, Species, Tissue, cluster) %>%
+  mutate(Contains_Noncoding = any(ProductivityLabel == "UP")) %>%
+  ungroup() %>%
+  mutate(ProductivityLabel = factor(ProductivityLabel, levels=c("UP", "PR"))) %>%
+  arrange(Contrast, Species, Tissue, cluster, Contains_Noncoding, ProductivityLabel, desc(abs(deltapsi))) %>%
+  distinct(Contrast, Species, Tissue, cluster, .keep_all=T)
+
+Final.heatmap.dat %>%
+  group_by(Contrast, Tissue, Species, ProductivityLabel) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  mutate(Plab = case_when(
+    p > 0.05 ~ "",
+    p < 0.05 ~ "*",
+    p < 0.005 ~ "**",
+    p < 0.0005 ~ "***"
+  )) %>%
+  mutate(label = paste0(n, Plab)) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=label), size=2) +
+  facet_wrap(~ProductivityLabel, nrow=2) +
+  Rotate_x_labels +
+  theme() +
+  labs(caption = "One junc per cluster in each tissue:species pair included.\nleafcutter_ds p.adjust < 0.05 and abs(deltapsi) > 5%", fill="spearman rho\ndPSI v logFC")
+
+Final.heatmap.dat %>%
+  group_by(Contrast, Tissue, Species, ProductivityLabel) %>%
+  summarise(spearman.of_dPSI_vs_logFC = cor(deltapsi, logFC, method='s', use="pairwise.complete.obs"), n=n(),
+            p  = cor.test(deltapsi, logFC, method='s', use="pairwise.complete.obs")$p.value) %>%
+  ungroup() %>%
+  mutate(Plab = case_when(
+    p > 0.05 ~ "",
+    p < 0.05 ~ "*",
+    p < 0.005 ~ "**",
+    p < 0.0005 ~ "***"
+  )) %>%
+  mutate(label = paste0(n, Plab)) %>%
+  mutate(Species = factor(Species, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  ggplot(aes(x=Species, y=Tissue, fill=spearman.of_dPSI_vs_logFC)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=0) +
+  geom_text(aes(label=n), size=2) +
+  facet_wrap(~ProductivityLabel, nrow=2) +
+  Rotate_x_labels +
+  theme() +
+  labs(caption = "One junc per cluster in each tissue:species pair included.\nleafcutter_ds p.adjust < 0.05 and abs(deltapsi) > 5%", fill="spearman rho\ndPSI v logFC")
+
+
+Final.heatmap.dat %>%
+  filter(Species == "Chicken" & Tissue == "Brain") %>%
+  ggplot(aes(y=deltapsi, x=logFC)) +
+  geom_point(alpha=0.2) +
+  facet_wrap(~ProductivityLabel) +
+  labs(x="Differential gene expression (log2FC)")
+
+Final.heatmap.dat %>%
+  filter(Species == "Chicken" & Tissue == "Brain") %>%
+  ggplot(aes(y=deltapsi, x=logFC)) +
+  geom_point(alpha=0.2) +
+  facet_wrap(~ProductivityLabel) +
+  labs(x="Differential gene expression (log2FC)")
+
+ggsave("../code/scratch/HeatmapFromLeafcutterDpsi_and_log2FC.stricterfiltering.pdf", height=8, width=14)
+```
+

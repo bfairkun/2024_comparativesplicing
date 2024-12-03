@@ -1,0 +1,170 @@
+---
+title: "2024-09-09_Organize_ConserveddevASJuncs"
+output: html_document
+date: '2024-09-09'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+```{r}
+library(tidyverse)
+library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+```
+
+First, as a sanity check, let's look at log2FC by classification status in human based on naRNA-seq data...
+
+```{r}
+
+dat.KD <- fread("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/SplicingAnalysis/CombinedJuncTables/NMD_KD.tsv.gz")
+
+
+juncs.long.summary <- 
+  dat.KD %>%
+  dplyr::select(chrom, start, stop, strand, Dataset, Count) %>%
+  group_by(Dataset, chrom, start, stop) %>%
+  summarise(Sum=sum(Count)) %>%
+  ungroup()
+
+Classifications <- read_tsv("../code/MazinLeafcutterAnalysis/ClassifyJuncs/Human_UCSC.hg38_GencodeComprehensive46.AllObserved._junction_classifications.txt") %>%
+  separate(Intron_coord, into=c("chrom", "start", "stop"), sep="[:-]", convert=T, remove=F)
+
+Classifications %>%
+  head()
+
+juncs.long.summary %>%
+  distinct(Dataset)
+
+Joined <- juncs.long.summary %>%
+  filter(Dataset %in% c("HeLa.dKD", "HeLa.scr")) %>%
+  group_by(Dataset) %>%
+  mutate(RPM = Sum/sum(Sum)*1E6) %>%
+  ungroup() %>%
+  pivot_wider(names_from = c("Dataset"), values_from=c("Sum", "RPM")) %>%
+  inner_join(
+    Classifications
+    )
+
+min(Joined$RPM_HeLa.dKD, na.rm=T)
+min(Joined$RPM_HeLa.scr, na.rm=T)
+
+
+Joined %>%
+  replace_na(list(Sum_HeLa.scr=0, Sum_HeLa.dKD=0, RPM_HeLa.dKD=1E-4, RPM_HeLa.scr=1E-4)) %>%
+  mutate(DeltaRPM = log2(RPM_HeLa.dKD/RPM_HeLa.scr)) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  ggplot(aes(x=DeltaRPM, color=Group)) +
+    stat_ecdf() +
+    coord_cartesian(xlim=c(-5,5)) +
+  geom_vline(xintercept = 0)
+
+```
+
+
+```{r}
+Classifications.clustered <- read_tsv("../code/MazinLeafcutterAnalysis/ClassifyJuncs/Human_UCSC.hg38_GencodeComprehensive46.Clustered._junction_classifications.txt") %>%
+  separate(Intron_coord, into=c("chrom", "start", "stop"), sep="[:-]", convert=T, remove=F)
+
+Classifications.clustered %>%
+  arrange(chrom, start, stop)
+
+Classifications.clustered %>%
+  count(Annot, Coding)
+
+Joined.clustered <- juncs.long.summary %>%
+  filter(Dataset %in% c("HeLa.dKD", "HeLa.scr")) %>%
+  group_by(Dataset) %>%
+  mutate(RPM = Sum/sum(Sum)*1E6) %>%
+  ungroup() %>%
+  pivot_wider(names_from = c("Dataset"), values_from=c("Sum", "RPM")) %>%
+  inner_join(
+    Classifications.clustered
+    )
+
+Joined.clustered %>%
+  count(Annot, Coding)
+
+Classifications %>%
+  inner_join(Classifications.clustered, by=c("Intron_coord", "Gene_name")) %>%
+  count(Annot.x, Annot.y, Coding.x, Coding.y)
+
+Classifications %>%
+  inner_join(Classifications.clustered, by=c("Intron_coord", "Gene_name")) %>%
+  count(Annot.x, Annot.y, Coding.x, Coding.y) %>%
+  mutate(Coding.x = if_else(Coding.x, "AllObs_Productive", "AllObs_Unproductive")) %>%
+  mutate(Coding.y = if_else(Coding.y, "Clustered_Productive", "Clustered_Unproductive")) %>%
+  mutate(Annot = if_else(Annot.x, "Annotated", "Unannotated")) %>%
+  mutate(CodingGroup = str_glue("{Coding.x} {Coding.y}")) %>%
+  ggplot(aes(x=Annot, y=n, fill=CodingGroup)) +
+  geom_col(position='stack')
+
+
+Joined.clustered %>%
+  replace_na(list(Sum_HeLa.scr=0, Sum_HeLa.dKD=0, RPM_HeLa.dKD=1E-4, RPM_HeLa.scr=1E-4)) %>%
+  mutate(DeltaRPM = log2(RPM_HeLa.dKD/RPM_HeLa.scr)) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  ggplot(aes(x=DeltaRPM, color=Group)) +
+    stat_ecdf() +
+    coord_cartesian(xlim=c(-5,5)) +
+  geom_vline(xintercept = 0)
+
+```
+
+
+
+I now understand the problem... I did not format the input correctly... Non-clustered juncs were right, but not clusterd juncs. So I get all kinds of weird results...
+
+
+I have fixed that problem.. But now I still suspect an issue in the script. Let's clone Chao's most recent version of the script, and run the forward classifier script.
+
+```{r}
+Classifications.100K.All <- read_tsv("../code/scratch/Leaf2Clustered_junction_classifications.txt") %>%
+  separate(Intron_coord, into=c("chrom", "start", "stop"), sep="[:-]", convert=T, remove=F)
+
+Classifications.100K.All %>%
+  count(Annot, Coding)
+
+Joined.clustered <- juncs.long.summary %>%
+  filter(Dataset %in% c("HeLa.dKD", "HeLa.scr")) %>%
+  group_by(Dataset) %>%
+  mutate(RPM = Sum/sum(Sum)*1E6) %>%
+  ungroup() %>%
+  pivot_wider(names_from = c("Dataset"), values_from=c("Sum", "RPM")) %>%
+  inner_join(
+    Classifications.100K.All %>%
+      mutate(stop = as.numeric(stop)) %>%
+      mutate(stop = if_else(Annot, stop, stop))
+    )
+
+Joined.clustered %>%
+  count(Annot, Coding)
+
+Joined.clustered %>%
+  replace_na(list(Sum_HeLa.scr=0, Sum_HeLa.dKD=0, RPM_HeLa.dKD=1E-4, RPM_HeLa.scr=1E-4)) %>%
+  mutate(DeltaRPM = log2(RPM_HeLa.dKD/RPM_HeLa.scr)) %>%
+  mutate(Annot = if_else(Annot, "Annot", "Unannot")) %>%
+  mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
+  mutate(Group = paste(Coding, Annot)) %>%
+  ggplot(aes(x=DeltaRPM, color=Group)) +
+    stat_ecdf() +
+    coord_cartesian(xlim=c(-5,5)) +
+  geom_vline(xintercept = 0)
+
+```
+Wow. that is clearly much better. Ok. so I dunno what the bug was. but now it's fixed.

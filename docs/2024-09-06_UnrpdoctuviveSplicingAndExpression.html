@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2024-09-06" />
+
+<title>2024-09-06_UnrpdoctuviveSplicingAndExpression</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">2024_ComparativeSplicing</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">2024-09-06_UnrpdoctuviveSplicingAndExpression</h1>
+<h4 class="date">2024-09-06</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#intro" id="toc-intro">Intro</a></li>
+</ul>
+</div>
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-09-09
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>2024_comparativesplicing/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed19900924code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(19900924)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed19900924code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(19900924)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkun2024comparativesplicingtree172f74b99c3d796bd47fa2cac0f2aa13fcd77647targetblank172f74ba"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/2024_comparativesplicing/tree/172f74b99c3d796bd47fa2cac0f2aa13fcd77647" target="_blank">172f74b</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
+    Ignored:    code/.RData
+    Ignored:    code/.Rhistory
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/ChainFiles/
+    Ignored:    code/Chicken.fixed2.agat.log
+    Ignored:    code/Chicken.head.agat.log
+    Ignored:    code/CordosoMoreira_Fastq/
+    Ignored:    code/Downloads/
+    Ignored:    code/GenomeFiles/
+    Ignored:    code/LiftoverJuncs/
+    Ignored:    code/Log.out
+    Ignored:    code/MazinLeafcutterAnalysis/
+    Ignored:    code/Reference.basic.agat.log
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/config/OldConfigs/2040822_Cordoso_Moreira_SampleList.tsv
+    Ignored:    code/conservation/
+    Ignored:    code/featureCounts/
+    Ignored:    code/kaessmanAnalysis/
+    Ignored:    code/kaessman_AS_dat/
+    Ignored:    code/logs/
+    Ignored:    code/rna-seq/
+    Ignored:    code/rules/.MazinLeafcutterAnalysis.smk.swp
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/.vscode/
+    Ignored:    code/snakemake.log
+    Ignored:    data/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/.ipynb_checkpoints/
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_AllSpecies.Rmd
+    Untracked:  analysis/2024-08-21_SpearmanFromPSI_WithinSpecies_SampleStagesFixed.Rmd
+    Untracked:  analysis/2024-08-24_BioMartLookupGenes.Rmd
+    Untracked:  analysis/2024-08-29_ExploreJuncLiftovers.Rmd
+    Untracked:  analysis/2024-08-29_OrganizeCrossSpeciesTables.Rmd
+    Untracked:  analysis/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd
+    Untracked:  analysis/20240815_LiftoverJuncsTest.ipynb
+    Untracked:  analysis/Untitled.ipynb
+    Untracked:  code/envs/crossmap.yml
+    Untracked:  code/rules/MazinLeafcutterAnalysis.smk
+    Untracked:  code/scripts/FeatureCounts_to_Mat.R
+    Untracked:  code/scripts/PrepAllJuncsFor_JunctionClassifier.R
+    Untracked:  code/scripts/Reformat_gtf.py
+    Untracked:  code/scripts/SpearmanCor_Mazin_LeafcutterPSI.R
+    Untracked:  code/scripts/SpearmanCor_Mazin_log2RPKM.R
+    Untracked:  code/scripts/Untitled.ipynb
+    Untracked:  data/Stages_AsIn_CordosoMoreira.tsv
+    Untracked:  data/Stages_AsIn_CordosoMoreira_Recoded.txt
+    Untracked:  output/Conserved.devAS.leafcutter.tsv.gz
+    Untracked:  output/Ensembl.GeneHumanHomologs.tsv.gz
+    Untracked:  output/Ensembl.TranscriptInfo.tsv.gz
+
+Unstaged changes:
+    Modified:   analysis/2024-07-16_Download_CordosoMoreira_Fastq.Rmd
+    Modified:   analysis/index.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/config/ChainFiles.tsv
+    Modified:   code/config/Cordoso_Moreira_SampleList.tsv
+    Modified:   code/config/STAR_Genome_List.tsv
+    Modified:   code/config/samples.tsv
+    Modified:   code/envs/bedparse.yml
+    Modified:   code/module_workflows/snakemake-workflow_rna-seq
+    Modified:   code/rules/LiftoverJuncs.smk
+    Modified:   code/rules/common.smk
+    Modified:   code/scripts/leafcutter2
+    Modified:   output/QC/ReadCountsPerSamples.tsv
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>I previously showed from a reanalysis of Mazin’s splicing
+quantifications that there is the expected correlation between
+unproductive splicing and expression. I have reprocessed things purely
+with leafcutter2 approach for splicing, from raw data, and now I want to
+repeat finding those trends, both both species-specific, and conserved
+devAS juncs.</p>
+<pre class="r"><code>library(tidyverse)
+library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))</code></pre>
+<p>Get devAS juncs, genes, and productivity classifications…</p>
+<pre class="r"><code>JunctionProductivity &lt;- JuncAnnotations &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.AllObserved._junction_classifications.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).AllObserved._junction_classifications.txt&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;Species&quot;) %&gt;%
+  mutate(Species.short = str_replace(Species, &quot;^(.+?)_.+&quot;, &quot;\\1&quot;))</code></pre>
+<p>Because of a bug in the classify juncs script at time these files
+were made, I have to fix the junc coordiantes to propoerly join…</p>
+<pre class="r"><code># JunctionProductivity.fixed &lt;- JunctionProductivity %&gt;%
+#   # head() %&gt;%
+#   separate(Intron_coord, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;), sep=&#39;[-:]&#39;, convert=T) %&gt;%
+#   mutate(Intron_coord = case_when(
+#     Annot ~ str_glue(&quot;{chrom}:{start}-{stop-1}&quot;),
+#     TRUE ~ str_glue(&quot;{chrom}:{start}-{stop}&quot;)
+#   )) %&gt;%
+#   dplyr::select(-chrom, -start, -stop)
+
+Spearman.tests &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/*.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/SplicingSpearmanCoefs/(.+?).tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;) %&gt;%
+  dplyr::rename(chrom=start, start=stop, stop=chrom) %&gt;%
+  mutate(Intron_coord = str_glue(&quot;{chrom}:{start}-{stop}&quot;))
+
+Spearman.tests.expression &lt;- Sys.glob(&quot;../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/*.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/MazinLeafcutterAnalysis/ExpressionSpearmanCoefs/(.+?).tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;OriginGenome&quot;)</code></pre>
+<p>Before we join tables, let’s quickly eyeball p val distribution for
+spearman tests</p>
+<pre class="r"><code>Spearman.tests %&gt;%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_grid(Tissue~Species)</code></pre>
+<p><img src="figure/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Spearman.tests.expression %&gt;%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_grid(Tissue~Species)</code></pre>
+<p><img src="figure/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, good enough I suppose.</p>
+<pre class="r"><code>Spearman.tests.WithProductivity &lt;- Spearman.tests %&gt;%
+  inner_join(
+    JunctionProductivity,
+    by=c(&quot;OriginGenome&quot;=&quot;Species&quot;, &quot;Intron_coord&quot;)
+  ) %&gt;%
+  inner_join(
+    Spearman.tests.expression,
+    by=c(&quot;Tissue&quot;, &quot;OriginGenome&quot;, &quot;Gene_name&quot;=&quot;Geneid&quot;, &quot;Species&quot;),
+    suffix=c(&quot;.Splicing&quot;, &quot;.Expression&quot;)
+  )
+
+Spearman.tests.WithProductivity %&gt;%
+  count(Species)</code></pre>
+<pre><code>   Species       n
+1: Chicken  662622
+2:   Human 1217574
+3: Macaque  763165
+4:   Mouse  927183
+5: Opossum  753417
+6:  Rabbit  959977
+7:     Rat 1058386</code></pre>
+<pre class="r"><code>Spearman.tests.WithProductivity %&gt;%
+  filter(q.Splicing &lt; 0.01 &amp; !Coding) %&gt;%
+  ggplot(aes(x=corr.Splicing, y=corr.Expression)) +
+  geom_hex(bins=100) +
+  scale_fill_viridis_c() +
+  facet_grid(Tissue~Species)</code></pre>
+<p><img src="figure/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Spearman.tests.WithProductivity %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  filter(q.Splicing &lt; 0.01) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.Splicing)==sign(corr.Expression)) %&gt;%
+  count(Tissue, Species, Coding, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species, Coding) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  ggplot(aes(x=Species, y=Tissue, fill=Percent)) +
+  geom_raster() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_wrap(~Coding) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" />
+Ok, that makes sense, let’s also look at annotated vs unannotated</p>
+<pre class="r"><code>Spearman.tests.WithProductivity %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annotated&quot;, &quot;Unannotated&quot;)) %&gt;%
+  filter(q.Splicing &lt; 0.01) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.Splicing)==sign(corr.Expression)) %&gt;%
+  count(Tissue, Species, Coding, Annot, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species, Coding, Annot) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  ggplot(aes(x=Species, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Coding~Annot) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Spearman.tests.WithProductivity %&gt;%
+  filter(Annot)</code></pre>
+<pre><code>                         OriginGenome                                junc chrom
+      1: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+      2: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+      3: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+      4: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+      5: Chicken_UCSC.galGal6_ensv101 chr1:100003234:100004243:clu_5391_+  chr1
+     ---                                                                       
+3803580:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+3803581:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+3803582:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+3803583:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+3803584:      Rat_UCSC.rn7_RefSeqv108      chrY:991425:993904:clu_67064_-  chrY
+             start      stop     cluster Species     Tissue corr.Splicing
+      1: 100003234 100004243  clu_5391_+ Chicken      Brain   -0.03987895
+      2: 100003234 100004243  clu_5391_+ Chicken Cerebellum    0.28296971
+      3: 100003234 100004243  clu_5391_+ Chicken      Heart    0.19501447
+      4: 100003234 100004243  clu_5391_+ Chicken     Kidney   -0.23077558
+      5: 100003234 100004243  clu_5391_+ Chicken      Liver   -0.10532238
+     ---                                                                 
+3803580:    991425    993904 clu_67064_-     Rat Cerebellum    0.15363175
+3803581:    991425    993904 clu_67064_-     Rat      Heart    0.06666267
+3803582:    991425    993904 clu_67064_-     Rat     Kidney    0.33500013
+3803583:    991425    993904 clu_67064_-     Rat      Liver    0.10714348
+3803584:    991425    993904 clu_67064_-     Rat     Testis   -0.07451586
+         P.Splicing q.Splicing             Intron_coord            Gene_name
+      1: 0.81737614  0.6991948 chr1:100003234-100004243 ENSGALG00000015693.6
+      2: 0.09447022  0.2081755 chr1:100003234-100004243 ENSGALG00000015693.6
+      3: 0.24741161  0.3598447 chr1:100003234-100004243 ENSGALG00000015693.6
+      4: 0.18227279  0.2912324 chr1:100003234-100004243 ENSGALG00000015693.6
+      5: 0.54097689  0.5657965 chr1:100003234-100004243 ENSGALG00000015693.6
+     ---                                                                    
+3803580: 0.47353920  0.4928485       chrY:991425-993904                  Uty
+3803581: 0.71697743  0.5473096       chrY:991425-993904                  Uty
+3803582: 0.10955857  0.2716403       chrY:991425-993904                  Uty
+3803583: 0.57306776  0.4302994       chrY:991425-993904                  Uty
+3803584: 0.70085706  0.5964342       chrY:991425-993904                  Uty
+         Annot Coding   UTR Species.short corr.Expression P.Expression
+      1:  TRUE   TRUE FALSE       Chicken       0.9046690 3.782586e-14
+      2:  TRUE   TRUE FALSE       Chicken       0.9403396 1.732790e-17
+      3:  TRUE   TRUE FALSE       Chicken       0.4043716 1.305315e-02
+      4:  TRUE   TRUE FALSE       Chicken       0.6051106 1.177121e-04
+      5:  TRUE   TRUE FALSE       Chicken       0.4038903 1.456961e-02
+     ---                                                              
+3803580:  TRUE   TRUE FALSE           Rat       0.1671667 2.315355e-01
+3803581:  TRUE   TRUE FALSE           Rat      -0.1509034 2.301778e-01
+3803582:  TRUE   TRUE FALSE           Rat      -0.1508297 3.061648e-01
+3803583:  TRUE   TRUE FALSE           Rat      -0.1720357 1.887202e-01
+3803584:  TRUE   TRUE FALSE           Rat      -0.2652109 1.566564e-01
+         q.Expression
+      1: 2.098834e-13
+      2: 2.692289e-16
+      3: 5.623650e-03
+      4: 5.213676e-05
+      5: 5.978063e-03
+     ---             
+3803580: 6.724892e-02
+3803581: 4.612255e-02
+3803582: 5.840534e-02
+3803583: 4.332171e-02
+3803584: 6.626084e-02</code></pre>
+<p>Hm, maybe this classifier is overly classifying things as productive,
+when in actuality most of those unannotated juncs that are classified as
+productive are unproductive… Maybe I would get more sensible results if
+I just subset the events with a reasonably high delta PSI, since the
+juncs that actually effect gene expression would probably only be the
+ones with a large delta PSI.</p>
+<p>Maybe we can start by just using one representative junc per cluster
+for conserved events…</p>
+<pre class="r"><code>Conserved.dev.AS &lt;- read_tsv(&quot;../output/Conserved.devAS.leafcutter.tsv.gz&quot;)
+
+
+
+Spearman.tests.WithProductivity %&gt;%
+  filter(q.Splicing &lt; 0.01) %&gt;%
+  inner_join(Conserved.dev.AS %&gt;%
+               filter(IsRepresentativeJuncForCluster) %&gt;%
+               dplyr::select(junc, OriginGenome) %&gt;%
+               distinct()) %&gt;%
+  mutate(Coding = if_else(Coding, &quot;Productive&quot;, &quot;Unproductive&quot;)) %&gt;%
+  mutate(Annot = if_else(Annot, &quot;Annotated&quot;, &quot;Unannotated&quot;)) %&gt;%
+  mutate(SplicingAndExpresionCoefSameSign = sign(corr.Splicing)==sign(corr.Expression)) %&gt;%
+  count(Tissue, Species, Coding, Annot, SplicingAndExpresionCoefSameSign) %&gt;%
+  filter(!is.na(SplicingAndExpresionCoefSameSign)) %&gt;%
+  group_by(Tissue, Species, Coding, Annot) %&gt;%
+  mutate(N = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Percent = n/N*100) %&gt;%
+  filter(SplicingAndExpresionCoefSameSign) %&gt;%
+  ggplot(aes(x=Species, y=Tissue, fill=Percent)) +
+  geom_tile() +
+  scale_fill_gradient2(midpoint=50) +
+  geom_text(aes(label=N), size=3) +
+  facet_grid(Coding~Annot) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;fraction events where splicing coef same sign as expression coef, among signif splicing coefs&quot;, 35))</code></pre>
+<p><img src="figure/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Some code from Chao to get GTEx differential splicing results…</p>
+<pre class="r"><code>get_DS_DGE_table &lt;- function(rds, contrast, FDR = 1e-5, selection = &#39;all&#39;, plot=FALSE) {
+    # rds: a single rds file, previousp rocessed in &quot;../../SpliFi/prepdata.smk&quot;
+    # contrast: a string, the contrast name
+    # return a joined table (on gene_names) of differential spliced junctions and diffenetially expressed genes
+    data &lt;- readRDS(rds)
+    ds &lt;- data$ds
+    dge &lt;- data$dge
+    dge_dsc &lt;- data$dge_dsc
+
+    joined_dt &lt;- inner_join(
+        x = ds[abs(deltapsi) &gt; .1 &amp; `p.adjust` &lt; FDR &amp; ctype %in% c(&#39;PR&#39;, &#39;PR,UP&#39;), 
+        .(gene_id, gene_name, intron, cluster, itype, ctype, deltapsi)],
+        y = dge[, .(gene_id, g_l2fc = log2FoldChange, g_z = stat, g_l2fcSE = lfcSE)],
+        by = &#39;gene_id&#39;
+    )
+
+    if (selection == &#39;maxClu&#39;) {
+        joined_dt  &lt;- joined_dt[
+            , .(intron, deltapsi, g_l2fc, g_z, g_l2fcSE, rk = rank(-abs(deltapsi), ties.method = &quot;random&quot;)), 
+            by = .(gene_id, gene_name, cluster, itype, ctype)
+            ][rk == 1, -c(&#39;rk&#39;)]
+    } else if (selection == &#39;maxGene&#39;) {
+        joined_dt &lt;- joined_dt[
+            , .(intron, deltapsi, g_l2fc, g_z, g_l2fcSE, rk = rank(-abs(deltapsi), ties.method = &quot;random&quot;)), 
+            by = .(gene_id, gene_name, itype)
+            ][rk == 1, -c(&#39;rk&#39;)]
+    }
+
+    return(joined_dt)
+}
+
+
+example.table &lt;- get_DS_DGE_table(&quot;/project/yangili1/cdai/SpliFi/data/ds_v_dge/Adipose-Visceral_Omentum__v_Brain-Cerebellum_data.rds&quot;)</code></pre>
+<p>Ok, now let’s get all tables…</p>
+<pre class="r"><code>All.Gtex.Contrasts &lt;- Sys.glob(&quot;/project/yangili1/cdai/SpliFi/data/ds_v_dge/*_v_*.rds&quot;) %&gt;%
+  setNames(str_replace(., &quot;/project/yangili1/cdai/SpliFi/data/ds_v_dge/(.+?)_v_(.+?)_data.rds&quot;, &quot;\\1;\\2&quot;)) %&gt;%
+  lapply(get_DS_DGE_table) %&gt;%
+  bind_rows(.id=&quot;Contrast&quot;) %&gt;%
+  separate(intron, into=c(&quot;Hg38_chrom&quot;, &quot;Hg38_start&quot;, &quot;Hg38_end&quot;, &quot;GTExAnalysisClusterName&quot;), sep=&quot;:&quot;, convert=T, remove=F) %&gt;%
+  separate(Contrast, into=c(&quot;GTEx_Tissue1&quot;, &quot;GTex_Tissu2&quot;), sep=&quot;;&quot;)
+
+All.Gtex.Contrasts %&gt;%
+  count(GTEx_Tissue1)</code></pre>
+<pre><code>                            GTEx_Tissue1      n
+ 1:            Adipose-Visceral_Omentum_ 206029
+ 2:                         AdrenalGland 227965
+ 3:                      Artery-Coronary 208459
+ 4:                       Brain-Amygdala 218139
+ 5:  Brain-Anteriorcingulatecortex_BA24_ 242840
+ 6:          Brain-Caudate_basalganglia_ 222593
+ 7:           Brain-CerebellarHemisphere 276957
+ 8:                     Brain-Cerebellum 271655
+ 9:                         Brain-Cortex 244201
+10:             Brain-FrontalCortex_BA9_ 258066
+11:                    Brain-Hippocampus 215251
+12:                   Brain-Hypothalamus 231600
+13: Brain-Nucleusaccumbens_basalganglia_ 245041
+14:          Brain-Putamen_basalganglia_ 218302
+15:        Brain-Spinalcord_cervicalc-1_ 197567
+16:                Brain-Substantianigra 205978
+17:                 Breast-MammaryTissue  91769
+18:            Cells-Culturedfibroblasts 136013
+19:     Cells-EBV-transformedlymphocytes 134591
+20:                     Colon-Transverse  74678
+21:                     Esophagus-Mucosa  82316
+22:                  Heart-LeftVentricle 116722
+23:                        Kidney-Cortex  75043
+24:                                Liver  82299
+25:                                 Lung  63626
+26:                   MinorSalivaryGland  59686
+27:                      Muscle-Skeletal 114774
+28:                                Ovary  58513
+29:                             Pancreas  49154
+30:                            Pituitary  62238
+31:                             Prostate  35545
+32:       Skin-NotSunExposed_Suprapubic_  39706
+33:         SmallIntestine-TerminalIleum  32184
+34:                               Spleen  31135
+35:                              Stomach  25086
+36:                               Testis  53379
+37:                              Thyroid  10501
+38:                               Uterus   7124
+39:                               Vagina   4557
+                            GTEx_Tissue1      n</code></pre>
+<pre class="r"><code>All.Gtex.Contrasts %&gt;%
+  count(GTex_Tissu2)</code></pre>
+<pre><code>                             GTex_Tissu2      n
+ 1:                         AdrenalGland   2796
+ 2:                      Artery-Coronary   4706
+ 3:                       Brain-Amygdala  23593
+ 4:  Brain-Anteriorcingulatecortex_BA24_  26878
+ 5:          Brain-Caudate_basalganglia_  23997
+ 6:           Brain-CerebellarHemisphere  33344
+ 7:                     Brain-Cerebellum  32941
+ 8:                         Brain-Cortex  27614
+ 9:             Brain-FrontalCortex_BA9_  29095
+10:                    Brain-Hippocampus  23305
+11:                   Brain-Hypothalamus  25381
+12: Brain-Nucleusaccumbens_basalganglia_  27242
+13:          Brain-Putamen_basalganglia_  23639
+14:        Brain-Spinalcord_cervicalc-1_  20687
+15:                Brain-Substantianigra  21623
+16:                 Breast-MammaryTissue 134662
+17:            Cells-Culturedfibroblasts 145410
+18:     Cells-EBV-transformedlymphocytes 158222
+19:                     Colon-Transverse 142765
+20:                     Esophagus-Mucosa 152431
+21:                  Heart-LeftVentricle 141554
+22:                        Kidney-Cortex 158931
+23:                                Liver 171865
+24:                                 Lung 171207
+25:                   MinorSalivaryGland 173172
+26:                      Muscle-Skeletal 216727
+27:                                Ovary 181463
+28:                             Pancreas 192359
+29:                            Pituitary 194652
+30:                             Prostate 181835
+31:       Skin-NotSunExposed_Suprapubic_ 222550
+32:         SmallIntestine-TerminalIleum 215817
+33:                               Spleen 220514
+34:                              Stomach 184787
+35:                               Testis 513392
+36:                              Thyroid 213663
+37:                               Uterus 219316
+38:                               Vagina 214048
+39:                           WholeBlood 263099
+                             GTex_Tissu2      n</code></pre>
+<pre class="r"><code>All.Gtex.Contrasts %&gt;%
+  count(GTEx_Tissue1, GTex_Tissu2) %&gt;%
+  ggplot(aes(x=GTEx_Tissue1, y=GTex_Tissu2, fill=n)) +
+  geom_tile() +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Conserved.dev.AS %&gt;%
+  filter(IsRepresentativeJuncForCluster) %&gt;%
+  inner_join(
+    All.Gtex.Contrasts %&gt;%
+    distinct(intron, .keep_all=T) %&gt;%
+    dplyr::select(-cluster)
+  ) %&gt;%
+  distinct(Junc.Human, .keep_all=T) %&gt;%
+  count(Annot.Human, Coding.Human)</code></pre>
+<pre><code># A tibble: 4 × 3
+  Annot.Human Coding.Human     n
+  &lt;lgl&gt;       &lt;lgl&gt;        &lt;int&gt;
+1 FALSE       FALSE           75
+2 FALSE       TRUE            19
+3 TRUE        FALSE          715
+4 TRUE        TRUE          8199</code></pre>
+<pre class="r"><code>Conserved.dev.AS %&gt;%
+  filter(Group == &quot;Unproductive&quot;) %&gt;%
+  count(Tissue)</code></pre>
+<pre><code># A tibble: 7 × 2
+  Tissue         n
+  &lt;chr&gt;      &lt;int&gt;
+1 Brain      68651
+2 Cerebellum 62482
+3 Heart       6497
+4 Kidney      3606
+5 Liver       8006
+6 Ovary         34
+7 Testis     14512</code></pre>
+<pre class="r"><code>Cordoso_ReleventGTExTissues &lt;- c(&quot;Cerebellum&quot;=&quot;Brain-Cerebellum&quot;, &quot;Brain&quot;=&quot;Brain-Cortex&quot;, &quot;Heart&quot;=&quot;Heart-LeftVentricle&quot;, &quot;Kidney&quot;=&quot;Kidney-Cortex&quot;, &quot;Liver&quot;=&quot;Liver&quot;, &quot;Ovary&quot;=&quot;Ovary&quot;, &quot;Testis&quot;=&quot;Testis&quot;)
+
+All.Gtex.Contrasts %&gt;%
+  filter(GTEx_Tissue1 %in% Cordoso_ReleventGTExTissues &amp; GTex_Tissu2 %in% Cordoso_ReleventGTExTissues) %&gt;%
+  filter(itype == &quot;UP&quot;) %&gt;%
+  ggplot(aes(x=deltapsi, y=g_l2fc)) +
+  geom_point(alpha=0.1) +
+  facet_wrap(GTEx_Tissue1~GTex_Tissu2)</code></pre>
+<p><img src="figure/2024-09-06_UnrpdoctuviveSplicingAndExpression.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># All.Gtex.Contrasts %&gt;%
+#   filter(GTEx_Tissue1 == &quot;Brain-Cortex&quot; &amp; GTex_Tissu2 == &quot;Testis&quot;) %&gt;%
+#   filter(itype == &quot;UP&quot;) %&gt;%
+#   filter(!sign(deltapsi)==sign(g_l2fc)) %&gt;%
+#   inner_join(
+#     Conserved.dev.AS %&gt;%
+#       filter(IsRepresentativeJuncForCluster) %&gt;%
+#       filter(!Coding.OtherSpecies) %&gt;%
+#       filter()
+#   )</code></pre>
+<pre class="r"><code>Conserved.dev.AS %&gt;%
+  filter(Group == &quot;Unproductive&quot;) %&gt;%
+  count(Tissue)</code></pre>
+<pre><code># A tibble: 7 × 2
+  Tissue         n
+  &lt;chr&gt;      &lt;int&gt;
+1 Brain      68651
+2 Cerebellum 62482
+3 Heart       6497
+4 Kidney      3606
+5 Liver       8006
+6 Ovary         34
+7 Testis     14512</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] data.table_1.14.2 forcats_0.5.1     stringr_1.4.0     dplyr_1.0.9      
+ [5] purrr_0.3.4       readr_2.1.2       tidyr_1.2.0       tibble_3.1.7     
+ [9] ggplot2_3.3.6     tidyverse_1.3.1  
+
+loaded via a namespace (and not attached):
+ [1] httr_1.4.3        sass_0.4.1        bit64_4.0.5       vroom_1.5.7      
+ [5] jsonlite_1.8.0    viridisLite_0.4.0 R.utils_2.11.0    modelr_0.1.8     
+ [9] bslib_0.3.1       assertthat_0.2.1  highr_0.9         cellranger_1.1.0 
+[13] yaml_2.3.5        pillar_1.7.0      backports_1.4.1   lattice_0.20-45  
+[17] glue_1.6.2        digest_0.6.29     promises_1.2.0.1  rvest_1.0.2      
+[21] colorspace_2.0-3  htmltools_0.5.2   httpuv_1.6.5      R.oo_1.24.0      
+[25] pkgconfig_2.0.3   broom_0.8.0       haven_2.5.0       scales_1.3.0     
+[29] later_1.3.0       tzdb_0.3.0        git2r_0.30.1      generics_0.1.2   
+[33] farver_2.1.0      ellipsis_0.3.2    withr_2.5.0       hexbin_1.28.3    
+[37] cli_3.6.2         magrittr_2.0.3    crayon_1.5.1      readxl_1.4.0     
+[41] evaluate_0.15     R.methodsS3_1.8.1 fs_1.5.2          fansi_1.0.3      
+[45] xml2_1.3.3        tools_4.2.0       hms_1.1.1         lifecycle_1.0.1  
+[49] munsell_0.5.0     reprex_2.0.1      compiler_4.2.0    jquerylib_0.1.4  
+[53] rlang_1.0.2       grid_4.2.0        rstudioapi_0.13   labeling_0.4.2   
+[57] rmarkdown_2.14    gtable_0.3.0      DBI_1.1.2         R6_2.5.1         
+[61] lubridate_1.8.0   knitr_1.39        fastmap_1.1.0     bit_4.0.4        
+[65] utf8_1.2.2        workflowr_1.7.0   rprojroot_2.0.3   stringi_1.7.6    
+[69] parallel_4.2.0    Rcpp_1.0.12       vctrs_0.4.1       dbplyr_2.1.1     
+[73] tidyselect_1.1.2  xfun_0.30        </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

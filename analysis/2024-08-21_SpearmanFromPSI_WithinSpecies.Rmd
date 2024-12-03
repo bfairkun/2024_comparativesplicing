@@ -1,0 +1,112 @@
+---
+title: "2024-08-21_SpearmanFromPSI_WithinSpecies"
+output: html_document
+date: '2024-08-21'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+I have had the snakemake perform clustering within species from data aligned on their native genomes... Next I want to find the developmentally regulated introns... Similar to Mazin et al, I will look within a tissue:species developmental timecourse, but more simply, I think I will just look for a 'significant' correlation with spearman test. Let's create some code here, which I may cleanup into a proper script for running in the pipeline later...
+
+First load libs
+
+```{r}
+library(data.table)
+library(tidyverse)
+```
+
+
+```{r}
+
+
+human.leafcutter.PSI <- fread("../code/rna-seq/SplicingAnalysis/leafcutter/Human_UCSC.hg38_GencodeComprehensive46/juncTableBeds/PSI_ByMax.sorted.bed.gz") %>%
+  dplyr::select(-c(1:3,5,6)) %>%
+  pivot_longer(names_to = "sample", values_to = "PSI", -junc)
+
+Stages <- read_tsv("../output/CordosoMoreira_CalibratedStageTable.tsv")
+
+samples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv") %>%
+  dplyr::select(ID, libID = `library ID`, Species, StageName=`Stage`, Organ, Stage2=`Developmental stage`) %>%
+  separate(ID, into=c("ID_Species", "ID_Organ", "ID_Stage", "ID_libID"), sep="_", remove=F)
+
+samples %>%
+  inner_join(Stages)
+
+
+samples %>%
+  distinct(Species, StageName) %>%
+  full_join(Stages)
+
+samples %>%
+  distinct(ID_Species, ID_Stage)
+
+samples %>%
+  distinct(Organ)
+samples %>%
+  distinct(Species)
+
+samples %>%
+  distinct(Species, ID_Stage, StageName, Stage2)
+
+HumanStages <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv") %>%
+  dplyr::select(contains("tage"), Species) %>%
+  filter(Species == "Human") %>%
+  distinct()
+
+HumanStages %>%
+  filter(str_detect(Stage, "CS"))
+```
+
+The stage names used in the metadata I downloaded from various sources from the source publication (supplemental table vs the splicing website) don't match... This is kind of a mess... Let's just go manually from the suppleental table data and re-organize it all to make sense... Let's start with the ID_Stage (can be inferred by splitting the sample name) and then assign ordinal numbers to each stage within each species and also assign the landmarks (birth, onset spermatogenesis, and onset oogenesis, as defined in the source publication). I think I'm gonna do this manually in excel... and save as new data file and read back in...
+
+```{r}
+samples %>%
+  distinct(Species, ID_Stage, StageName, Stage2) %>%
+  write_tsv("../data/Stages_AsIn_CordosoMoreira.tsv")
+```
+
+Ok, I have manually recoded the stages to match the previous analysis with stages downloaded from the Mazin data website, and assigned ordinal numbers to each stage.
+
+```{r}
+Stages <- read_tsv("../data/Stages_AsIn_CordosoMoreira_Recoded.txt")
+
+Stages %>%
+  distinct(Species, Stage_From_SampleName, Label_As_in_PreviousAnalysis)
+
+
+samples %>%
+  dplyr::select(sample=ID, Species =ID_Species, Tissue = ID_Organ, ID_Stage) %>%
+  inner_join(Stages %>%
+               dplyr::select(ID_Stage=Stage_From_SampleName, Species, Ordinal_stage, Label_As_in_PreviousAnalysis) %>%
+               distinct())
+```
+
+
+Ok, let's fix the samples tsv file... And while we are here, let's also fix the organs to be more consistent of a factor
+
+```{r, eval=F}
+NewSamples <- read_tsv("../code/config/OldConfigs/2040822_Cordoso_Moreira_SampleList.tsv") %>%
+  separate(ID, into=c("ID_Species", "ID_Organ", "ID_Stage", "ID_libNumber"), sep="_", remove = F) %>%
+  inner_join(
+    Stages %>%
+               dplyr::select(ID_Stage=Stage_From_SampleName, ID_Species=Species, Ordinal_stage, Label_As_in_PreviousAnalysis) %>%
+               distinct()
+  )
+
+NewSamples %>%
+  distinct(ID_Organ)
+
+# Check the 'weird' ones
+NewSamples %>%
+  filter(ID_Organ %in% c("Hindbrain", "Forebrain", "WholeBrain", "KidneyTestis"))
+
+NewSamples %>%
+  mutate(Tissue_ForDevelopementalAnalysis = recode(ID_Organ, "Hindbrain"="Cerebellum", "Forebrain"="Brain", "WholeBrain"="Brain,Cerebellum", "KidneyTestis"="Kidney")) %>%
+  write_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+```
+
+Then, let's make a new Rmd and start the analysis from the beginning for clarity, now that the stages are more tidy...

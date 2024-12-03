@@ -1,0 +1,225 @@
+---
+title: "2024-09-30_ContinousTimeSplicingModel"
+output: html_document
+date: '2024-09-30'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Had some wierd results using spearman correlation coef as proxy for effect size (beta) when making the splicing beta vs expression beta scatter plots across developmental time in various tissues/species. Mabye that spearman correlation coef is just not the way to go with leafcutter quantifications. Maybe if we prepare the splicing quantifications a little more carefully (eg standardization and normalization as in sQTL splicing table preperation), then get 'beta's from linear model (Splicing ~ OrdinalDevelopmentalTime) within each species:tissue combination, the problem will go away. Let's try setting up that, here (and possibly later incorporating that work into the snakemake).
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(magrittr)
+
+PSI.table <- read_tsv("../code/rna-seq/SplicingAnalysis/leafcutter/Human_UCSC.hg38_GencodeComprehensive46/juncTableBeds/PSI.sorted.bed.gz")
+
+CordosoSamples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+
+PSI.table.tidy <- PSI.table %>%
+  dplyr::select(-c(1:3, 5, 6)) %>%
+  pivot_longer(names_to = "ID", values_to = "PSI", -junc) %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")
+  )
+
+
+```
+
+Now let's tidy the data by standardizing the rows, qqnorm the columns, within each tissue.
+
+```{r}
+Heart.AndLiver <- PSI.table.tidy %>%
+  filter(Tissue_ForDevelopementalAnalysis %in% c("Heart", "Liver"))
+
+#test vector for qqnorm function
+A <- c(7, 1,2,3,4,4, 5, NaN, 6)
+scale(A)
+qnorm(dense_rank(A)/(sum(!is.na(A)) + 1))
+
+
+Heart.AndLiver.qq.normed <- Heart.AndLiver %>%
+  group_by(junc, Tissue_ForDevelopementalAnalysis) %>%
+  mutate(PSI.normalized = scale(PSI)) %>%
+  mutate(var.PSI = var(PSI, na.rm = T)) %>%
+  ungroup() %>%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %>%
+  mutate(PSI.normalized = qnorm(dense_rank(PSI.normalized)/(sum(!is.na(PSI.normalized)) + 1))) %>%
+  ungroup()
+  
+Example.Junc.Heart.AndLiver.qq.normed <- Heart.AndLiver.qq.normed %>%
+  filter(str_detect(junc, "chr20:63931182:63931465"))
+  
+
+Example.Junc.Heart.AndLiver.qq.normed
+
+Example.Junc.Heart.AndLiver.qq.normed %>%
+  ggplot(aes(x=PSI, y=PSI.normalized)) +
+  geom_point(alpha=0.5) +
+  facet_wrap(~Tissue_ForDevelopementalAnalysis)
+
+Example.Junc.Heart.AndLiver.qq.normed %>%
+  pivot_longer(names_to = "stat", values_to = "value", c("PSI", "PSI.normalized")) %>%
+  ggplot(aes(x=Ordinal_stage, y=value, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point(alpha=0.5) +
+  geom_smooth(method='loess', se=F) +
+  facet_wrap(~stat, scales="free") +
+  theme(legend.position = "bottom")
+
+Example.Junc.Heart.AndLiver.qq.normed %>%
+  filter(Tissue_ForDevelopementalAnalysis == "Liver") %$%
+  cor.test(y=PSI.normalized, x=Ordinal_stage,  method='s')
+
+Example.Junc.Heart.AndLiver.qq.normed %>%
+  filter(Tissue_ForDevelopementalAnalysis == "Liver") %$%
+  cor.test(y=PSI, x=Ordinal_stage,  method='s')
+
+Example.Junc.Heart.AndLiver.qq.normed %>%
+  filter(Tissue_ForDevelopementalAnalysis == "Liver") %$%
+  lm(PSI~Ordinal_stage) %>%
+  summary()
+
+Heart.AndLiver.qq.normed %>%
+  filter(var.PSI > 0) %>%
+  ggplot(aes(x=PSI, y=PSI.normalized)) +
+  geom_hex(bins=100) +
+  scale_fill_viridis_c(trans='log10') +
+  facet_wrap(~Tissue_ForDevelopementalAnalysis)
+```
+Let's check PCA goes with time course, before considering linear model (with no covariates).
+
+```{r}
+pca.results <- Heart.AndLiver.qq.normed %>%
+  filter(var.PSI > 0 & Tissue_ForDevelopementalAnalysis == "Liver") %>%
+  dplyr::select(ID, junc, PSI.normalized) %>%
+  pivot_wider(names_from = "ID", values_from = "PSI.normalized") %>%
+  drop_na() %>%
+  column_to_rownames("junc") %>%
+  t() %>%
+  prcomp()
+
+
+pca.results$x %>%
+  as.data.frame() %>%
+  rownames_to_column("ID") %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")) %>%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title="PCA, liver, PSI.normalized")
+
+pca.results <- Heart.AndLiver.qq.normed %>%
+  filter(var.PSI > 0 & Tissue_ForDevelopementalAnalysis == "Heart") %>%
+  dplyr::select(ID, junc, PSI.normalized) %>%
+  pivot_wider(names_from = "ID", values_from = "PSI.normalized") %>%
+  drop_na() %>%
+  column_to_rownames("junc") %>%
+  t() %>%
+  prcomp()
+
+
+pca.results$x %>%
+  as.data.frame() %>%
+  rownames_to_column("ID") %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")) %>%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title="PCA, Heart, PSI.normalized")
+
+
+```
+
+Let's compare to PCA just based on PSI (not normalized)...
+
+```{r}
+pca.results <- Heart.AndLiver.qq.normed %>%
+  filter(var.PSI > 0 & Tissue_ForDevelopementalAnalysis == "Liver") %>%
+  dplyr::select(ID, junc, PSI) %>%
+  pivot_wider(names_from = "ID", values_from = "PSI") %>%
+  drop_na() %>%
+  column_to_rownames("junc") %>%
+  scale() %>%
+  t() %>%
+  prcomp()
+
+
+pca.results$x %>%
+  as.data.frame() %>%
+  rownames_to_column("ID") %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")) %>%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title="PCA, liver, PSI")
+
+pca.results <- Heart.AndLiver.qq.normed %>%
+  filter(var.PSI > 0 & Tissue_ForDevelopementalAnalysis == "Heart") %>%
+  dplyr::select(ID, junc, PSI) %>%
+  pivot_wider(names_from = "ID", values_from = "PSI") %>%
+  drop_na() %>%
+  column_to_rownames("junc") %>%
+  scale() %>%
+  t() %>%
+  prcomp()
+
+
+pca.results$x %>%
+  as.data.frame() %>%
+  rownames_to_column("ID") %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")) %>%
+  ggplot(aes(x=PC1, y=PC2, color=Ordinal_stage)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title="PCA, Heart, PSI")
+
+pca.results$x %>%
+  as.data.frame() %>%
+  rownames_to_column("ID") %>%
+  inner_join(
+    CordosoSamples %>%
+      filter(`Used library?` %in% c("yes", "Yes")) %>%
+      dplyr::select(ID:ID_Stage, Ordinal_stage, Tissue_ForDevelopementalAnalysis, RQN, "PtAligned"=`% aligned reads`, "NumReads"=`Total number aligned reads`) %>%
+      separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")) %>%
+  ggplot(aes(x=PC1, y=PC2, color=PtAligned)) +
+  geom_text(aes(label=Ordinal_stage)) +
+  labs(title="PCA, Heart, PSI")
+```
+Hmm, I think there might be some other effects, like batch effects playing a role. And the PSI standardization/normalization probably helps a bit.
+
+
+
+
+I forget how base R `lm` handles missing data by default. Let's play around a bit to make things are reasonable.
+
+```{r}
+test.lm.dat <- data.frame(x=c(1,2,3,4,5), y=c(2,NA,4,5,6), y2=c(2,3,NA,NA,6), x2=1)
+res <- lm(y~x, data=test.lm.dat)
+res.2 <- lm(y2~x, data=test.lm.dat)
+res.3 <- lm(y~x2, data=test.lm.dat)
+
+summary(res.2)
+summary(res.3)
+
+```
+

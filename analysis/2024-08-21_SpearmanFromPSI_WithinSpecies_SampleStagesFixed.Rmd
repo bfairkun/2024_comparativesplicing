@@ -1,0 +1,162 @@
+---
+title: "2024-08-21_SpearmanFromPSI_WithinSpecies"
+output: html_document
+date: '2024-08-21'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+I have had the snakemake perform clustering within species from data aligned on their native genomes... Next I want to find the developmentally regulated introns... Similar to Mazin et al, I will look within a tissue:species developmental timecourse, but more simply, I think I will just look for a 'significant' correlation with spearman test. Let's create some code here, which I may cleanup into a proper script for running in the pipeline later...
+
+First load libs
+
+```{r}
+library(data.table)
+library(tidyverse)
+library(qvalue)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+
+```{r}
+samples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+
+samples %>%
+  count(`Used library?`)
+
+
+human.leafcutter.PSI <- fread("../code/rna-seq/SplicingAnalysis/leafcutter/Human_UCSC.hg38_GencodeComprehensive46/juncTableBeds/PSI_ByMax.sorted.bed.gz") %>%
+  dplyr::select(-c(1:3,5,6)) %>%
+  pivot_longer(names_to = "sample", values_to = "PSI", -junc) %>%
+  inner_join(
+    samples %>%
+      filter(`Used library?` %in% c("Yes", "yes")) %>%
+      dplyr::select(Tissue = Tissue_ForDevelopementalAnalysis, sample=ID, Ordinal_stage, Species=ID_Species) %>%
+      separate_rows(Tissue, sep=",")
+  ) %>%
+  mutate(NonZeroPSI = PSI>0) %>%
+  mutate(group = paste(junc, Species, Tissue, sep=';'))
+
+
+human.leafcutter.PSI %>%
+  distinct(Species, Tissue, Ordinal_stage) %>%
+  count(Species, Tissue)
+
+human.leafcutter.PSI %>% head(1E5) %>%
+  group_by(junc, Species, Tissue) %>%
+  summarise(NumberNonZeroPSI_Samples = sum(NonZeroPSI, na.rm=T)) %>%
+  ungroup() %>%
+  ggplot(aes(x=NumberNonZeroPSI_Samples, color=Tissue)) +
+  stat_ecdf()
+
+human.leafcutter.PSI.filtered <- 
+  human.leafcutter.PSI %>% head(1E5) %>%
+  group_by(junc, Species, Tissue) %>%
+  mutate(NumberNonZeroPSI_Samples = sum(NonZeroPSI, na.rm=T)) %>%
+  ungroup() %>%
+  filter(NumberNonZeroPSI_Samples > 5)
+
+options(warn=-1)
+spearman.coefs <- lapply(split(human.leafcutter.PSI.filtered, human.leafcutter.PSI.filtered$group), function(x){cor.test(x$PSI, x$Ordinal_stage, method = "spearman", exact=F)$estimate})
+spearman.pvals <- lapply(split(human.leafcutter.PSI.filtered, human.leafcutter.PSI.filtered$group), function(x){cor.test(x$PSI, x$Ordinal_stage, method = "spearman", exact=F)$p.value})
+
+
+# Bring it together
+results <- data.frame(group = names(spearman.coefs), corr = unlist(spearman.coefs), P=unlist(spearman.pvals), row.names = NULL)
+
+
+results %>%
+  separate(group, into=c("junc", "Species", "Tissue"), sep=";") %>%
+  ggplot(aes(x=corr)) +
+  geom_histogram() +
+  facet_wrap(~Tissue)
+
+results %>%
+  separate(group, into=c("junc", "Species", "Tissue"), sep=";") %>%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_wrap(~Tissue)
+
+
+
+```
+
+
+
+
+Let's repeat with all data...
+
+```{r}
+options(warn=-1)
+
+human.leafcutter.PSI.filtered <- human.leafcutter.PSI %>%
+  # head(1E6) %>%
+  group_by(junc, Species, Tissue) %>%
+  mutate(NumberNonZeroPSI_Samples = sum(NonZeroPSI, na.rm=T)) %>%
+  ungroup() %>%
+  filter(NumberNonZeroPSI_Samples > 5)
+
+spearman.coefs <- lapply(split(human.leafcutter.PSI.filtered, human.leafcutter.PSI.filtered$group), function(x){cor.test(x$PSI, x$Ordinal_stage, method = "spearman", exact=F)$estimate})
+spearman.pvals <- lapply(split(human.leafcutter.PSI.filtered, human.leafcutter.PSI.filtered$group), function(x){cor.test(x$PSI, x$Ordinal_stage, method = "spearman", exact=F)$p.value})
+
+
+# Bring it together
+results <- data.frame(group = names(spearman.coefs), corr = unlist(spearman.coefs), P=unlist(spearman.pvals), row.names = NULL) %>%
+    separate(group, into=c("junc", "Species", "Tissue"), sep=";") %>%
+    separate(junc, into=c("start", "stop", "chrom", "cluster"), sep=":", remove = F, convert=T) %>%
+    group_by(Tissue, Species) %>%
+    mutate(q = qvalue(P)$qvalue)
+
+results %>%
+  ggplot(aes(x=corr)) +
+  geom_histogram() +
+  facet_wrap(~Tissue)
+
+results %>%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_wrap(~Tissue)
+
+results %>%
+  filter(q < 0.1) %>%
+  count(Species, Tissue)
+
+results %>%
+  filter(q < 1) %>%
+  distinct(cluster, Species, Tissue, .keep_all=T) %>%
+  count(Species, Tissue)
+
+results %>%
+  filter(q < 0.1) %>%
+  distinct(cluster, Species, Tissue, .keep_all=T) %>%
+  count(Species, Tissue)
+
+results %>%
+  group_by(Species, Tissue, cluster) %>%
+  summarise(Threshold_100 = any(q < 1),
+         Threshold_10 = any(q < 0.1),
+         Threshold_01 = any(q < 0.01)) %>%
+  pivot_longer(names_to = "Threshold", values_to = "IsPassing", contains("Threshold")) %>%
+  group_by(Species, Tissue, Threshold) %>%
+  summarise(SumPass = sum(IsPassing, na.rm=T)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Tissue, y=SumPass, fill=Threshold)) +
+  geom_col(position='dodge') +
+  scale_fill_brewer(palette = "Blues", labels=c("contains junc FDR<1%", "contains junc FDR<10%", "All test clusters"),direction = -1) +
+  facet_wrap(~Species) +
+  Rotate_x_labels +
+  labs(y="Number splice clusters")
+```
+
