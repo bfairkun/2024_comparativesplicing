@@ -1,6 +1,7 @@
 [submodule "code/scripts/leafcutter2"]
 	path = code/scripts/leafcutter2
 	url = git@github.com:bfairkun/leafcutter2.git
+    branch = main
 [submodule "code/module_workflows/snakemake-workflow_rna-seq"]
 	path = code/module_workflows/snakemake-workflow_rna-seq
 	url = git@github.com:bfairkun/snakemake-workflow_rna-seq.git

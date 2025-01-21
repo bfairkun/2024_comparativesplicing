@@ -1,0 +1,447 @@
+---
+title: "2025-01-14_NMD_UPF3A_Exploration"
+output: html_document
+date: '2025-01-14'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Analysis
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(ggrepel)
+library(ggnewscale)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+```{r}
+JunctionProductivity <- Sys.glob("../code/MazinLeafcutterAnalysis/ClassifyJuncs/*.AllObserved._junction_classifications.txt") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/ClassifyJuncs/(.+?).AllObserved._junction_classifications.txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome") %>%
+  mutate(Species.short = str_replace(OriginGenome, "^(.+?)_.+", "\\1")) %>%
+  mutate(Species_AnnotationSource = recode(Species.short, "Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101")) %>%
+  mutate(Species_AnnotationSource = factor(Species_AnnotationSource, levels=c("Human"="Human, Gencode v46", "Macaque"="Macaque, Ensembl v101", "Mouse"="Mouse, Gencode v46", "Rat"="Rat, RefSeq updated 2021-03-31","Rabbit"="Rabbit, Ensembl v101", "Opossum"="Opossum, Ensembl v97", "Chicken"="Chicken, Ensembl v101"))) %>%
+  dplyr::rename("AlgorithmCoding"="Coding") %>%
+  mutate(Coding = AlgorithmCoding | GencodePC)
+
+
+Junc.regtools.annotations <- Sys.glob("../code/rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/*.uniq.annotated.tsv.gz") %>%
+  setNames(str_replace(., "../code/rna-seq/SplicingAnalysis/ObservedJuncsAnnotations/(.+?).uniq.annotated.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome") %>%
+  mutate(end = end - 1) %>%
+  mutate(Intron_coord = str_glue("{chrom}:{start}-{end}"))
+
+
+JunctionProductivity.AndAnnotated <- JunctionProductivity %>%
+  inner_join(
+    Junc.regtools.annotations %>%
+      dplyr::select(OriginGenome, chrom, start, end, score, Intron_coord, strand, name, splice_site, anchor),
+    by=c("Intron_coord", "OriginGenome")
+  ) %>%
+  mutate(Species.short = factor(Species.short, levels=c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  mutate(IntFlag = 1*UTR + 2*AlgorithmCoding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  ))
+```
+
+
+Total unproductive percent by sample
+
+```{r}
+samples <- read_tsv("../code/config/Cordoso_Moreira_SampleList.tsv")
+Stages <- read_tsv("../data/Stages_AsIn_CordosoMoreira_Recoded.txt")
+all.samples <- read_tsv("../code/config/samples.tsv")
+
+BirthStage <- Stages %>%
+  filter(Marker == "Birth") %>%
+  distinct(Species, Marker, Ordinal_stage) %>%
+  dplyr::select(ID_Species = Species, BirthStage = Ordinal_stage)
+
+samples.WhichAreUsedForWhichAnalyses <- samples %>%
+  dplyr::select(ID, ID_Species, Tissue_ForDevelopementalAnalysis, Ordinal_stage, `Used library?`) %>%
+  left_join(BirthStage, by=c("ID_Species")) %>%
+  mutate(NoEmbryo = `Used library?` %in% c("Yes", "yes") & Ordinal_stage >= BirthStage) %>%
+  mutate(NoHumanEmbryo = `Used library?` %in% c("Yes", "yes") &
+           ((Ordinal_stage >= BirthStage & ID_Species == "Human") | !ID_Species == "Human"))  %>%
+  left_join(all.samples %>%
+              dplyr::select(ID=SampleName, GenomeName = STARGenomeName))
+
+TotalCountsByClassification.BySample <- Sys.glob("../code/MazinLeafcutterAnalysis/SummarisedClassificationsBySample/*.tsv.gz") %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/SummarisedClassificationsBySample/(.+?).tsv.gz", "\\1")) %>%
+  lapply(fread, col.names=c("fn", "Annot", "Coding", "UTR", "GencodePC", "TotalCounts")) %>%
+  bind_rows(.id="Species") %>%
+  mutate(ID = str_replace(fn, "rna-seq/SplicingAnalysis/juncfiles/(.+?).junccounts.tsv.gz", "\\1")) %>%
+  inner_join(
+    samples.WhichAreUsedForWhichAnalyses %>%
+      filter(NoHumanEmbryo)
+  ) %>%
+  separate_rows(Tissue_ForDevelopementalAnalysis, sep=",")
+
+AllSamples.PercentUnproductive.P.dat <- TotalCountsByClassification.BySample %>%
+  mutate(IntFlag = 1*UTR + 2*Coding + 4*Annot + 8*GencodePC) %>%
+  mutate(ProductivityLabel = case_when(
+    IntFlag %in% c(1,5) ~ "NE",
+    IntFlag %in% c(0,4) ~ "UP",
+    TRUE ~ "PR"
+  )) %>%
+  filter(!ProductivityLabel=="NE") %>%
+  group_by(ID, Tissue_ForDevelopementalAnalysis, ProductivityLabel) %>%
+  summarise(TotalByCodingStatus = sum(TotalCounts)) %>%
+  ungroup() %>%
+  group_by(ID, Tissue_ForDevelopementalAnalysis) %>%
+  mutate(Percent = TotalByCodingStatus/ sum(TotalByCodingStatus) * 100) %>%
+  ungroup() %>%
+  filter(!ProductivityLabel=="PR") %>%
+  right_join(
+    samples.WhichAreUsedForWhichAnalyses %>%
+      dplyr::select(ID, Ordinal_stage, Species=ID_Species)
+  ) %>%
+  group_by(Species) %>%
+  mutate(PercentRank_OrdinalStage = percent_rank(Ordinal_stage)) %>%
+  ungroup() %>%
+  inner_join(Stages %>%
+               dplyr::select(Ordinal_stage, Species, Marker)) %>%
+  mutate(Species = factor(Species, levels = c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken"))) %>%
+  filter(!is.na(Tissue_ForDevelopementalAnalysis)) %>%
+  distinct(ID, Tissue_ForDevelopementalAnalysis, .keep_all=T)
+
+
+
+ggplot(AllSamples.PercentUnproductive.P.dat, aes(x=PercentRank_OrdinalStage, y=Percent)) +
+  geom_vline( data = . %>%
+                  distinct(Ordinal_stage, Species, .keep_all=T) %>%
+                  filter(!is.na(Marker)) %>%
+                  dplyr::select(PercentRank_OrdinalStage, Marker, Species),
+              aes(xintercept = PercentRank_OrdinalStage, color=Marker)) +
+  labs(color = "Developmental landmark") +
+  # ggnewscale::new_scale_color() +
+  geom_point(alpha=0.4, color='black') +
+  coord_cartesian(ylim=c(0,6.5)) +
+  scale_x_continuous(breaks=c(0,1), labels=c("Early embryo", "Adult")) +
+  facet_grid(Species~Tissue_ForDevelopementalAnalysis) +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y="Percent unproductive reads", x="Development")
+```
+And now let's read in gene expression matrices, cause I want to look at UPF3A and UPF3B expression.
+
+```{r}
+Liftovers.AsFlanks <- Sys.glob("../code/LiftoverJuncs/AsFlanks/*.Lifted.bed.gz") %>%
+  setNames(str_replace(., "../code/LiftoverJuncs/AsFlanks/(.+?).Lifted.bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "end", "name", "score", "strand", "thickStart", "thickStop", "color", "nBlocks", "blockSizes", "blockStarts")) %>%
+  bind_rows(.id = "OriginGenome") %>%
+  mutate(Species = str_replace(OriginGenome, "^(.+?)_.+$", "\\1")) %>%
+  mutate(start = start +1,
+         end = end - 1) %>%
+  dplyr::select(OriginGenome, Species, name, human.chrom=chrom, human.start=start, human.end=end, human.strand=strand) %>%
+  mutate(human.name = str_glue("{human.chrom}_{human.start}_{human.end}_{human.strand}"))
+
+
+
+
+Orthologs <- read_tsv("../output/Ensembl.GeneHumanHomologs.tsv.gz")
+
+Orthologs %>%
+  filter(external_gene_name %in% c("UPF3A", "UPF3B", "UPF1"))
+
+UPF3.Orthologs <-  Orthologs%>%
+  filter(hsapiens_homolog_ensembl_gene %in% c("ENSG00000125351", "ENSG00000169062", "ENSG00000005007"))
+UPF3.Orthologs
+
+  
+
+Genes <- read_tsv("../output/Ensembl.TranscriptInfo.tsv.gz")
+
+Genes %>%
+  distinct(Species, ensembl_gene_id, ensembl_gene_id_version) %>%
+  filter(ensembl_gene_id %in% c("ENSG00000125351", "ENSG00000169062", "ENSG00000005007"))
+
+
+UPF3.Orthologs.genes <- Genes %>%
+  distinct(Species, ensembl_gene_id, ensembl_gene_id_version) %>%
+  inner_join(UPF3.Orthologs) %>%
+  #Manually add rat (refseq gtf) and human
+  add_row(Species = "Rat", ensembl_gene_id_version="Upf3a", hsapiens_homolog_ensembl_gene="ENSG00000169062") %>%
+  add_row(Species = "Rat", ensembl_gene_id_version="Upf3b", hsapiens_homolog_ensembl_gene="ENSG00000125351") %>%
+  add_row(Species = "Rat", ensembl_gene_id_version="Upf1", hsapiens_homolog_ensembl_gene="ENSG00000005007") %>%
+
+  add_row(Species = "Human", ensembl_gene_id_version="ENSG00000169062.15", hsapiens_homolog_ensembl_gene="ENSG00000169062") %>%
+  add_row(Species = "Human", ensembl_gene_id_version="ENSG00000125351.14", hsapiens_homolog_ensembl_gene="ENSG00000125351") %>%
+  add_row(Species = "Human", ensembl_gene_id_version="ENSG00000005007.14", hsapiens_homolog_ensembl_gene="ENSG00000005007") %>%
+
+  mutate( UPF3_paralog = case_when(
+    hsapiens_homolog_ensembl_gene == "ENSG00000125351" ~ "UPF3B",
+    hsapiens_homolog_ensembl_gene == "ENSG00000169062" ~ "UPF3A",
+    hsapiens_homolog_ensembl_gene == "ENSG00000005007" ~ "UPF1",
+
+  ))
+
+Genomes <- JunctionProductivity %>%
+  distinct(OriginGenome, Species.short)
+
+  
+
+
+RPKM <- str_glue("../code/MazinLeafcutterAnalysis/Expression/{unique(Genomes$OriginGenome)}.log2rpkm.tsv.gz") %>%
+  as.character() %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/Expression/(.+?).log2rpkm.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  lapply(function(x) filter(x, Geneid %in% UPF3.Orthologs.genes$ensembl_gene_id_version)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "ID",values_to = "log2RPKM",-Geneid)) %>%
+  bind_rows(.id="OriginGenome") %>%
+  inner_join(
+    UPF3.Orthologs.genes,
+    by=c("Geneid"="ensembl_gene_id_version")
+  ) %>%
+  mutate(Species = factor(Species, levels = c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken")))
+
+
+RPKM %>% distinct(Species)
+
+RPKM %>%
+  inner_join(
+    AllSamples.PercentUnproductive.P.dat
+  ) %>%
+  mutate(UPF3_paralog = case_when(
+    ensembl_gene_id == "ENSGALG00000050442" ~ "UPF3A_MoreDistantParalog",
+    TRUE ~ UPF3_paralog
+  )) %>%
+  filter(!UPF3_paralog=="UPF1") %>%
+ggplot(aes(x=PercentRank_OrdinalStage, y=log2RPKM)) +
+  geom_vline( data = . %>%
+                  distinct(Ordinal_stage, Species, .keep_all=T) %>%
+                  filter(!is.na(Marker)) %>%
+                  dplyr::select(PercentRank_OrdinalStage, Marker, Species),
+              aes(xintercept = PercentRank_OrdinalStage, color=Marker)) +
+  labs(color = "Developmental landmark") +
+  ggnewscale::new_scale_color() +
+  geom_point(alpha=0.4, aes(color=UPF3_paralog)) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_x_continuous(breaks=c(0,1), labels=c("Early embryo", "Adult")) +
+  facet_grid(Species~Tissue_ForDevelopementalAnalysis, scales="free") +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y="Expression, log2RPKM", x="Development")
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/UPF3_Expression.pdf", height=200, width=280, units="mm")
+
+```
+So UPF3A/UPF3B ratio seems to go up in all species, except for maybe rabbit. But the way it goes up may be different (eg UPF3B going down, vs UPF3A going up)... I wonder if UPF3B is X-linked in all these species as it is human.
+
+
+```{r}
+
+Transcripts <- str_glue("/project2/yangili1/bjf79/ReferenceGenomes/{unique(Genomes$OriginGenome)}/Reference.ColoredTranscripts.bed.gz") %>%
+  as.character() %>%
+  setNames(str_replace(., "/project2/yangili1/bjf79/ReferenceGenomes/(.+?)/Reference.ColoredTranscripts.bed.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="OriginGenome")
+
+Transcripts %>%
+  inner_join(UPF3.Orthologs.genes, by=c("V13"="ensembl_gene_id_version")) %>%
+  distinct(V13, .keep_all=T) %>%
+  dplyr::select(OriginGenome, V1, V2, V13, hsapiens_homolog_orthology_confidence, UPF3_paralog, external_gene_name) %>%
+  arrange(UPF3_paralog, OriginGenome, hsapiens_homolog_orthology_confidence)
+```
+
+Ok, yes, in all mammals here, UPF3B is on X... In chicken it is on chr4.
+
+Let's look at expression over development/tissue for a few more NMD factors
+
+```{r}
+Genes %>%
+  distinct(Species, ensembl_gene_id, ensembl_gene_id_version, .keep_all=T) %>%
+  filter(Species == "Human") %>%
+  filter(external_gene_name %in% c("UPF1", "UPF2", "UPF3A", "UPF3B", "SMG5", "SMG6", "SMG7"))
+
+
+go=c("REACTOME_NONSENSE_MEDIATED_DECAY_NMD"="https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=REACTOME_NONSENSE_MEDIATED_DECAY_NMD&fileType=grp")
+
+GO.genes.of.interest <- lapply(go, read.table, skip=2, col.names=c("hgnc_symbol")) %>%
+  bind_rows(.id="GO") %>%
+  mutate(GO_Name = recode(GO, !!!go)) %>%
+  mutate(GO_Name = str_replace(GO_Name, ".+?geneSetName=(.+?)&fileType=grp$", "\\1"))
+
+
+
+NMD.genes <- Genes %>%
+  distinct(Species, ensembl_gene_id, ensembl_gene_id_version, .keep_all=T) %>%
+  filter(Species == "Human") %>%
+  filter(external_gene_name %in% GO.genes.of.interest$hgnc_symbol)
+
+NMD.genes
+
+NMD.genes %>%
+  filter(external_gene_name %in% c("UPF3A", "UPF3B", "SMG7", "SMG6", "SMG5", "SMG1", "UPF2", "UPF1"))
+```
+
+I also want to verify that many more genes are expressed in mature testis in all species.
+
+```{r}
+RPKM.human <- read_tsv("../code/MazinLeafcutterAnalysis/Expression/Human_UCSC.hg38_GencodeComprehensive46.log2rpkm.tsv.gz")
+
+RPKM.human %>%
+  pivot_longer( names_to = "ID",values_to = "log2RPKM",-Geneid) %>%
+  filter(log2RPKM > 0) %>%
+  count(ID) %>%
+  inner_join()
+
+Expressed.gene.count <- str_glue("../code/MazinLeafcutterAnalysis/Expression/{unique(Genomes$OriginGenome)}.log2rpkm.tsv.gz") %>%
+  as.character() %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/Expression/(.+?).log2rpkm.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  lapply(function(x) pivot_longer(x, names_to = "ID",values_to = "log2RPKM",-Geneid)) %>%
+  lapply(function(x) filter(x, log2RPKM>0)) %>%
+  lapply(function(x) count(x, ID)) %>%
+  bind_rows()
+
+
+Expressed.gene.count %>%
+  inner_join(AllSamples.PercentUnproductive.P.dat) %>%
+  ggplot(aes(x=PercentRank_OrdinalStage, y=n)) +
+  geom_vline( data = . %>%
+                  distinct(Ordinal_stage, Species, .keep_all=T) %>%
+                  filter(!is.na(Marker)) %>%
+                  dplyr::select(PercentRank_OrdinalStage, Marker, Species),
+              aes(xintercept = PercentRank_OrdinalStage, color=Marker)) +
+  labs(color = "Developmental landmark") +
+  # ggnewscale::new_scale_color() +
+  geom_point(alpha=0.4, color='black') +
+  scale_x_continuous(breaks=c(0,1), labels=c("Early embryo", "Adult")) +
+  facet_grid(Species~Tissue_ForDevelopementalAnalysis) +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y="Num expressed genes (RPKM>1)", x="Development")
+```
+ok maybe the chicken effect is questionable. but yes for the most part more genes are expressed in mature vs juvenile testis
+
+```{r}
+Core.NMD.Orthologs.Human.genes <- Genes %>%
+  filter(Species == "Human") %>%
+  filter(external_gene_name %in% c("UPF3A", "UPF3B", "SMG7", "SMG6", "SMG5", "SMG1", "UPF2", "UPF1")) %>%
+  distinct(ensembl_gene_id_version, .keep_all=T) %>%
+  dplyr::rename(hsapiens_homolog_ensembl_gene = ensembl_gene_id)
+
+Core.NMD.Orthologs <- Orthologs %>%
+  inner_join(
+    Core.NMD.Orthologs.Human.genes %>%
+      dplyr::select(hsapiens_homolog_ensembl_gene)
+  ) %>%
+  arrange(Species, hsapiens_homolog_ensembl_gene, hsapiens_homolog_perc_id) %>%
+  distinct(Species, hsapiens_homolog_ensembl_gene, .keep_all=T) %>%
+  bind_rows(
+    Core.NMD.Orthologs.Human.genes %>%
+      dplyr::select(hsapiens_homolog_ensembl_gene, external_gene_name) %>%
+      mutate(Species = "Human", ensembl_gene_id=hsapiens_homolog_ensembl_gene)
+    ) %>%
+  inner_join(
+    Genes %>%
+      dplyr::select(ensembl_gene_id, ensembl_gene_id_version) %>%
+      distinct(ensembl_gene_id, ensembl_gene_id_version)
+  ) %>%
+  bind_rows(
+    Transcripts %>%
+      distinct(OriginGenome, V13) %>%
+      filter(str_detect(OriginGenome, "Rat")) %>%
+      filter(V13 %in% c("Upf1", "Upf2", "Upf3a", "Upf3b", "Upf4b", "Smg1", "Smg5", "Smg6", "Smg7")) %>%
+      mutate(external_gene_name = str_to_upper(V13), Species="Rat") %>%
+      mutate(ensembl_gene_id_version = V13) %>%
+      dplyr::rename(ensembl_gene_id=V13) %>%
+      inner_join(
+        Core.NMD.Orthologs.Human.genes %>%
+          dplyr::select(hsapiens_homolog_ensembl_gene, external_gene_name)
+      )
+  ) %>%
+  inner_join(
+    Core.NMD.Orthologs.Human.genes %>%
+      dplyr::select(hsapiens_homolog_ensembl_gene, human.name = external_gene_name)
+  ) %>%
+  dplyr::select(Species, ensembl_gene_id, ensembl_gene_id_version, hsapiens_homolog_ensembl_gene, hsapiens_homolog_perc_id, external_gene_name, human.name)
+
+Core.NMD.Orthologs
+
+RPKM <- str_glue("../code/MazinLeafcutterAnalysis/Expression/{unique(Genomes$OriginGenome)}.log2rpkm.tsv.gz") %>%
+  as.character() %>%
+  setNames(str_replace(., "../code/MazinLeafcutterAnalysis/Expression/(.+?).log2rpkm.tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  lapply(function(x) filter(x, Geneid %in% Core.NMD.Orthologs$ensembl_gene_id_version)) %>%
+  lapply(function(x) pivot_longer(x, names_to = "ID",values_to = "log2RPKM",-Geneid)) %>%
+  bind_rows(.id="OriginGenome") %>%
+  inner_join(
+    Core.NMD.Orthologs,
+    by=c("Geneid"="ensembl_gene_id_version")
+  ) %>%
+  mutate(Species = factor(Species, levels = c("Human", "Macaque", "Mouse", "Rat", "Rabbit", "Opossum", "Chicken")))
+
+Dat.For.Delta.NMD.Factors <- RPKM %>%
+  inner_join(AllSamples.PercentUnproductive.P.dat) %>%
+  inner_join(
+    RPKM %>%
+      inner_join(AllSamples.PercentUnproductive.P.dat) %>%
+      group_by(OriginGenome, Geneid, Tissue_ForDevelopementalAnalysis) %>%
+      filter(PercentRank_OrdinalStage == min(PercentRank_OrdinalStage)) %>%
+      summarise(MeanT0 = mean(log2RPKM)) %>%
+      ungroup()
+  ) %>%
+  mutate(Delta = log2RPKM - MeanT0)
+
+Dat.For.Delta.NMD.Factors %>%
+  ggplot(aes(x=PercentRank_OrdinalStage, y=Delta)) +
+  geom_vline( data = . %>%
+                  distinct(Ordinal_stage, Species, .keep_all=T) %>%
+                  filter(!is.na(Marker)) %>%
+                  dplyr::select(PercentRank_OrdinalStage, Marker, Species),
+              aes(xintercept = PercentRank_OrdinalStage, color=Marker)) +
+  labs(color = "Developmental landmark") +
+  ggnewscale::new_scale_color() +
+  geom_point(alpha=0.4, size=1, aes(color=human.name)) +
+  geom_smooth(method='loess', aes(color=human.name), se=F) +
+  scale_color_brewer(palette="Dark2") +
+  scale_x_continuous(breaks=c(0,1), labels=c("Early embryo", "Adult")) +
+  facet_grid(Species~Tissue_ForDevelopementalAnalysis) +
+  theme_bw() +
+  coord_cartesian(ylim=c(-2,2)) +
+  Rotate_x_labels +
+  labs(y="log2FC", x="Development")
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/NMD_factor_Expression.pdf", height=200, width=400, units="mm")
+
+Dat.For.Delta.NMD.Factors %>%
+  filter(human.name %in% c("UPF3A", "UPF3B")) %>%
+  ggplot(aes(x=PercentRank_OrdinalStage, y=Delta)) +
+  geom_vline( data = . %>%
+                  distinct(Ordinal_stage, Species, .keep_all=T) %>%
+                  filter(!is.na(Marker)) %>%
+                  dplyr::select(PercentRank_OrdinalStage, Marker, Species),
+              aes(xintercept = PercentRank_OrdinalStage, color=Marker)) +
+  labs(color = "Developmental landmark") +
+  ggnewscale::new_scale_color() +
+  geom_point(alpha=0.4, size=1, aes(color=human.name)) +
+  geom_smooth(method='loess', aes(color=human.name), se=F) +
+  scale_color_brewer(palette="Dark2") +
+  scale_x_continuous(breaks=c(0,1), labels=c("Early embryo", "Adult")) +
+  facet_grid(Species~Tissue_ForDevelopementalAnalysis) +
+  theme_bw() +
+  coord_cartesian(ylim=c(-3,3)) +
+  Rotate_x_labels +
+  labs(y="log2FC", x="Development")
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/NMD_factor_UPF3AB_Expression.pdf", height=200, width=280, units="mm")
+
+```
+

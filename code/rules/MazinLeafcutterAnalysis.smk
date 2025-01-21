@@ -587,3 +587,8 @@ use rule rna_seq_ConcatJuncFilesAndKeepUniq as ConcatJuncFilesAndKeepUniq_NoEmbr
     resources:
         mem_mb = rna_seq.GetMemForSuccessiveAttempts(24000, 48000)
 
+rule ARHGAP17_FlankingConservation:
+    input:
+        bw = "/project2/yangili1/bjf79/20211209_JingxinRNAseq/code/PhyloP/SourceTrack/PhyloP.hg38.bw"
+        bed = "MazinLeafcutterAnalysis/ReformatedGTFs/Human_UCSC.hg38_GencodeComprehensive46.bed"
+

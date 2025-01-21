@@ -31,7 +31,6 @@ theme_set(
 Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 ```
 
-
 First, let's define which samples are to be used for which analyses (that haven't already been defined by differential splicing contrast files)...
 
 ```{r}
@@ -537,6 +536,7 @@ ggplot(aes(x=deltapsi, y=logFC, color=Coding)) +
   geom_point(alpha=0.05) +
   geom_hline(yintercept=0, linetype='dashed', alpha=0.5) +
   geom_smooth(method='lm', se=F) +
+  coord_cartesian(ylim=c(-3,3)) +
   # geom_abline(data = deming.lines, aes(slope=slp, intercept = int)) +
   geom_text( data = betabetascatter.P.dat %>%
             mutate(Coding = if_else(Coding, "Productive", "Unproductive")) %>%
@@ -547,16 +547,17 @@ ggplot(aes(x=deltapsi, y=logFC, color=Coding)) +
             mutate(AdjP = p.adjust(p, method="BH")) %>%
             filter(Species %in% c("Chicken", "Human") & Tissue == "Testis") %>%
             mutate(Plab = format.pval(p, digits=2), PadjLab = format.pval(AdjP, digits=2)) %>%
-            mutate(label = str_glue(" n={n}\n spearman rho={round(spearman.of_dPSI_vs_logFC, 2)}\n P={Plab}\nP.adj={PadjLab}")),
+            mutate(label = str_glue("n={n}\nspearman rho={round(spearman.of_dPSI_vs_logFC, 2)}\nP={Plab}\nP.adj={PadjLab}")),
             aes(label=label),
-            x=-0.8, y=Inf, vjust=1.1, hjust=0, color='black'
+            x=-1, y=Inf, vjust=1.1, hjust=0, color='black'
                            ) +
   scale_color_manual(values=c("Productive"="#1f78b4", "Unproductive"="#e31a1c")) +
   facet_grid(Species~Coding) +
-  coord_cartesian(ylim=c(-3,3)) +
   theme(legend.position='none') +
-  labs(x="Differential splicing\n(Delta PSI)", y="Differential gene\nexpression (log2FC)", title="Neonate Testis vs Adult Testis")
+  Rotate_x_labels +
+  labs(x="Differential splicing\n(Delta PSI)", y="Differential gene\nexpression (log2FC)", title="Juvenile Testis vs Adult Testis")
 
+ggsave("../code/scratch/FinalFigs/OriginalPlots/BetaBetaScatter_HumanChickenTestis.pdf", height=100, width=160, units="mm")
 
 # test to see if unproductive is meaningfully different than productive
 results <- betabetascatter.P.dat %>%
@@ -1258,11 +1259,11 @@ bind_rows(
   mutate(Group = factor(Group, levels=c("Matches a human junction (liftOver)", "& is unproductive", "& same sign effect",  "& matching human junction is unproductive",  "& is tissue or developmentally regulated in both human and species X"))) %>%
   ggplot(aes(x=Species.OtherSpecies, y=n)) +
   geom_col() +
-  facet_wrap(~Group, scales="free_y", ncol=1, labeller = label_wrap_gen(15)) +
+  facet_wrap(~Group, scales="free_y", nrow=1, labeller = label_wrap_gen(20)) +
   Rotate_x_labels +
   labs(x="Species", y="Number of conserved splice junctions")
 
-ggsave("../code/scratch/FinalFigs/OriginalPlots/NumberConservedEvents_AfterEachFilter2.pdf", height=220, width=70, units="mm")
+ggsave("../code/scratch/FinalFigs/OriginalPlots/NumberConservedEvents_AfterEachFilter2.pdf", height=200, width=300, units="mm")
 
 ```
 
@@ -2126,7 +2127,7 @@ Juncs.To.Plot %>%
   distinct() %>%
   dplyr::select(chrom, start, stop, gene, strand, OriginGenome) %>%
   mutate(Orientation = if_else(strand == "+", "", "--decreasingXAxis")) %>%
-  mutate(Cmd = str_glue("pyGenomeTracks --tracks ../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/Tracks.{OriginGenome}.ini --region {chrom}:{start-1000}-{stop+1000} {Orientation} --width 20 --outFileName ../code/scratch/{gene}_{OriginGenome}.pdf")) %>%
+  mutate(Cmd = str_glue("pyGenomeTracks --tracks ../code/MazinLeafcutterAnalysis/ConservedJuncsToHighlight3/Tracks.{OriginGenome}.ini --region {chrom}:{start-1000}-{stop+1000} {Orientation} --width 15 --outFileName ../code/scratch/{gene}_{OriginGenome}.pdf")) %>%
   arrange(gene, OriginGenome) %>%
   dplyr::select(Cmd) %>%
   write_tsv("../code/scratch/MakePlots.sh", col_names = F)
@@ -2155,5 +2156,54 @@ GTEx.SRSF.PSI %>%
 
 ```
 
+#### Conservation of ARHGAP flanking introns
 
+Let's plot mean PhyloP signal for 50bp of flanking intronic signal for constitutive exons as well as the alternative exon of interest.
+
+```{r}
+ARHGAP.FlankingIntronicPhyloP <- read_tsv("../code/scratch/ARHGAP17.exonflanks.MeanPhyloP.bed", col_names=c("chrom", "start", "stop", "meanPhyloP", "score", "strand")) %>%
+  mutate(ExNumber = ceiling(row_number()/2)) %>%
+  group_by(ExNumber) %>%
+  mutate(Is_SD=start == max(start)) %>%
+  ungroup() %>%
+  mutate(SS_Type = if_else(Is_SD, "SD", "SA")) %>%
+  filter(!(ExNumber == 1 & SS_Type == "SA")) %>%
+  filter(!(ExNumber == 17 & SS_Type == "SD")) %>%
+  mutate(isCassetteExon = start %in% c(24959620, 24959752))
+
+ARHGAP.FlankingIntronicPhyloP %>%
+  ggplot(aes(x=SS_Type, y=meanPhyloP, color=isCassetteExon)) +
+  geom_jitter(width=0.15)
+
+ARHGAP.FlankingIntronicPhyloP %>%
+  group_by(SS_Type) %>%
+  group_map(~ wilcox.test(meanPhyloP ~ isCassetteExon, .x, alternative="less"))
+
+ARHGAP.FlankingIntronicPhyloP %>%
+  inner_join(
+    ARHGAP.FlankingIntronicPhyloP %>%
+      filter(!isCassetteExon) %>%
+      group_by(SS_Type) %>%
+      summarise(mean = mean(meanPhyloP), sd = sd(meanPhyloP)) %>%
+      ungroup()
+  ) %>%
+  mutate(z = (meanPhyloP - mean)/sd) %>%
+  mutate( p = pnorm(z, lower.tail=FALSE) ) %>%
+  mutate(SS_Type = recode(SS_Type, "SA"="Upstream flanking\nintronic regions", "SD"="Downstream flanking\nintronic regions")) %>%
+  mutate(SS_Type = relevel(factor(SS_Type), "Upstream flanking\nintronic regions")) %>%
+  mutate(label = str_glue("z={round(z, 2)}\nP={format.pval(p, 2)}")) %>%
+  mutate(label = if_else(isCassetteExon, label, NA_character_)) %>%
+  ggplot(aes(x=SS_Type, y=meanPhyloP, color=isCassetteExon)) +
+  geom_jitter(width=0.15) +
+  geom_label_repel(aes(label=label)) +
+  scale_color_manual(values=c("TRUE"="red", "FALSE"="black"), labels=c("TRUE"="ARHGAP17 cassette exon\nskipped in adult testis","FALSE"="ARHGAP17 constitutive exons")) +
+  Rotate_x_labels +
+  labs(x=NULL, y="Nucleotide conservation,\nMean PhyloP", color=NULL)
+
+ggsave("../code/scratch/FinalFigs/OriginalPlots/ARHGAP17_FlankingIntronicConservation.pdf", height=150, width=180, units="mm")
+
+
+
+  
+```
 
