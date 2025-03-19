@@ -41,6 +41,11 @@ Cordoso_contrasts = pd.read_csv("config/CordosoTimeSeriesContrasts.tsv", sep='\t
 Cordoso_TissueContrasts = pd.read_csv("config/CordosoTissueContrasts.tsv", sep='\t', index_col=0)
 Cordoso_SamplesNoHumanEmbryo = pd.read_csv("../data/Cordoso_SampleList.WhichAreNonHumanEmbryo.tsv.gz", sep='\t', index_col=0)
 
+maf_filelist = pd.read_csv("../data/multiz100way_maf_md5sum.txt", sep='\s+', names=["md5sum", "fn"])
+maf_filelist["fn_base"] = maf_filelist['fn'].str.replace(".maf.gz$", "", regex=True)
+maf_filelist['link'] = maf_filelist["fn"].apply(lambda fn: f"https://hgdownload.soe.ucsc.edu/goldenPath/hg38/multiz100way/maf/{fn}")
+
+
 def has_differences(dcmp):
     """
     https://stackoverflow.com/questions/4187564/recursively-compare-two-directories-to-ensure-they-have-the-same-files-and-subdi

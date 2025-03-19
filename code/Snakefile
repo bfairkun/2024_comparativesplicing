@@ -5,7 +5,8 @@ configfile: "config/config.yaml"
 include: "rules/common.smk"
 include: "rules/Download.smk"
 include: "rules/GenomeAnnotations.smk"
-localrules: DownloadFastaAndGtf, Download_hg19_PhyloP, DownloadFastqFromLink, Download_Chain_to_hg38, Download_Chain_from_hg38, DownloadHumanAndMouse_GencodeFa, GetExtra_GTF_From_link, GetExtra_GTF_From_link_RefSeq
+include: "rules/MultipleSequenceAlignmentAnalysis.smk"
+localrules: DownloadFastaAndGtf, Download_hg19_PhyloP, DownloadFastqFromLink, Download_Chain_to_hg38, Download_Chain_from_hg38, DownloadHumanAndMouse_GencodeFa, GetExtra_GTF_From_link, GetExtra_GTF_From_link_RefSeq, Download_100WayVertebrate_MAF_hg38
 wildcard_constraints: GenomeName = "|".join(STAR_genomes.index)
 
 

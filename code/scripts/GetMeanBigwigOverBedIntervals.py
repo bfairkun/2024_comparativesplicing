@@ -21,16 +21,6 @@ def calculate_mean_signal(row, bw):
         print(f"Error processing interval {row[0]}:{row[1]}-{row[2]}: {e}")
         return 0.0
 
-# def process_bed_file(bed_file, bigwig_file, output_file):
-#     bw = pyBigWig.open(bigwig_file)
-#     chunk_size = 10000  # Adjust chunk size based on memory constraints and performance
-#     with pd.read_csv(bed_file, sep='\t', header=None, chunksize=chunk_size) as reader:
-#         with open(output_file, 'w') as out_file:
-#             for chunk in reader:
-#                 chunk[3] = chunk.apply(lambda row: calculate_mean_signal(row, bw), axis=1)
-#                 chunk.to_csv(out_file, sep='\t', header=False, index=False, mode='a')
-#     bw.close()
-
 def process_bed_file(bed_file, bigwig_file, output_file):
     """
     Process a BED file and append the mean BigWig signal to each interval.
@@ -54,26 +44,21 @@ def main(args=None):
     """
     # Parse command-line arguments
     parsed_args = parse_args(args)
-    
     # Extract the arguments
     bed_file = parsed_args.bedfile
     bigwig_file = parsed_args.bigwigfile
     output_file = parsed_args.outfile
-    
     # Process the BED file and calculate mean signal
     print(f"Processing BED file: {bed_file}")
     print(f"Using BigWig file: {bigwig_file}")
     print(f"Output will be saved to: {output_file}")
-    
     # Call the processing function
     process_bed_file(bed_file, bigwig_file, output_file)
     print("Processing complete.")
 
 if __name__ == "__main__":
     if hasattr(sys, 'ps1'):
-        # main("-i /project2/yangili1/bjf79/2024_comparativesplicing/code/GenomeFiles/Human_ensemblv75/Reference.gtf -o scratch/Human_ensemblv75.Reannotated.gtf -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v -translation_approach A".split(' '))
         main("-b conservation/human.AS_segments.bed -w conservation/PhyloP.hg19.bw -o scratch/test.bed".split(' '))
-        # main("-i /project2/yangili1/bjf79/2024_comparativesplicing/code/GenomeFiles/Human_ensemblv75/Reference.gtf -o scratch/Human_ensemblv75.Reannotated.gtf -fa /project2/yangili1/bjf79/ReferenceGenomes/Human_ensemblv75/Reference.fa -v -translation_approach A".split(' '))
     main()
 
 

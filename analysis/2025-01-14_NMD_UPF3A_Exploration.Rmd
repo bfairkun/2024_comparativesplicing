@@ -295,11 +295,6 @@ I also want to verify that many more genes are expressed in mature testis in all
 ```{r}
 RPKM.human <- read_tsv("../code/MazinLeafcutterAnalysis/Expression/Human_UCSC.hg38_GencodeComprehensive46.log2rpkm.tsv.gz")
 
-RPKM.human %>%
-  pivot_longer( names_to = "ID",values_to = "log2RPKM",-Geneid) %>%
-  filter(log2RPKM > 0) %>%
-  count(ID) %>%
-  inner_join()
 
 Expressed.gene.count <- str_glue("../code/MazinLeafcutterAnalysis/Expression/{unique(Genomes$OriginGenome)}.log2rpkm.tsv.gz") %>%
   as.character() %>%
@@ -443,5 +438,72 @@ Dat.For.Delta.NMD.Factors %>%
 
 ggsave("../code/scratch/FinalFigs/OriginalPlots/NMD_factor_UPF3AB_Expression.pdf", height=200, width=280, units="mm")
 
+Dat.For.Delta.NMD.Factors %>%
+  filter(human.name %in% c("UPF3A", "UPF3B")) %>%
+  pivot_wider(names_from = c("human.name"), values_from = c("Delta"), id_cols=c("ID", "Species", "Tissue_ForDevelopementalAnalysis", "PercentRank_OrdinalStage", "Percent")) %>%
+  mutate(DeltaRatio = UPF3A-UPF3B) %>%
+  ggplot(aes(x=DeltaRatio, y=Percent, color=Tissue_ForDevelopementalAnalysis)) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  geom_smooth(method='lm', se=F) +
+  facet_wrap(~Species, scales="free") +
+  labs(y="Percent unproductive juncs", x="log2FC(UPF3A/UPF3B),\nrelative to t_0")
+
+```
+
+[Bao et al ](https://pubmed.ncbi.nlm.nih.gov/27149259/) suggested that EJC-dependent NMD is repressed in testis, while an alternative mechanism, by which NMD recognizes long 3'UTRs, is activated in testis. Let's look for evidence of this... I can look at junctions specific to EJC-NMD transcripts, and junctions specific to long 3'UTR isoforms.
+
+First, let's read in annotated transcripts to find introns unique to particular transcripts...
+
+```{r}
+human.transcripts <- read_tsv("../code/MazinLeafcutterAnalysis/ReformatedGTFs/Human_UCSC.hg38_GencodeComprehensive46.bed", col_names = c("chrom", "start", "stop","name", "score", "strand", "thickStart", "thickEnd", "color", "blockCount", "blockSizes", "blockStarts", "gene_name", "transcript_name", "gene_type", "transcript_type_out", "NMDFinderB", "FiveUTR_nEx", "FiveUTR_len", "ThreeUTR_nEx", "ThreeUTR_len", "ThreeUTR_nEx_AfterFirst50", "CDSLen", "Introns"))
+
+human.transcripts %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(X26, "end_NF")) %>%
+  ggplot(aes(x=ThreeUTR_nEx_AfterFirst50, color=NMDFinderB)) +
+  stat_ecdf(size=3) +
+  coord_cartesian(xlim=c(0,5))
+
+# Get introns in transcripts without EJC 50nt after PTC
+No.EJC.After.PTC <- human.transcripts %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(X26, "end_NF")) %>%
+  mutate(IsEJC_NMD_Target = ThreeUTR_nEx_AfterFirst50 > 1) %>%
+  separate_rows(Introns, sep=",") %>%
+  filter(ThreeUTR_nEx_AfterFirst50 <= 1) %>%
+  distinct(Introns, gene_name)
+
+# Get introns in transcripts with EJC 50nt after PTC
+EJC.After.PTC <- human.transcripts %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(X26, "end_NF")) %>%
+  mutate(IsEJC_NMD_Target = ThreeUTR_nEx_AfterFirst50 > 1) %>%
+  separate_rows(Introns, sep=",") %>%
+  filter(ThreeUTR_nEx_AfterFirst50 >= 2) %>%
+  distinct(Introns, gene_name)
+
+anti_join(
+  EJC.After.PTC, No.EJC.After.PTC
+)
+
+# Get No.EJC.After.PTC introns unique to a particalar tx, with a unique 3'UTR len
+human.transcripts %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(X26, "end_NF")) %>%
+  mutate(IsEJC_NMD_Target = ThreeUTR_nEx_AfterFirst50 > 1) %>%
+  separate_rows(Introns, sep=",") %>%
+  filter(ThreeUTR_nEx_AfterFirst50 <= 1) %>%
+  distinct(Introns, gene_name, ThreeUTR_len) %>%
+  add_count(Introns, gene_name) %>%
+  filter(n==1) %>%
+  filter(ThreeUTR_len > 0)
+
+human.transcripts %>%
+  filter(gene_type == "protein_coding") %>%
+  filter(!str_detect(X26, "end_NF")) %>%
+  mutate(IsEJC_NMD_Target = ThreeUTR_nEx_AfterFirst50 > 1) %>%
+  filter(ThreeUTR_len > 0) %>%
+  distinct()
 ```
 
